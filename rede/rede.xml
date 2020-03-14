@@ -1,0 +1,2115 @@
+<rede>
+ <elementos>
+  <chave estado="fechado" nome="CH18">
+  </chave>
+  <chave estado="fechado" nome="CH17">
+  </chave>
+  <chave estado="aberto" nome="CH16">
+  </chave>
+  <chave estado="fechado" nome="CH12">
+  </chave>
+  <chave estado="fechado" nome="CH4">
+  </chave>
+  <chave estado="fechado" nome="CH5">
+  </chave>
+  <chave estado="fechado" nome="CH15">
+  </chave>
+  <chave estado="aberto" nome="CH11">
+  </chave>
+  <chave estado="aberto" nome="CH8">
+  </chave>
+  <chave estado="aberto" nome="CH3">
+  </chave>
+  <chave estado="fechado" nome="CH14">
+  </chave>
+  <chave estado="fechado" nome="CH10">
+  </chave>
+  <chave estado="fechado" nome="CH7">
+  </chave>
+  <chave estado="fechado" nome="CH2">
+  </chave>
+  <chave estado="fechado" nome="CH13">
+  </chave>
+  <chave estado="fechado" nome="CH9">
+  </chave>
+  <chave estado="fechado" nome="CH6">
+  </chave>
+  <chave estado="fechado" nome="CH1">
+  </chave>
+  <no nome="N1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    5409.586
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    2304.466
+   </potencia>
+  </no>
+  <no nome="M1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    1957.12
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    833.73
+   </potencia>
+  </no>
+  <no nome="L1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    1693.239
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    721.0
+   </potencia>
+  </no>
+  <no nome="D1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    2308.962
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    983.61
+   </potencia>
+  </no>
+  <no nome="K1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    3408.46
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    1452.00
+   </potencia>
+  </no>
+  <no nome="K2">
+   <potencia multip="k" tipo="ativa" unid="W">
+    0
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    0
+   </potencia>
+  </no>
+  <no nome="C1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    1649.25
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    702.58
+   </potencia>
+  </no>
+  <no nome="J1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    923.58
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    393.445
+   </potencia>
+  </no>
+  <no nome="H1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    1363.38
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    580.8
+   </potencia>
+  </no>
+  <no nome="F1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    2330.95
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    992.98
+   </potencia>
+  </no>
+  <no nome="B1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    1253.436
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    533.961
+   </potencia>
+  </no>
+  <no nome="I1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    2770.75
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    1180.33
+   </potencia>
+  </no>
+  <no nome="G1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    1825.17
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    777.52
+   </potencia>
+  </no>
+  <no nome="E1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    461.792
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    196.722
+   </potencia>
+  </no>
+  <no nome="A1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    506
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    215
+   </potencia>
+  </no>
+  <no nome="S3">
+   <potencia multip="k" tipo="ativa" unid="W">
+    0.0
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    0.0
+   </potencia>
+  </no>
+  <no nome="S2">
+   <potencia multip="k" tipo="ativa" unid="W">
+    0.0
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    0.0
+   </potencia>
+  </no>
+  <no nome="S1">
+   <potencia multip="k" tipo="ativa" unid="W">
+    0.0
+   </potencia>
+   <potencia multip="k" tipo="reativa" unid="VAr">
+    0.0
+   </potencia>
+  </no>
+  <trecho nome="CH18N1">
+   <comprimento multip="k" unid="m">
+    3.304
+   </comprimento>
+  </trecho>
+  <trecho nome="CH17N1">
+   <comprimento multip="k" unid="m">
+    5.08
+   </comprimento>
+  </trecho>
+  <trecho nome="M1CH17">
+   <comprimento multip="k" unid="m">
+    2.5305
+   </comprimento>
+  </trecho>
+  <trecho nome="CH16M1">
+   <comprimento multip="k" unid="m">
+    2.5305
+   </comprimento>
+  </trecho>
+  <trecho nome="L1CH16">
+   <comprimento multip="k" unid="m">
+    0.0015
+   </comprimento>
+  </trecho>
+  <trecho nome="CH15L1">
+   <comprimento multip="k" unid="m">
+    0.0015
+   </comprimento>
+  </trecho>
+  <trecho nome="CH12K1">
+   <comprimento multip="k" unid="m">
+    1.621
+   </comprimento>
+  </trecho>
+  <trecho nome="D1CH5">
+   <comprimento multip="k" unid="m">
+    0.510
+   </comprimento>
+  </trecho>
+  <trecho nome="CH4D1">
+   <comprimento multip="k" unid="m">
+    0.580
+   </comprimento>
+  </trecho>
+  <trecho nome="C1CH4">
+   <comprimento multip="k" unid="m">
+    0.910
+   </comprimento>
+  </trecho>
+  <trecho nome="CH8K1">
+   <comprimento multip="k" unid="m">
+    2.250
+   </comprimento>
+  </trecho>
+  <trecho nome="K2K1">
+   <comprimento multip="k" unid="m">
+    2.156
+   </comprimento>
+  </trecho>
+  <trecho nome="CH11K2">
+   <comprimento multip="k" unid="m">
+    2.768
+   </comprimento>
+  </trecho>
+  <trecho nome="CH3C1">
+   <comprimento multip="k" unid="m">
+    0.910
+   </comprimento>
+  </trecho>
+  <trecho nome="J1CH15">
+   <comprimento multip="k" unid="m">
+    0.945
+   </comprimento>
+  </trecho>
+  <trecho nome="H1CH11">
+   <comprimento multip="k" unid="m">
+    0.941
+   </comprimento>
+  </trecho>
+  <trecho nome="F1CH8">
+   <comprimento multip="k" unid="m">
+    0.841
+   </comprimento>
+  </trecho>
+  <trecho nome="B1CH3">
+   <comprimento multip="k" unid="m">
+    0.595
+   </comprimento>
+  </trecho>
+  <trecho nome="CH14J1">
+   <comprimento multip="k" unid="m">
+    0.945
+   </comprimento>
+  </trecho>
+  <trecho nome="CH10H1">
+   <comprimento multip="k" unid="m">
+    3.173
+   </comprimento>
+  </trecho>
+  <trecho nome="CH7F1">
+   <comprimento multip="k" unid="m">
+    0.841
+   </comprimento>
+  </trecho>
+  <trecho nome="CH2B1">
+   <comprimento multip="k" unid="m">
+    0.595
+   </comprimento>
+  </trecho>
+  <trecho nome="I1CH14">
+   <comprimento multip="k" unid="m">
+    4.037
+   </comprimento>
+  </trecho>
+  <trecho nome="G1CH10">
+   <comprimento multip="k" unid="m">
+    999.5
+   </comprimento>
+  </trecho>
+  <trecho nome="E1CH7">
+   <comprimento multip="k" unid="m">
+    2.5825
+   </comprimento>
+  </trecho>
+  <trecho nome="A1CH2">
+   <comprimento multip="k" unid="m">
+    2.520
+   </comprimento>
+  </trecho>
+  <trecho nome="CH13I1">
+   <comprimento multip="k" unid="m">
+    5.039
+   </comprimento>
+  </trecho>
+  <trecho nome="CH9G1">
+   <comprimento multip="k" unid="m">
+    0.9995
+   </comprimento>
+  </trecho>
+  <trecho nome="CH6E1">
+   <comprimento multip="k" unid="m">
+    2.5825
+   </comprimento>
+  </trecho>
+  <trecho nome="CH1A1">
+   <comprimento multip="k" unid="m">
+    2.520
+   </comprimento>
+  </trecho>
+  <trecho nome="S3CH18">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  <trecho nome="S2CH5">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  <trecho nome="S2CH12">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  <trecho nome="S1CH13">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  <trecho nome="S1CH9">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  <trecho nome="S1CH6">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  <trecho nome="S1CH1">
+   <comprimento multip="k" unid="m">
+    0.01
+   </comprimento>
+  </trecho>
+  
+  <condutor ampacidade="475" nome="CCA 266.8 MCM" rp="0.2391" rz="0.41693" xp="0.37895" xz="1.55591">
+  </condutor>
+  <condutor ampacidade="617" nome="SPACER 240 mm2" rp="0.141" rz="2.131" xp="0.2762" xz="2.2615">
+  </condutor>
+  <condutor ampacidade="242" nome="CCA 1/10 AWG" rp="0.5877" rz="0.7653" xp="0.4374" xz="1.6043">
+  </condutor>
+  <condutor ampacidade="438" nome="CU 95 mm2" rp="0.2213" rz="0.399" xp="0.4101" xz="1.5771">
+  </condutor>
+
+  <setor nome="S3">
+  </setor>
+  <setor nome="K">
+  </setor>
+  <setor nome="H">
+  </setor>
+  <setor nome="C">
+  </setor>
+  <setor nome="L">
+  </setor>
+  <setor nome="J">
+  </setor>
+  <setor nome="M">
+  </setor>
+  <setor nome="D">
+  </setor>
+  <setor nome="N">
+  </setor>
+  <setor nome="F">
+  </setor>
+  <setor nome="B">
+  </setor>
+  <setor nome="I">
+  </setor>
+  <setor nome="G">
+  </setor>
+  <setor nome="E">
+  </setor>
+  <setor nome="A">
+  </setor>
+  <setor nome="S2">
+  </setor>
+  <setor nome="S1">
+  </setor>
+  <alimentador nome="S3_AL1">
+  </alimentador>
+  <alimentador nome="S2_AL1">
+  </alimentador>
+  <alimentador nome="S2_AL2">
+  </alimentador>
+  <alimentador nome="S1_AL1">
+  </alimentador>
+  <alimentador nome="S1_AL2">
+  </alimentador>
+  <alimentador nome="S1_AL3">
+  </alimentador>
+  <alimentador nome="S1_AL4">
+  </alimentador>
+  <transformador nome="S3_T1">
+   <potencia multip="M" tipo="aparente" unid="VA">
+    15
+   </potencia>
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="ohms">
+     0.868
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+     0.868
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="ohms">
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+    </reatancia>
+   </impedancia>
+   <enrolamento tipo="primario">
+    <tensao multip="k" unid="V">
+     69
+    </tensao>
+   </enrolamento>
+   <enrolamento tipo="secundario">
+    <tensao multip="k" unid="V">
+     13.8
+    </tensao>
+   </enrolamento>
+  </transformador>
+  <transformador nome="S3_T2">
+   <potencia multip="M" tipo="aparente" unid="VA">
+    15
+   </potencia>
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="ohms">
+     0.868
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+     0.868
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="ohms">
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+    </reatancia>
+   </impedancia>
+   <enrolamento tipo="primario">
+    <tensao multip="k" unid="V">
+     69
+    </tensao>
+   </enrolamento>
+   <enrolamento tipo="secundario">
+    <tensao multip="k" unid="V">
+     13.8
+    </tensao>
+   </enrolamento>
+  </transformador>
+  <transformador nome="S2_T1">
+   <potencia multip="M" tipo="aparente" unid="VA">
+    15
+   </potencia>
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="ohms">
+     0.868
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+     0.868
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="ohms">
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+    </reatancia>
+   </impedancia>
+   <enrolamento tipo="primario">
+    <tensao multip="k" unid="V">
+     69
+    </tensao>
+   </enrolamento>
+   <enrolamento tipo="secundario">
+    <tensao multip="k" unid="V">
+     13.8
+    </tensao>
+   </enrolamento>
+  </transformador>
+  <transformador nome="S1_T1">
+   <potencia multip="M" tipo="aparente" unid="VA">
+    15
+   </potencia>
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="ohms">
+     0.868
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+     0.868
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="ohms">
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+    </reatancia>
+   </impedancia>
+   <enrolamento tipo="primario">
+    <tensao multip="k" unid="V">
+     69
+    </tensao>
+   </enrolamento>
+   <enrolamento tipo="secundario">
+    <tensao multip="k" unid="V">
+     13.8
+    </tensao>
+   </enrolamento>
+  </transformador>
+  <transformador nome="S1_T2">
+   <potencia multip="M" tipo="aparente" unid="VA">
+    15
+   </potencia>
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="ohms">
+     0.868
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+     0.868
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="ohms">
+    </resistencia>
+    <reatancia multip="" unid="ohms">
+    </reatancia>
+   </impedancia>
+   <enrolamento tipo="primario">
+    <tensao multip="k" unid="V">
+     69
+    </tensao>
+   </enrolamento>
+   <enrolamento tipo="secundario">
+    <tensao multip="k" unid="V">
+     13.8
+    </tensao>
+   </enrolamento>
+  </transformador>
+  <subestacao nome="S3">
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="pu">
+     1
+    </resistencia>
+    <reatancia multip="" unid="pu">
+     1
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="pu">
+     1
+    </resistencia>
+    <reatancia multip="" unid="pu">
+     1
+    </reatancia>
+   </impedancia>
+  </subestacao>
+  <subestacao nome="S2">
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="pu">
+     1
+    </resistencia>
+    <reatancia multip="" unid="pu">
+     1
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="pu">
+     1
+    </resistencia>
+    <reatancia multip="" unid="pu">
+     1
+    </reatancia>
+   </impedancia>
+  </subestacao>
+  <subestacao nome="S1">
+   <impedancia tipo="seq_pos">
+    <resistencia multip="" unid="pu">
+     1
+    </resistencia>
+    <reatancia multip="" unid="pu">
+     1
+    </reatancia>
+   </impedancia>
+   <impedancia tipo="seq_zero">
+    <resistencia multip="" unid="pu">
+     1
+    </resistencia>
+    <reatancia multip="" unid="pu">
+     1
+    </reatancia>
+   </impedancia>
+  </subestacao>
+ </elementos>
+ <topologia>
+  <elemento nome="N1" tipo="no">
+   <vizinhos>
+    <no nome="S3">
+    </no>
+    <no nome="M1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH18">
+    </chave>
+    <chave nome="CH17">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="M1" tipo="no">
+   <vizinhos>
+    <no nome="N1">
+    </no>
+    <no nome="L1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH17">
+    </chave>
+    <chave nome="CH16">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="L1" tipo="no">
+   <vizinhos>
+    <no nome="M1">
+    </no>
+    <no nome="J1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH16">
+    </chave>
+    <chave nome="CH15">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="D1" tipo="no">
+   <vizinhos>
+    <no nome="S2">
+    </no>
+    <no nome="C1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH4">
+    </chave>
+    <chave nome="CH5">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="K1" tipo="no">
+   <vizinhos>
+    <no nome="S2">
+    </no>
+    <no nome="F1">
+    </no>
+    <no nome="K2">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH12">
+    </chave>
+    <chave nome="CH8">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="K2" tipo="no">
+   <vizinhos>
+    <no nome="K1">
+    </no>
+    <no nome="H1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH11">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="C1" tipo="no">
+   <vizinhos>
+    <no nome="D1">
+    </no>
+    <no nome="B1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH4">
+    </chave>
+    <chave nome="CH3">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="J1" tipo="no">
+   <vizinhos>
+    <no nome="L1">
+    </no>
+    <no nome="I1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH15">
+    </chave>
+    <chave nome="CH14">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="H1" tipo="no">
+   <vizinhos>
+    <no nome="K2">
+    </no>
+    <no nome="G1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH11">
+    </chave>
+    <chave nome="CH10">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="F1" tipo="no">
+   <vizinhos>
+    <no nome="K1">
+    </no>
+    <no nome="E1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH8">
+    </chave>
+    <chave nome="CH7">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="B1" tipo="no">
+   <vizinhos>
+    <no nome="C1">
+    </no>
+    <no nome="A1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH2">
+    </chave>
+    <chave nome="CH3">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="I1" tipo="no">
+   <vizinhos>
+    <no nome="J1">
+    </no>
+    <no nome="S1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH13">
+    </chave>
+    <chave nome="CH14">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="G1" tipo="no">
+   <vizinhos>
+    <no nome="H1">
+    </no>
+    <no nome="S1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH9">
+    </chave>
+    <chave nome="CH10">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="E1" tipo="no">
+   <vizinhos>
+    <no nome="F1">
+    </no>
+    <no nome="S1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH6">
+    </chave>
+    <chave nome="CH7">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="A1" tipo="no">
+   <vizinhos>
+    <no nome="B1">
+    </no>
+    <no nome="S1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH2">
+    </chave>
+    <chave nome="CH1">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="S3" tipo="no">
+   <vizinhos>
+    <no nome="N1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH18">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="S2" tipo="no">
+   <vizinhos>
+    <no nome="D1">
+    </no>
+    <no nome="K1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH12">
+    </chave>
+    <chave nome="CH5">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="S1" tipo="no">
+   <vizinhos>
+    <no nome="I1">
+    </no>
+    <no nome="G1">
+    </no>
+    <no nome="E1">
+    </no>
+    <no nome="A1">
+    </no>
+   </vizinhos>
+   <chaves>
+    <chave nome="CH13">
+    </chave>
+    <chave nome="CH9">
+    </chave>
+    <chave nome="CH6">
+    </chave>
+    <chave nome="CH1">
+    </chave>
+   </chaves>
+  </elemento>
+  <elemento nome="S3" tipo="setor">
+   <vizinhos>
+    <setor nome="N">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="S3">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="K" tipo="setor">
+   <vizinhos>
+    <setor nome="S2">
+    </setor>
+    <setor nome="F">
+    </setor>
+    <setor nome="H">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="K1">
+    </no>
+    <no nome="K2">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="H" tipo="setor">
+   <vizinhos>
+    <setor nome="K">
+    </setor>
+    <setor nome="G">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="H1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="C" tipo="setor">
+   <vizinhos>
+    <setor nome="D">
+    </setor>
+    <setor nome="B">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="C1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="L" tipo="setor">
+   <vizinhos>
+    <setor nome="M">
+    </setor>
+    <setor nome="J">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="L1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="J" tipo="setor">
+   <vizinhos>
+    <setor nome="L">
+    </setor>
+    <setor nome="I">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="J1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="M" tipo="setor">
+   <vizinhos>
+    <setor nome="N">
+    </setor>
+    <setor nome="L">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="M1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="D" tipo="setor">
+   <vizinhos>
+    <setor nome="S2">
+    </setor>
+    <setor nome="C">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="D1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="N" tipo="setor">
+   <vizinhos>
+    <setor nome="S3">
+    </setor>
+    <setor nome="M">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="N1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="F" tipo="setor">
+   <vizinhos>
+    <setor nome="K">
+    </setor>
+    <setor nome="E">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="F1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="B" tipo="setor">
+   <vizinhos>
+    <setor nome="C">
+    </setor>
+    <setor nome="A">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="B1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="I" tipo="setor">
+   <vizinhos>
+    <setor nome="J">
+    </setor>
+    <setor nome="S1">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="I1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="G" tipo="setor">
+   <vizinhos>
+    <setor nome="H">
+    </setor>
+    <setor nome="S1">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="G1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="E" tipo="setor">
+   <vizinhos>
+    <setor nome="F">
+    </setor>
+    <setor nome="S1">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="E1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="A" tipo="setor">
+   <vizinhos>
+    <setor nome="B">
+    </setor>
+    <setor nome="S1">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="A1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="S2" tipo="setor">
+   <vizinhos>
+    <setor nome="D">
+    </setor>
+    <setor nome="K">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="S2">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="S1" tipo="setor">
+   <vizinhos>
+    <setor nome="I">
+    </setor>
+    <setor nome="G">
+    </setor>
+    <setor nome="E">
+    </setor>
+    <setor nome="A">
+    </setor>
+   </vizinhos>
+   <nos>
+    <no nome="S1">
+    </no>
+   </nos>
+  </elemento>
+  <elemento nome="CH18" tipo="chave">
+   <n1>
+    <setor nome="S3">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="N">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH17" tipo="chave">
+   <n1>
+    <setor nome="N">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="M">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH16" tipo="chave">
+   <n1>
+    <setor nome="M">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="L">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH12" tipo="chave">
+   <n1>
+    <setor nome="S2">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="K">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH4" tipo="chave">
+   <n1>
+    <setor nome="D">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="C">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH5" tipo="chave">
+   <n1>
+    <setor nome="S2">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="D">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH15" tipo="chave">
+   <n1>
+    <setor nome="J">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="L">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH11" tipo="chave">
+   <n1>
+    <setor nome="K">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="H">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH8" tipo="chave">
+   <n1>
+    <setor nome="K">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="F">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH3" tipo="chave">
+   <n1>
+    <setor nome="C">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="B">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH14" tipo="chave">
+   <n1>
+    <setor nome="I">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="J">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH10" tipo="chave">
+   <n1>
+    <setor nome="G">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="H">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH7" tipo="chave">
+   <n1>
+    <setor nome="E">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="F">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH2" tipo="chave">
+   <n1>
+    <setor nome="A">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="B">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH13" tipo="chave">
+   <n1>
+    <setor nome="S1">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="I">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH9" tipo="chave">
+   <n1>
+    <setor nome="S1">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="G">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH6" tipo="chave">
+   <n1>
+    <setor nome="S1">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="E">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH1" tipo="chave">
+   <n1>
+    <setor nome="S1">
+    </setor>
+   </n1>
+   <n2>
+    <setor nome="A">
+    </setor>
+   </n2>
+  </elemento>
+  <elemento nome="CH18N1" tipo="trecho">
+   <n1>
+    <chave nome="CH18">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="N1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="SPACER 240 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH17N1" tipo="trecho">
+   <n1>
+    <no nome="N1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH17">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="M1CH17" tipo="trecho">
+   <n1>
+    <chave nome="CH17">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="M1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH16M1" tipo="trecho">
+   <n1>
+    <no nome="M1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH16">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="L1CH16" tipo="trecho">
+   <n1>
+    <no nome="L1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH16">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH15L1" tipo="trecho">
+   <n1>
+    <chave nome="CH15">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="L1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH12K1" tipo="trecho">
+   <n1>
+    <chave nome="CH12">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="K1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="SPACER 240 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="D1CH5" tipo="trecho">
+   <n1>
+    <chave nome="CH5">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="D1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="SPACER 240 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH4D1" tipo="trecho">
+   <n1>
+    <no nome="D1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH4">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="C1CH4" tipo="trecho">
+   <n1>
+    <chave nome="CH4">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="C1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH8K1" tipo="trecho">
+   <n1>
+    <no nome="K1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH8">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="K2K1" tipo="trecho">
+   <n1>
+    <no nome="K1">
+    </no>
+   </n1>
+   <n2>
+    <no nome="K2">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH11K2" tipo="trecho">
+   <n1>
+    <no nome="K2">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH11">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH3C1" tipo="trecho">
+   <n1>
+    <no nome="C1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH3">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="J1CH15" tipo="trecho">
+   <n1>
+    <no nome="J1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH15">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="H1CH11" tipo="trecho">
+   <n1>
+    <no nome="H1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH11">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="F1CH8" tipo="trecho">
+   <n1>
+    <no nome="F1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH8">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="B1CH3" tipo="trecho">
+   <n1>
+    <no nome="B1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH3">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH14J1" tipo="trecho">
+   <n1>
+    <chave nome="CH14">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="J1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH10H1" tipo="trecho">
+   <n1>
+    <chave nome="CH10">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="H1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH7F1" tipo="trecho">
+   <n1>
+    <chave nome="CH7">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="F1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH2B1" tipo="trecho">
+   <n1>
+    <chave nome="CH2">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="B1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="I1CH14" tipo="trecho">
+   <n1>
+    <no nome="I1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH14">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CU 95 mm2"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="G1CH10" tipo="trecho">
+   <n1>
+    <no nome="G1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH10">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="E1CH7" tipo="trecho">
+   <n1>
+    <no nome="E1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH7">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="A1CH2" tipo="trecho">
+   <n1>
+    <no nome="A1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH2">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH13I1" tipo="trecho">
+   <n1>
+    <chave nome="CH13">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="I1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH9G1" tipo="trecho">
+   <n1>
+    <chave nome="CH9">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="G1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH6E1" tipo="trecho">
+   <n1>
+    <chave nome="CH6">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="E1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="CH1A1" tipo="trecho">
+   <n1>
+    <chave nome="CH1">
+    </chave>
+   </n1>
+   <n2>
+    <no nome="A1">
+    </no>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S3CH18" tipo="trecho">
+   <n1>
+    <no nome="S3">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH18">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S2CH5" tipo="trecho">
+   <n1>
+    <no nome="S2">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH5">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S2CH12" tipo="trecho">
+   <n1>
+    <no nome="S2">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH12">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S1CH13" tipo="trecho">
+   <n1>
+    <no nome="S1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH13">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S1CH9" tipo="trecho">
+   <n1>
+    <no nome="S1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH9">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S1CH6" tipo="trecho">
+   <n1>
+    <no nome="S1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH6">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S1CH1" tipo="trecho">
+   <n1>
+    <no nome="S1">
+    </no>
+   </n1>
+   <n2>
+    <chave nome="CH1">
+    </chave>
+   </n2>
+   <condutores>
+    <condutor nome="CCA 266.8 MCM"
+>
+    </condutor>
+   </condutores>
+  </elemento>
+  <elemento nome="S3_AL1" tipo="alimentador">
+   <setores>
+    <setor nome="N">
+    </setor>
+    <setor nome="S3">
+    </setor>
+    <setor nome="M">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="CH18N1">
+    </trecho>
+    <trecho nome="CH17N1">
+    </trecho>
+    <trecho nome="S3CH18">
+    </trecho>
+    <trecho nome="M1CH17">
+    </trecho>
+    <trecho nome="CH16M1">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH18">
+    </chave>
+    <chave nome="CH17">
+    </chave>
+    <chave nome="CH16">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S3">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S2_AL1" tipo="alimentador">
+   <setores>
+    <setor nome="D">
+    </setor>
+    <setor nome="S2">
+    </setor>
+    <setor nome="C">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="D1CH5">
+    </trecho>
+    <trecho nome="CH4D1">
+    </trecho>
+    <trecho nome="S2CH5">
+    </trecho>
+    <trecho nome="C1CH4">
+    </trecho>
+    <trecho nome="CH3C1">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH5">
+    </chave>
+    <chave nome="CH4">
+    </chave>
+    <chave nome="CH3">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S2">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S2_AL2" tipo="alimentador">
+   <setores>
+    <setor nome="K">
+    </setor>
+    <setor nome="S2">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="CH12K1">
+    </trecho>
+    <trecho nome="CH8K1">
+    </trecho>
+    <trecho nome="K2K1">
+    </trecho>
+    <trecho nome="CH11K2">
+    </trecho>
+    <trecho nome="S2CH12">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH12">
+    </chave>
+    <chave nome="CH11">
+    </chave>
+    <chave nome="CH8">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S2">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S1_AL1" tipo="alimentador">
+   <setores>
+    <setor nome="I">
+    </setor>
+    <setor nome="S1">
+    </setor>
+    <setor nome="J">
+    </setor>
+    <setor nome="L">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="CH13I1">
+    </trecho>
+    <trecho nome="I1CH14">
+    </trecho>
+    <trecho nome="S1CH13">
+    </trecho>
+    <trecho nome="CH14J1">
+    </trecho>
+    <trecho nome="J1CH15">
+    </trecho>
+    <trecho nome="CH15L1">
+    </trecho>
+    <trecho nome="L1CH16">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH13">
+    </chave>
+    <chave nome="CH14">
+    </chave>
+    <chave nome="CH15">
+    </chave>
+    <chave nome="CH16">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S1">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S1_AL2" tipo="alimentador">
+   <setores>
+    <setor nome="G">
+    </setor>
+    <setor nome="S1">
+    </setor>
+    <setor nome="H">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="CH9G1">
+    </trecho>
+    <trecho nome="G1CH10">
+    </trecho>
+    <trecho nome="S1CH9">
+    </trecho>
+    <trecho nome="CH10H1">
+    </trecho>
+    <trecho nome="H1CH11">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH9">
+    </chave>
+    <chave nome="CH10">
+    </chave>
+    <chave nome="CH11">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S1">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S1_AL3" tipo="alimentador">
+   <setores>
+    <setor nome="E">
+    </setor>
+    <setor nome="S1">
+    </setor>
+    <setor nome="F">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="CH6E1">
+    </trecho>
+    <trecho nome="E1CH7">
+    </trecho>
+    <trecho nome="S1CH6">
+    </trecho>
+    <trecho nome="CH7F1">
+    </trecho>
+    <trecho nome="F1CH8">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH6">
+    </chave>
+    <chave nome="CH7">
+    </chave>
+    <chave nome="CH8">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S1">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S1_AL4" tipo="alimentador">
+   <setores>
+    <setor nome="A">
+    </setor>
+    <setor nome="S1">
+    </setor>
+    <setor nome="B">
+    </setor>
+   </setores>
+   <trechos>
+    <trecho nome="CH1A1">
+    </trecho>
+    <trecho nome="A1CH2">
+    </trecho>
+    <trecho nome="S1CH1">
+    </trecho>
+    <trecho nome="B1CH3">
+    </trecho>
+    <trecho nome="CH2B1">
+    </trecho>
+   </trechos>
+   <chaves>
+    <chave nome="CH1">
+    </chave>
+    <chave nome="CH2">
+    </chave>
+    <chave nome="CH3">
+    </chave>
+   </chaves>
+   <raiz>
+    <setor nome="S1">
+    </setor>
+   </raiz>
+  </elemento>
+  <elemento nome="S3" tipo="subestacao">
+   <alimentadores>
+    <alimentador nome="S3_AL1">
+    </alimentador>
+   </alimentadores>
+   <transformadores>
+    <transformador nome="S3_T1">
+    </transformador>
+    <transformador nome="S3_T2">
+    </transformador>
+   </transformadores>
+  </elemento>
+  <elemento nome="S2" tipo="subestacao">
+   <alimentadores>
+    <alimentador nome="S2_AL1">
+    </alimentador>
+    <alimentador nome="S2_AL2">
+    </alimentador>
+   </alimentadores>
+   <transformadores>
+    <transformador nome="S2_T1">
+    </transformador>
+   </transformadores>
+  </elemento>
+  <elemento nome="S1" tipo="subestacao">
+   <alimentadores>
+    <alimentador nome="S1_AL1">
+    </alimentador>
+    <alimentador nome="S1_AL2">
+    </alimentador>
+    <alimentador nome="S1_AL3">
+    </alimentador>
+    <alimentador nome="S1_AL4">
+    </alimentador>
+   </alimentadores>
+   <transformadores>
+    <transformador nome="S1_T1">
+    </transformador>
+    <transformador nome="S1_T2">
+    </transformador>
+   </transformadores>
+  </elemento>
+ </topologia>
+</rede>
