@@ -21,5 +21,5 @@ def to_string(element):
 
 class AgenteSMAD(Agent):
     def __init__(self, aid, subestacao, debug=False):
-        super(AgenteSMAD, self).__init__(aid, debug)
+        super().__init__(aid, debug)
         self.subestacao = subestacao

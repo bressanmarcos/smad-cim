@@ -1,10 +1,10 @@
 #!/bin/bash
-generateds="./generateDS/generateDS.py"
+origin="./artifacts"
 destination="./information_model"
-for filepath in artifacts/*.xsd
+for filepath in $origin/*.xsd
 do
-    echo $filepath
     name=${filepath##*/}
     base=${name%.xsd}
-    python $generateds -o $destination/$base.py --export="write etree validate generator" -q -f --silence $filepath
+    echo "$filepath --> $destination/$base.py" 
+    generateDS -o $destination/$base.py --export="write etree validate generator" -q -f --silence $filepath
 done

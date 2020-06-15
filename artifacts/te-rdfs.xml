@@ -1,0 +1,70 @@
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:cims="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#" xmlns:uml="http://langdale.com.au/2005/UML#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#" xml:base="http://iec.ch/TC57/te">
+	<rdf:Description rdf:about="#PowerSystemResource">
+		<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+		<rdfs:label>PowerSystemResource</rdfs:label>
+		<rdfs:comment>A power system resource can be an item of equipment such as a switch, an equipment container containing many individual items of equipment such as a substation, or an organisational entity such as sub-control area. Power system resources can have measurements associated.</rdfs:comment>
+		<cims:belongsToCategory rdf:resource="#Package_Core"/>
+		<rdfs:subClassOf rdf:resource="#IdentifiedObject"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#ReportingGroup">
+		<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+		<rdfs:label>ReportingGroup</rdfs:label>
+		<rdfs:comment>A reporting group is used for various ad-hoc groupings used for reporting.</rdfs:comment>
+		<cims:belongsToCategory rdf:resource="#Package_Core"/>
+		<rdfs:subClassOf rdf:resource="#IdentifiedObject"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#Switch">
+		<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+		<rdfs:label>Switch</rdfs:label>
+		<rdfs:comment>A generic device designed to close, or open, or both, one or more electric circuits.  All switches are two terminal devices including grounding switches.</rdfs:comment>
+		<cims:belongsToCategory rdf:resource="#Package_Wires"/>
+		<rdfs:subClassOf rdf:resource="#PowerSystemResource"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#IdentifiedObject.mRID">
+		<rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+		<rdfs:label>mRID</rdfs:label>
+		<rdfs:comment>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</rdfs:comment>
+		<rdfs:domain rdf:resource="#IdentifiedObject"/>
+		<cims:dataType rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<cims:multiplicity rdf:resource="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1"/>
+		<cims:stereotype rdf:resource="http://langdale.com.au/2005/UML#attribute"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#IdentifiedObject.name">
+		<rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+		<rdfs:label>name</rdfs:label>
+		<rdfs:comment>The name is any free human readable and possibly non unique text naming the object.</rdfs:comment>
+		<rdfs:domain rdf:resource="#IdentifiedObject"/>
+		<cims:dataType rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+		<cims:multiplicity rdf:resource="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1"/>
+		<cims:stereotype rdf:resource="http://langdale.com.au/2005/UML#attribute"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#IdentifiedObject">
+		<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+		<rdfs:label>IdentifiedObject</rdfs:label>
+		<rdfs:comment>This is a root class to provide common identification for all classes needing identification and naming attributes.</rdfs:comment>
+		<cims:belongsToCategory rdf:resource="#Package_Core"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#Package_IEC61970">
+		<rdf:type rdf:resource="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#ClassCategory"/>
+		<rdfs:label>IEC61970</rdfs:label>
+		<rdfs:comment>Top package for IEC 61970.</rdfs:comment>
+	</rdf:Description>
+	<rdf:Description rdf:about="#Package_Core">
+		<rdf:type rdf:resource="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#ClassCategory"/>
+		<rdfs:label>Core</rdfs:label>
+		<rdfs:comment>Contains the core PowerSystemResource and ConductingEquipment entities shared by all applications plus common collections of those entities. Not all applications require all the Core entities.  This package does not depend on any other package except the Domain package, but most of the other packages have associations and generalizations that depend on it.</rdfs:comment>
+		<cims:belongsToCategory rdf:resource="#Package_Base"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#Package_Wires">
+		<rdf:type rdf:resource="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#ClassCategory"/>
+		<rdfs:label>Wires</rdfs:label>
+		<rdfs:comment>An extension to the Core and Topology package that models information on the electrical characteristics of Transmission and Distribution networks. This package is used by network applications such as State Estimation, Load Flow and Optimal Power Flow.</rdfs:comment>
+		<cims:belongsToCategory rdf:resource="#Package_Base"/>
+	</rdf:Description>
+	<rdf:Description rdf:about="#Package_Base">
+		<rdf:type rdf:resource="http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#ClassCategory"/>
+		<rdfs:label>Base</rdfs:label>
+		<cims:belongsToCategory rdf:resource="#Package_IEC61970"/>
+	</rdf:Description>
+</rdf:RDF>

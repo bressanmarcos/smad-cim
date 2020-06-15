@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xsd:schema targetNamespace="grei.ufc.br/smad" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:smad="grei.ufc.br/smad">
+	<xsd:import namespace="grei.ufc.br/smad" schemaLocation="common.xsd"/>
+	<xsd:element name="ReportingGroup" type="smad:ReportingGroup_Type"/>
+	<xsd:complexType name="ControlArea">
+		<xsd:annotation>
+			<xsd:documentation>A control area is a grouping of generating units and/or loads and a cutset of tie lines (as terminals) which may be used for a variety of purposes including automatic generation control, powerflow solution area interchange control specification, and input to load forecasting.   Note that any number of overlapping control area specifications can be superimposed on the physical model.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The description is a free human readable text describing or naming the object. It may be non unique and may not correlate to a naming hierarchy.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="EnergyConnection">
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Analog" type="smad:Power_Analog" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>The measurements associated with this power system resource.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Feeder">
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Power_Analog">
+		<xsd:annotation>
+			<xsd:documentation>Analog represents an analog Measurement.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="unitMultiplier" type="smad:UnitMultiplier" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The unit multiplier of the measured quantity.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="unitSymbol" type="smad:UnitSymbol" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The unit of measure of the measured quantity.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AnalogValues" type="smad:Power_AnalogValue" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The values connected to this measurement.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Power_AnalogValue">
+		<xsd:annotation>
+			<xsd:documentation>AnalogValue represents an analog MeasurementValue.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="value" type="xsd:float" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The value to supervise.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProtectedSwitch">
+		<xsd:annotation>
+			<xsd:documentation>A ProtectedSwitch is a switching device that can be operated by ProtectionEquipment.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="normalOpen" type="xsd:boolean" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The attribute is used in cases when no Measurement for the status value is present. If the Switch has a status measurement the Discrete.normalValue is expected to match with the Switch.normalOpen.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SwitchAction" type="smad:SwitchAction" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Action changing status of this switch.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ReportingGroup_Type">
+		<xsd:annotation>
+			<xsd:documentation>A reporting group is used for various ad-hoc groupings used for reporting.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="name" type="smad:ReportName" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The description is a free human readable text describing or naming the object. It may be non unique and may not correlate to a naming hierarchy.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProtectedSwitch" type="smad:ProtectedSwitch" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>Power system resources which belong to this reporting group.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Restored_EnergyConnection" type="smad:EnergyConnection" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>Power system resources which belong to this reporting group.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Feeder" type="smad:Feeder" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>Power system resources which belong to this reporting group.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Restored_ControlArea" type="smad:ControlArea" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Power system resources which belong to this reporting group.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SwitchAction">
+		<xsd:annotation>
+			<xsd:documentation>Action on switch as a switching step.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="kind" type="smad:SwitchActionKind" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Switching action to perform.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="executedDateTime" type="xsd:dateTime" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Actual date and time of this switching step.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="SwitchingPlan" type="smad:SwitchingPlan" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Group to which this step belongs.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="SwitchingPlan">
+		<xsd:annotation>
+			<xsd:documentation>A sequence of grouped or atomic steps intended to:
+- de-energise equipment or part of the network for safe work, and/or
+- bring back in service previously de-energised equipment or part of the network.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="purpose" type="smad:Purpose" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Purpose of  this plan, such as whether it is to move the state from normal to some abnormal condition, or to restore the normal state after an abnormal condition, or to perform some kind of optimisation such as correction of overload, voltage control, etc.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

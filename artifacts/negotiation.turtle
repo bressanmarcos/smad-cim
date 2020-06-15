@@ -1,0 +1,407 @@
+@prefix msg:   <http://langdale.com.au/2005/Message#> .
+@prefix cims:  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix uml:   <http://langdale.com.au/2005/UML#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:    <http://purl.org/dc/elements/1.1/> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer.customerCount>
+        a                  rdf:Property ;
+        rdfs:comment       "Number of individual customers represented by this demand." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer> ;
+        rdfs:label         "customerCount" ;
+        cims:dataType      xsd:integer ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject.name>
+        a                  rdf:Property ;
+        rdfs:comment       "The name is any free human readable and possibly non unique text naming the object." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        rdfs:label         "name" ;
+        cims:dataType      xsd:string ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal.ConductingEquipment>
+        a                     rdf:Property ;
+        rdfs:comment          "The conducting equipment of the terminal.  Conducting equipment have  terminals that may be connected to other conducting equipment terminals via connectivity nodes or topological nodes." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal> ;
+        rdfs:label            "ConductingEquipment" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment.Terminals> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment.EquipmentContainer>
+        a                     rdf:Property ;
+        rdfs:comment          "Container of this equipment." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment> ;
+        rdfs:label            "EquipmentContainer" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#EquipmentContainer> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#EquipmentContainer.Equipments> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype       uml:ofAggregate .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Base>
+        a                       cims:ClassCategory ;
+        rdfs:comment            "This package contains model for direct current equipment and controls." ;
+        rdfs:label              "Base" ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_IEC61970> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Conductor>
+        a                       rdfs:Class ;
+        rdfs:comment            "Combination of conducting material with consistent electrical characteristics, building a single electrical system, used to carry current between points in the power system." ;
+        rdfs:label              "Conductor" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Switch>
+        a                       rdfs:Class ;
+        rdfs:comment            "A generic device designed to close, or open, or both, one or more electric circuits.  All switches are two terminal devices including grounding switches." ;
+        rdfs:label              "Switch" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires> ;
+        cims:stereotype         uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Conductor.length>
+        a                  rdf:Property ;
+        rdfs:comment       "Segment length for calculating line section capabilities" ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#Conductor> ;
+        rdfs:label         "length" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Length> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Conductance>
+        a             rdfs:Class ;
+        rdfs:comment  "Factor by which voltage must be multiplied to give corresponding power lost from a circuit. Real part of admittance." ;
+        rdfs:label    "Conductance" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment>
+        a                       rdfs:Class ;
+        rdfs:comment            "The parts of the AC power system that are designed to carry current or that are conductively connected through terminals." ;
+        rdfs:label              "ConductingEquipment" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Switch.open>
+        a                  rdf:Property ;
+        rdfs:comment       "The attribute tells if the switch is considered open when used as input to topology processing." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#Switch> ;
+        rdfs:label         "open" ;
+        cims:dataType      xsd:boolean ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.x0>
+        a                  rdf:Property ;
+        rdfs:comment       "Zero sequence series reactance of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "x0" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Reactance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ConnectivityNode>
+        a                       rdfs:Class ;
+        rdfs:comment            "Connectivity nodes are points where terminals of AC conducting equipment are connected together with zero impedance." ;
+        rdfs:label              "ConnectivityNode" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core> ;
+        cims:stereotype         uml:byreference , uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.x>
+        a                  rdf:Property ;
+        rdfs:comment       "Positive sequence series reactance of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "x" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Reactance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.b0ch>
+        a                  rdf:Property ;
+        rdfs:comment       "Zero sequence shunt (charging) susceptance, uniformly distributed, of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "b0ch" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Susceptance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Package_IEC61970>
+        a             cims:ClassCategory ;
+        rdfs:comment  "Top package for IEC 61970." ;
+        rdfs:label    "IEC61970" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.r>
+        a                  rdf:Property ;
+        rdfs:comment       "Positive sequence series resistance of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "r" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Resistance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Susceptance>
+        a             rdfs:Class ;
+        rdfs:comment  "Imaginary part of admittance." ;
+        rdfs:label    "Susceptance" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject>
+        a                       rdfs:Class ;
+        rdfs:comment            "This is a root class to provide common identification for all classes needing identification and naming attributes." ;
+        rdfs:label              "IdentifiedObject" ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#PerLengthImpedance>
+        a                       rdfs:Class ;
+        rdfs:comment            "Common type for per-length impedance electrical catalogues." ;
+        rdfs:label              "PerLengthImpedance" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires> ;
+        cims:stereotype         uml:byreference , uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ConnectivityNode.Terminals>
+        a                     rdf:Property ;
+        rdfs:comment          "Terminals interconnected with zero impedance at a this connectivity node." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#ConnectivityNode> ;
+        rdfs:label            "Terminals" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal.ConnectivityNode> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..n> ;
+        cims:stereotype       uml:byreference .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal>
+        a                       rdfs:Class ;
+        rdfs:comment            "An AC electrical connection point to a piece of conducting equipment. Terminals are connected at physical connection points called connectivity nodes." ;
+        rdfs:label              "Terminal" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core> ;
+        cims:stereotype         uml:byreference , uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ReactivePower>
+        a             rdfs:Class ;
+        rdfs:comment  "Product of RMS value of the voltage and the RMS value of the quadrature component of the current." ;
+        rdfs:label    "ReactivePower" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Reactance>
+        a             rdfs:Class ;
+        rdfs:comment  "Reactance (imaginary part of impedance), at rated frequency." ;
+        rdfs:label    "Reactance" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Resistance>
+        a             rdfs:Class ;
+        rdfs:comment  "Resistance (real part of impedance)." ;
+        rdfs:label    "Resistance" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.PerLengthImpedance>
+        a                     rdf:Property ;
+        rdfs:comment          "Per-length impedance of this line segment." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label            "PerLengthImpedance" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#PerLengthImpedance> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#PerLengthImpedance.ACLineSegments> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype       uml:byreference .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment>
+        a                       rdfs:Class ;
+        rdfs:comment            "The parts of a power system that are physical devices, electronic or mechanical." ;
+        rdfs:label              "Equipment" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core> ;
+        cims:stereotype         uml:byreference .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires>
+        a                       cims:ClassCategory ;
+        rdfs:comment            "An extension to the Core and Topology package that models information on the electrical characteristics of Transmission and Distribution networks. This package is used by network applications such as State Estimation, Load Flow and Optimal Power Flow." ;
+        rdfs:label              "Wires" ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Base> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal.ConnectivityNode>
+        a                     rdf:Property ;
+        rdfs:comment          "The connectivity node to which this terminal connects with zero impedance." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal> ;
+        rdfs:label            "ConnectivityNode" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#ConnectivityNode> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#ConnectivityNode.Terminals> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype       uml:byreference .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject.description>
+        a                  rdf:Property ;
+        rdfs:comment       "The description is a free human readable text describing or naming the object. It may be non unique and may not correlate to a naming hierarchy." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        rdfs:label         "description" ;
+        cims:dataType      xsd:string ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ActivePower>
+        a             rdfs:Class ;
+        rdfs:comment  "Product of RMS value of the voltage and the RMS value of the in-phase component of the current." ;
+        rdfs:label    "ActivePower" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EquipmentContainer>
+        a                       rdfs:Class ;
+        rdfs:comment            "A modeling construct to provide a root class for containing equipment." ;
+        rdfs:label              "EquipmentContainer" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core> ;
+        cims:stereotype         uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Switch.normalOpen>
+        a                  rdf:Property ;
+        rdfs:comment       "The attribute is used in cases when no Measurement for the status value is present. If the Switch has a status measurement the Discrete.normalValue is expected to match with the Switch.normalOpen." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#Switch> ;
+        rdfs:label         "normalOpen" ;
+        cims:dataType      xsd:boolean ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer.q>
+        a                  rdf:Property ;
+        rdfs:comment       "Reactive power of the load. Load sign convention is used, i.e. positive sign means flow out from a node.\nFor voltage dependent loads the value is at rated voltage.\nStarting value for a steady state solution." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer> ;
+        rdfs:label         "q" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#ReactivePower> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#PerLengthImpedance.ACLineSegments>
+        a                     rdf:Property ;
+        rdfs:comment          "All line segments described by this per-length impedance." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#PerLengthImpedance> ;
+        rdfs:label            "ACLineSegments" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.PerLengthImpedance> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..n> .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment>
+        a                       rdfs:Class ;
+        rdfs:comment            "A wire or combination of wires, with consistent electrical characteristics, building a single electrical system, used to carry alternating current between points in the power system.\nFor symmetrical, transposed 3ph lines, it is sufficient to use  attributes of the line segment, which describe impedances and admittances for the entire length of the segment.  Additionally impedances can be computed by using length and associated per length impedances.\nThe BaseVoltage at the two ends of ACLineSegments in a Line shall have the same BaseVoltage.nominalVoltage. However, boundary lines  may have slightly different BaseVoltage.nominalVoltages and  variation is allowed. Larger voltage difference in general requires use of an equivalent branch." ;
+        rdfs:label              "ACLineSegment" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#Conductor> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires> ;
+        cims:stereotype         uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EquipmentContainer.Equipments>
+        a                     rdf:Property ;
+        rdfs:comment          "Contained equipment." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#EquipmentContainer> ;
+        rdfs:label            "Equipments" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment.EquipmentContainer> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:1..n> ;
+        cims:stereotype       uml:aggregateOf , uml:byreference .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment.aggregate>
+        a                  rdf:Property ;
+        rdfs:comment       "The single instance of equipment represents multiple pieces of equipment that have been modeled together as an aggregate.  Examples would be power transformers or synchronous machines operating in parallel modeled as a single aggregate power transformer or aggregate synchronous machine.  This is not to be used to indicate equipment that is part of a group of interdependent equipment produced by a network production program." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#Equipment> ;
+        rdfs:label         "aggregate" ;
+        cims:dataType      xsd:boolean ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer.grounded>
+        a                  rdf:Property ;
+        rdfs:comment       "Used for Yn and Zn connections. True if the neutral is solidly grounded." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer> ;
+        rdfs:label         "grounded" ;
+        cims:dataType      xsd:boolean ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject.mRID>
+        a                  rdf:Property ;
+        rdfs:comment       "Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.\nFor CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#IdentifiedObject> ;
+        rdfs:label         "mRID" ;
+        cims:dataType      xsd:string ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.gch>
+        a                  rdf:Property ;
+        rdfs:comment       "Positive sequence shunt (charging) conductance, uniformly distributed, of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "gch" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Conductance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Length>
+        a             rdfs:Class ;
+        rdfs:comment  "Unit of length. Never negative." ;
+        rdfs:label    "Length" .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.g0ch>
+        a                  rdf:Property ;
+        rdfs:comment       "Zero sequence shunt (charging) conductance, uniformly distributed, of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "g0ch" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Conductance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer.p>
+        a                  rdf:Property ;
+        rdfs:comment       "Active power of the load. Load sign convention is used, i.e. positive sign means flow out from a node.\nFor voltage dependent loads the value is at rated voltage.\nStarting value for a steady state solution." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer> ;
+        rdfs:label         "p" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#ActivePower> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#BusbarSection>
+        a                       rdfs:Class ;
+        rdfs:comment            "A conductor, or group of conductors, with negligible impedance, that serve to connect other conducting equipment within a single substation. \nVoltage measurements are typically obtained from VoltageTransformers that are connected to busbar sections. A bus bar section may have many physical terminals but for analysis is modelled with exactly one logical terminal." ;
+        rdfs:label              "BusbarSection" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires> ;
+        cims:stereotype         uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#EnergyConsumer>
+        a                       rdfs:Class ;
+        rdfs:comment            "Generic user of energy - a  point of consumption on the power system model." ;
+        rdfs:label              "EnergyConsumer" ;
+        rdfs:subClassOf         <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Wires> ;
+        cims:stereotype         uml:concrete .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment.Terminals>
+        a                     rdf:Property ;
+        rdfs:comment          "Conducting equipment have terminals that may be connected to other conducting equipment terminals via connectivity nodes or topological nodes." ;
+        rdfs:domain           <http://iec.ch/TC57/2012/CIM-schema-cim16#ConductingEquipment> ;
+        rdfs:label            "Terminals" ;
+        rdfs:range            <http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal> ;
+        cims:inverseRoleName  <http://iec.ch/TC57/2012/CIM-schema-cim16#Terminal.ConductingEquipment> ;
+        cims:multiplicity     <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..n> ;
+        cims:stereotype       uml:byreference .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.bch>
+        a                  rdf:Property ;
+        rdfs:comment       "Positive sequence shunt (charging) susceptance, uniformly distributed, of the entire line section.  This value represents the full charging over the full length of the line." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "bch" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Susceptance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment.r0>
+        a                  rdf:Property ;
+        rdfs:comment       "Zero sequence series resistance of the entire line section." ;
+        rdfs:domain        <http://iec.ch/TC57/2012/CIM-schema-cim16#ACLineSegment> ;
+        rdfs:label         "r0" ;
+        cims:dataType      <http://iec.ch/TC57/2012/CIM-schema-cim16#Resistance> ;
+        cims:multiplicity  <http://iec.ch/TC57/1999/rdf-schema-extensions-19990926#M:0..1> ;
+        cims:stereotype    uml:attribute .
+
+<http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Core>
+        a                       cims:ClassCategory ;
+        rdfs:comment            "Contains the core PowerSystemResource and ConductingEquipment entities shared by all applications plus common collections of those entities. Not all applications require all the Core entities.  This package does not depend on any other package except the Domain package, but most of the other packages have associations and generalizations that depend on it." ;
+        rdfs:label              "Core" ;
+        cims:belongsToCategory  <http://iec.ch/TC57/2012/CIM-schema-cim16#Package_Base> .

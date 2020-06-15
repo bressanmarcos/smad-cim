@@ -28,11 +28,11 @@ class Conversa(FipaRequestProtocol):
 """
 
 if __name__ == "__main__":
+    debug = False
     lista_agentes = [
-        # Agente Comunicação
-        core.AgenteCom(AID('agente_com'), 'S1',
-                       './config_TRIP_S1.txt', 'agente_dc'),
-        core.AgenteDC(AID('agente_dc'), 'S1'),
-        core.AgenteDF(AID('agente_df'), 'S1'),
+        core.AgenteCom(AID('agente_com'), 'S1', debug=debug),
+        core.AgenteCom(AID('agente_com2'), 'S1', debug=debug),
+        # Agente de Diagnóstico e Configuração
+        core.AgenteDC(AID('agente_dc'), 'S1', debug=debug),
     ]
     start_loop(lista_agentes)
