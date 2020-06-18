@@ -5,18 +5,13 @@ from pade.acl.messages import ACLMessage
 from pade.behaviours.protocols import FipaRequestProtocol, TimedBehaviour
 
 import xml.etree.ElementTree as ET
-import lxml.etree as et
-
-import information_model as im
 
 
 class Conversa(FipaRequestProtocol):
     def __init__(self, agent: Agent, message=None, is_initiator=True):
-        super(Conversa, self).__init__(
-            agent, message, is_initiator=is_initiator)
+        super().__init__(agent, message, is_initiator=is_initiator)
 
     def handle_request(self, message: ACLMessage):
-        im.o.parseString(ET.tostring(message))
         display_message(
             self.agent.aid.localname,
             "Recebi esse ID: {}".format(message.content)
@@ -61,10 +56,9 @@ if __name__ == "__main__":
     destinatario_agente = Destinatario(destinatario_aid)
     agentes.append(destinatario_agente)
     # Mensagem de envio
-    root = im.o.Outage_Type(mRID="CHAVE24")
     message = ACLMessage(ACLMessage.REQUEST)
     message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-    message.set_content(et.tostring(root.to_etree()))
+    message.set_content('conteudo')
     message.add_receiver(destinatario_aid)
     # Remetente
     remetente_aid = AID("remetente@localhost:50001")

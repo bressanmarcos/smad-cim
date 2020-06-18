@@ -1,3 +1,5 @@
+REM cimrdf.py e generateDS devem estar instalados
+
 REM DEFINIR CAMINHOS
 set origin=artifacts
 set destination=information_model

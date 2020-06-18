@@ -1,4 +1,5 @@
 #!/bin/bash
+# cimrdf.py e generateDS devem estar instalados
 origin="./artifacts"
 destination="./information_model"
 for filepath in $origin/*.xsd
