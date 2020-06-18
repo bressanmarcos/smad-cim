@@ -10,21 +10,22 @@ Baixar última versão do:
 (nomes dos objetos são provisórios e deverão ser atualizados)
 Acompanhar UCs no Anexo A do TCC
 
-- Comando de chaves 
-ADC envia objeto ***SwitchingPlan*** para ACom
-ACom interpreta o plano e ativa / desativa chaves na ordem indicada
+- Comando de chaves (simples)
+ACom interpreta o *SwitchingPlan* e ativa / desativa chaves na ordem indicada
 
 - Diagnosticar falta
 ACom envia ***Outage*** para ADC
 
 - Corrigir descoordenação
-ADC ***processa***
-ADC gera objeto para Comando de Chaves
+ADC _processa_
+ADC gera objeto *SwitchingPlan* para _Comando de Chaves_
 
 - Isolar trecho em falta
-(mesmo de corrigir, outro objeto)
+(mesmo de *Corrigir*, outro objeto *SwitchingPlan*)
 
 - Negociar
+*SwitchingPlan*
 
 - Recompor
+
 
