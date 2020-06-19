@@ -4,3 +4,8 @@ Baixar última versão do:
 - generateDS em https://github.com/bressanmarcos/generateDS
 - cimrdf.py em https://github.com/bressanmarcos/cimrdf.py
 - mygrid em https://github.com/grei-ufc/MyGrid
+
+Para executar um agente:
+```
+pade start-runtime agente.py
+``` 
