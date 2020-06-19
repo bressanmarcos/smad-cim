@@ -41,11 +41,16 @@ class ReceberComando(FipaRequestProtocol):
     def __init__(self, agent: AgenteSMAD):
         super().__init__(agent, is_initiator=False)
 
-    def handle_request(self, message):
+    def handle_request(self, message: ACLMessage):
         """Recepção de mensagem de comando 
         (conteúdo deve ser um SwitchingPlan)
-        """
-        pass
+        OBS: Mensagem recebida deve ser processada e respondida
+        com agree / refuse / not_understood"""
+
+        # Envia mensagem de agree
+        reply = message.create_reply()
+        reply.set_performative(ACLMessage.AGREE)
+        self.agent.send(reply)
 
 
 class AgenteCom(AgenteSMAD):
