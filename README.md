@@ -8,7 +8,7 @@ Baixar última versão do:
 
 ## Ordem para implementação de Use Cases
 (nomes dos objetos são provisórios e deverão ser atualizados)
-Acompanhar UCs no Anexo A do TCC
+***Acompanhar UCs no Anexo A do TCC***
 
 - Comando de chaves (simples)
 ACom interpreta o *SwitchingPlan* e ativa / desativa chaves na ordem indicada
