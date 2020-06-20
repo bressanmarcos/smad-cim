@@ -3,6 +3,7 @@ from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
 import xml.etree.ElementTree as ET
 import lxml.etree as lET
+from xml.dom.minidom import parseString
 
 
 def to_elementtree(document, name_):
@@ -18,6 +19,13 @@ def to_string(element):
         return ET.tostring(element)
     except:
         return lET.tostring(element)
+
+
+def dump(element):
+    rough_string = to_string(element)
+    reparsed = parseString(rough_string)
+    print(reparsed.toprettyxml(indent=' '*4))
+
 
 class AgenteSMAD(Agent):
     def __init__(self, aid, subestacao, debug=False):
