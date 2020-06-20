@@ -6,8 +6,8 @@ import lxml.etree as lET
 from xml.dom.minidom import parseString
 
 
-def to_elementtree(document, name_):
-    etree = document.to_etree(name_=name_)
+def to_elementtree(document, name_=None):
+    etree = document.to_etree() if name_ == None else document.to_etree(name_=name_)
     try:
         return ET.fromstring(lET.tostring(etree))
     except:
