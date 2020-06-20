@@ -21,11 +21,6 @@
 					<xs:documentation>The name is any free human readable and possibly non unique text naming the object.</xs:documentation>&amp;#13;
 				</xs:annotation>&amp;#13;
 			</xs:element>&amp;#13;
-			<xs:element name="SwitchAction" type="m:SwitchAction" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.SwitchAction">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Action changing status of this switch.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
 		</xs:sequence>&amp;#13;
 	</xs:complexType>&amp;#13;
 	<xs:simpleType name="Purpose" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Purpose">&amp;#13;
@@ -73,11 +68,6 @@
 			<xs:element name="OperatedSwitch" minOccurs="1" maxOccurs="1" type="m:ProtectedSwitch" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#SwitchAction.OperatedSwitch">&amp;#13;
 				<xs:annotation>&amp;#13;
 					<xs:documentation>Switch that is the object of this switch action.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="SwitchingPlan" type="m:SwitchingPlan" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#SwitchAction.SwitchingPlan">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Group to which this step belongs.</xs:documentation>&amp;#13;
 				</xs:annotation>&amp;#13;
 			</xs:element>&amp;#13;
 		</xs:sequence>&amp;#13;

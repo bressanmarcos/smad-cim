@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Sat Jun 20 20:13:16 2020 by generateDS.py version 2.35.24.
+# Generated Sat Jun 20 20:24:53 2020 by generateDS.py version 2.35.24.
 # Python 3.7.7 (default, May  7 2020, 21:25:33)  [GCC 7.3.0]
 #
 # Command line options:
@@ -1091,7 +1091,7 @@ class ProtectedSwitch(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, mRID=None, name=None, SwitchAction=None, gds_collector_=None, **kwargs_):
+    def __init__(self, mRID=None, name=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -1101,8 +1101,6 @@ class ProtectedSwitch(GeneratedsSuper):
         self.mRID_nsprefix_ = None
         self.name = name
         self.name_nsprefix_ = None
-        self.SwitchAction = SwitchAction
-        self.SwitchAction_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
@@ -1126,15 +1124,10 @@ class ProtectedSwitch(GeneratedsSuper):
         return self.name
     def set_name(self, name):
         self.name = name
-    def get_SwitchAction(self):
-        return self.SwitchAction
-    def set_SwitchAction(self, SwitchAction):
-        self.SwitchAction = SwitchAction
     def hasContent_(self):
         if (
             self.mRID is not None or
-            self.name is not None or
-            self.SwitchAction is not None
+            self.name is not None
         ):
             return True
         else:
@@ -1177,9 +1170,6 @@ class ProtectedSwitch(GeneratedsSuper):
             namespaceprefix_ = self.name_nsprefix_ + ':' if (UseCapturedNS_ and self.name_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sname>%s</%sname>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.name), input_name='name')), namespaceprefix_ , eol_))
-        if self.SwitchAction is not None:
-            namespaceprefix_ = self.SwitchAction_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchAction_nsprefix_) else ''
-            self.SwitchAction.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchAction', pretty_print=pretty_print)
     def to_etree(self, parent_element=None, name_='ProtectedSwitch', mapping_=None, nsmap_=None):
         if parent_element is None:
             element = etree_.Element('{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
@@ -1191,9 +1181,6 @@ class ProtectedSwitch(GeneratedsSuper):
         if self.name is not None:
             name_ = self.name
             etree_.SubElement(element, '{grei.ufc.br/smad#}name').text = self.gds_format_string(name_)
-        if self.SwitchAction is not None:
-            SwitchAction_ = self.SwitchAction
-            SwitchAction_.to_etree(element, name_='SwitchAction', mapping_=mapping_, nsmap_=nsmap_)
         if mapping_ is not None:
             mapping_[id(self)] = element
         return element
@@ -1207,16 +1194,11 @@ class ProtectedSwitch(GeneratedsSuper):
         self.gds_validate_builtin_ST_(self.gds_validate_string, self.name, 'name')
         self.gds_check_cardinality_(self.name, 'name', min_occurs=0, max_occurs=1)
         # validate complex type children
-        self.gds_check_cardinality_(self.SwitchAction, 'SwitchAction', min_occurs=1, max_occurs=1)
         if recursive:
-            if self.SwitchAction is not None:
-                self.SwitchAction.validate_(gds_collector, recursive=True)
+            pass
         return message_count == len(self.gds_collector_.get_messages())
     def generateRecursively_(self, level=0):
         yield (self, level)
-        # generate complex type children
-        level += 1
-        yield from self.SwitchAction.generateRecursively_(level)
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1243,11 +1225,6 @@ class ProtectedSwitch(GeneratedsSuper):
             value_ = self.gds_validate_string(value_, node, 'name')
             self.name = value_
             self.name_nsprefix_ = child_.prefix
-        elif nodeName_ == 'SwitchAction':
-            obj_ = SwitchAction.factory(parent_object_=self)
-            obj_.build(child_, gds_collector_=gds_collector_)
-            self.SwitchAction = obj_
-            obj_.original_tagname_ = 'SwitchAction'
 # end class ProtectedSwitch
 
 
@@ -1256,7 +1233,7 @@ class SwitchAction(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, executedDateTime=None, isFreeSequence=None, issuedDateTime=None, kind=None, plannedDateTime=None, sequenceNumber=None, OperatedSwitch=None, SwitchingPlan=None, gds_collector_=None, **kwargs_):
+    def __init__(self, executedDateTime=None, isFreeSequence=None, issuedDateTime=None, kind=None, plannedDateTime=None, sequenceNumber=None, OperatedSwitch=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -1289,8 +1266,6 @@ class SwitchAction(GeneratedsSuper):
         self.sequenceNumber_nsprefix_ = None
         self.OperatedSwitch = OperatedSwitch
         self.OperatedSwitch_nsprefix_ = None
-        self.SwitchingPlan = SwitchingPlan
-        self.SwitchingPlan_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
@@ -1334,10 +1309,6 @@ class SwitchAction(GeneratedsSuper):
         return self.OperatedSwitch
     def set_OperatedSwitch(self, OperatedSwitch):
         self.OperatedSwitch = OperatedSwitch
-    def get_SwitchingPlan(self):
-        return self.SwitchingPlan
-    def set_SwitchingPlan(self, SwitchingPlan):
-        self.SwitchingPlan = SwitchingPlan
     def validate_SwitchActionKind(self, value):
         result = True
         # Validate type SwitchActionKind, a restriction on xs:string.
@@ -1361,8 +1332,7 @@ class SwitchAction(GeneratedsSuper):
             self.kind is not None or
             self.plannedDateTime is not None or
             self.sequenceNumber is not None or
-            self.OperatedSwitch is not None or
-            self.SwitchingPlan is not None
+            self.OperatedSwitch is not None
         ):
             return True
         else:
@@ -1424,9 +1394,6 @@ class SwitchAction(GeneratedsSuper):
         if self.OperatedSwitch is not None:
             namespaceprefix_ = self.OperatedSwitch_nsprefix_ + ':' if (UseCapturedNS_ and self.OperatedSwitch_nsprefix_) else ''
             self.OperatedSwitch.export(outfile, level, namespaceprefix_, namespacedef_='', name_='OperatedSwitch', pretty_print=pretty_print)
-        if self.SwitchingPlan is not None:
-            namespaceprefix_ = self.SwitchingPlan_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchingPlan_nsprefix_) else ''
-            self.SwitchingPlan.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchingPlan', pretty_print=pretty_print)
     def to_etree(self, parent_element=None, name_='SwitchAction', mapping_=None, nsmap_=None):
         if parent_element is None:
             element = etree_.Element('{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
@@ -1453,9 +1420,6 @@ class SwitchAction(GeneratedsSuper):
         if self.OperatedSwitch is not None:
             OperatedSwitch_ = self.OperatedSwitch
             OperatedSwitch_.to_etree(element, name_='OperatedSwitch', mapping_=mapping_, nsmap_=nsmap_)
-        if self.SwitchingPlan is not None:
-            SwitchingPlan_ = self.SwitchingPlan
-            SwitchingPlan_.to_etree(element, name_='SwitchingPlan', mapping_=mapping_, nsmap_=nsmap_)
         if mapping_ is not None:
             mapping_[id(self)] = element
         return element
@@ -1478,19 +1442,15 @@ class SwitchAction(GeneratedsSuper):
         self.gds_check_cardinality_(self.sequenceNumber, 'sequenceNumber', min_occurs=0, max_occurs=1)
         # validate complex type children
         self.gds_check_cardinality_(self.OperatedSwitch, 'OperatedSwitch', min_occurs=1, max_occurs=1)
-        self.gds_check_cardinality_(self.SwitchingPlan, 'SwitchingPlan', min_occurs=1, max_occurs=1)
         if recursive:
             if self.OperatedSwitch is not None:
                 self.OperatedSwitch.validate_(gds_collector, recursive=True)
-            if self.SwitchingPlan is not None:
-                self.SwitchingPlan.validate_(gds_collector, recursive=True)
         return message_count == len(self.gds_collector_.get_messages())
     def generateRecursively_(self, level=0):
         yield (self, level)
         # generate complex type children
         level += 1
         yield from self.OperatedSwitch.generateRecursively_(level)
-        yield from self.SwitchingPlan.generateRecursively_(level)
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1545,11 +1505,6 @@ class SwitchAction(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.OperatedSwitch = obj_
             obj_.original_tagname_ = 'OperatedSwitch'
-        elif nodeName_ == 'SwitchingPlan':
-            obj_ = SwitchingPlan.factory(parent_object_=self)
-            obj_.build(child_, gds_collector_=gds_collector_)
-            self.SwitchingPlan = obj_
-            obj_.original_tagname_ = 'SwitchingPlan'
 # end class SwitchAction
 
 
