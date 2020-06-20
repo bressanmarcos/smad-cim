@@ -2,21 +2,21 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Mon Jun 15 12:08:33 2020 by generateDS.py version 2.35.10.
-# Python 3.6.9 (default, Apr 18 2020, 01:56:04)  [GCC 8.4.0]
+# Generated Sat Jun 20 20:13:16 2020 by generateDS.py version 2.35.24.
+# Python 3.7.7 (default, May  7 2020, 21:25:33)  [GCC 7.3.0]
 #
 # Command line options:
-#   ('-o', './information_model/te.py')
+#   ('-o', './information_model/SwitchingCommand.py')
 #   ('--export', 'write etree validate generator')
 #   ('-q', '')
 #   ('-f', '')
 #   ('--silence', '')
 #
 # Command line arguments:
-#   ./artifacts/te.xsd
+#   ./artifacts/SwitchingCommand.xsd
 #
 # Command line:
-#   /usr/local/bin/generateDS -o "./information_model/te.py" --export="write etree validate generator" -q -f --silence ./artifacts/te.xsd
+#   /home/bressan/anaconda3/envs/pade/bin/generateDS -o "./information_model/SwitchingCommand.py" --export="write etree validate generator" -q -f --silence ./artifacts/SwitchingCommand.xsd
 #
 # Current working directory (os.getcwd()):
 #   smad-cim
@@ -250,7 +250,12 @@ except ImportError as exp:
                     raise_parse_error(node, 'Requires sequence of float values')
             return values
         def gds_format_decimal(self, input_data, input_name=''):
-            return ('%0.10f' % input_data).rstrip('0')
+            return_value = '%s' % input_data
+            if '.' in return_value:
+                return_value = return_value.rstrip('0')
+                if return_value.endswith('.'):
+                    return_value = return_value.rstrip('.')
+            return return_value
         def gds_parse_decimal(self, input_data, node=None, input_name=''):
             try:
                 decimal_value = decimal_.Decimal(input_data)
@@ -264,7 +269,7 @@ except ImportError as exp:
                 raise_parse_error(node, 'Requires decimal value')
             return value
         def gds_format_decimal_list(self, input_data, input_name=''):
-            return '%s' % ' '.join(input_data)
+            return ' '.join([self.gds_format_decimal(item) for item in input_data])
         def gds_validate_decimal_list(
                 self, input_data, node=None, input_name=''):
             values = input_data.split()
@@ -850,7 +855,7 @@ class MixedContainer:
                 self.name,
                 base64.b64encode(self.value),
                 self.name))
-    def to_etree(self, element):
+    def to_etree(self, element, mapping_=None, nsmap_=None):
         if self.category == MixedContainer.CategoryText:
             # Prevent exporting empty content as empty lines.
             if self.value.strip():
@@ -870,7 +875,7 @@ class MixedContainer:
             subelement.text = self.to_etree_simple()
         else:    # category == MixedContainer.CategoryComplex
             self.value.to_etree(element)
-    def to_etree_simple(self):
+    def to_etree_simple(self, mapping_=None, nsmap_=None):
         if self.content_type == MixedContainer.TypeString:
             text = self.value
         elif (self.content_type == MixedContainer.TypeInteger or
@@ -948,15 +953,145 @@ def _cast(typ, value):
 #
 
 
-class PowerSystemResource(GeneratedsSuper):
-    """A power system resource can be an item of equipment such as a switch, an
-    equipment container containing many individual items of equipment such
-    as a substation, or an organisational entity such as sub-control area.
-    Power system resources can have measurements associated."""
+class Purpose(str, Enum):
+    COORDINATION='Coordination'
+    ISOLATION='Isolation'
+    RESTORATION='Restoration'
+
+
+class SwitchActionKind(str, Enum):
+    """Kind of action on switch."""
+    CLOSE='close' # Close the switch.
+    OPEN='open' # Open the switch.
+
+
+class SwitchingCommand(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, mRID=None, name=None, gds_collector_=None, **kwargs_):
+    def __init__(self, SwitchingPlan=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        self.SwitchingPlan = SwitchingPlan
+        self.SwitchingPlan_nsprefix_ = None
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, SwitchingCommand)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if SwitchingCommand.subclass:
+            return SwitchingCommand.subclass(*args_, **kwargs_)
+        else:
+            return SwitchingCommand(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_SwitchingPlan(self):
+        return self.SwitchingPlan
+    def set_SwitchingPlan(self, SwitchingPlan):
+        self.SwitchingPlan = SwitchingPlan
+    def hasContent_(self):
+        if (
+            self.SwitchingPlan is not None
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='SwitchingCommand', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('SwitchingCommand')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'SwitchingCommand':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='SwitchingCommand')
+        if self.hasContent_():
+            outfile.write('>%s' % (eol_, ))
+            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='SwitchingCommand', pretty_print=pretty_print)
+            showIndent(outfile, level, pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='SwitchingCommand'):
+        pass
+    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='SwitchingCommand', fromsubclass_=False, pretty_print=True):
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.SwitchingPlan is not None:
+            namespaceprefix_ = self.SwitchingPlan_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchingPlan_nsprefix_) else ''
+            self.SwitchingPlan.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchingPlan', pretty_print=pretty_print)
+    def to_etree(self, parent_element=None, name_='SwitchingCommand', mapping_=None, nsmap_=None):
+        if parent_element is None:
+            element = etree_.Element('{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
+        else:
+            element = etree_.SubElement(parent_element, '{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
+        if self.SwitchingPlan is not None:
+            SwitchingPlan_ = self.SwitchingPlan
+            SwitchingPlan_.to_etree(element, name_='SwitchingPlan', mapping_=mapping_, nsmap_=nsmap_)
+        if mapping_ is not None:
+            mapping_[id(self)] = element
+        return element
+    def validate_(self, gds_collector, recursive=False):
+        self.gds_collector_ = gds_collector
+        message_count = len(self.gds_collector_.get_messages())
+        # validate simple type attributes
+        # validate simple type children
+        # validate complex type children
+        self.gds_check_cardinality_(self.SwitchingPlan, 'SwitchingPlan', min_occurs=1, max_occurs=1)
+        if recursive:
+            if self.SwitchingPlan is not None:
+                self.SwitchingPlan.validate_(gds_collector, recursive=True)
+        return message_count == len(self.gds_collector_.get_messages())
+    def generateRecursively_(self, level=0):
+        yield (self, level)
+        # generate complex type children
+        level += 1
+        yield from self.SwitchingPlan.generateRecursively_(level)
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self.buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self.buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def buildAttributes(self, node, attrs, already_processed):
+        pass
+    def buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        if nodeName_ == 'SwitchingPlan':
+            obj_ = SwitchingPlan.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.SwitchingPlan = obj_
+            obj_.original_tagname_ = 'SwitchingPlan'
+# end class SwitchingCommand
+
+
+class ProtectedSwitch(GeneratedsSuper):
+    """A ProtectedSwitch is a switching device that can be operated by
+    ProtectionEquipment."""
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, mRID=None, name=None, SwitchAction=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -966,16 +1101,18 @@ class PowerSystemResource(GeneratedsSuper):
         self.mRID_nsprefix_ = None
         self.name = name
         self.name_nsprefix_ = None
+        self.SwitchAction = SwitchAction
+        self.SwitchAction_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, PowerSystemResource)
+                CurrentSubclassModule_, ProtectedSwitch)
             if subclass is not None:
                 return subclass(*args_, **kwargs_)
-        if PowerSystemResource.subclass:
-            return PowerSystemResource.subclass(*args_, **kwargs_)
+        if ProtectedSwitch.subclass:
+            return ProtectedSwitch.subclass(*args_, **kwargs_)
         else:
-            return PowerSystemResource(*args_, **kwargs_)
+            return ProtectedSwitch(*args_, **kwargs_)
     factory = staticmethod(factory)
     def get_ns_prefix_(self):
         return self.ns_prefix_
@@ -989,40 +1126,45 @@ class PowerSystemResource(GeneratedsSuper):
         return self.name
     def set_name(self, name):
         self.name = name
+    def get_SwitchAction(self):
+        return self.SwitchAction
+    def set_SwitchAction(self, SwitchAction):
+        self.SwitchAction = SwitchAction
     def hasContent_(self):
         if (
             self.mRID is not None or
-            self.name is not None
+            self.name is not None or
+            self.SwitchAction is not None
         ):
             return True
         else:
             return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="http://iec.ch/TC57/te#"', name_='PowerSystemResource', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('PowerSystemResource')
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='ProtectedSwitch', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('ProtectedSwitch')
         if imported_ns_def_ is not None:
             namespacedef_ = imported_ns_def_
         if pretty_print:
             eol_ = '\n'
         else:
             eol_ = ''
-        if self.original_tagname_ is not None:
+        if self.original_tagname_ is not None and name_ == 'ProtectedSwitch':
             name_ = self.original_tagname_
         if UseCapturedNS_ and self.ns_prefix_:
             namespaceprefix_ = self.ns_prefix_ + ':'
         showIndent(outfile, level, pretty_print)
         outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
         already_processed = set()
-        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='PowerSystemResource')
+        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='ProtectedSwitch')
         if self.hasContent_():
             outfile.write('>%s' % (eol_, ))
-            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='PowerSystemResource', pretty_print=pretty_print)
+            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='ProtectedSwitch', pretty_print=pretty_print)
             showIndent(outfile, level, pretty_print)
             outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
         else:
             outfile.write('/>%s' % (eol_, ))
-    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='PowerSystemResource'):
+    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='ProtectedSwitch'):
         pass
-    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="http://iec.ch/TC57/te#"', name_='PowerSystemResource', fromsubclass_=False, pretty_print=True):
+    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='ProtectedSwitch', fromsubclass_=False, pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -1035,17 +1177,23 @@ class PowerSystemResource(GeneratedsSuper):
             namespaceprefix_ = self.name_nsprefix_ + ':' if (UseCapturedNS_ and self.name_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sname>%s</%sname>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.name), input_name='name')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='PowerSystemResource', mapping_=None):
+        if self.SwitchAction is not None:
+            namespaceprefix_ = self.SwitchAction_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchAction_nsprefix_) else ''
+            self.SwitchAction.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchAction', pretty_print=pretty_print)
+    def to_etree(self, parent_element=None, name_='ProtectedSwitch', mapping_=None, nsmap_=None):
         if parent_element is None:
-            element = etree_.Element('{http://iec.ch/TC57/te#}' + name_)
+            element = etree_.Element('{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
         else:
-            element = etree_.SubElement(parent_element, '{http://iec.ch/TC57/te#}' + name_)
+            element = etree_.SubElement(parent_element, '{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
         if self.mRID is not None:
             mRID_ = self.mRID
-            etree_.SubElement(element, '{http://iec.ch/TC57/te#}mRID').text = self.gds_format_string(mRID_)
+            etree_.SubElement(element, '{grei.ufc.br/smad#}mRID').text = self.gds_format_string(mRID_)
         if self.name is not None:
             name_ = self.name
-            etree_.SubElement(element, '{http://iec.ch/TC57/te#}name').text = self.gds_format_string(name_)
+            etree_.SubElement(element, '{grei.ufc.br/smad#}name').text = self.gds_format_string(name_)
+        if self.SwitchAction is not None:
+            SwitchAction_ = self.SwitchAction
+            SwitchAction_.to_etree(element, name_='SwitchAction', mapping_=mapping_, nsmap_=nsmap_)
         if mapping_ is not None:
             mapping_[id(self)] = element
         return element
@@ -1055,15 +1203,20 @@ class PowerSystemResource(GeneratedsSuper):
         # validate simple type attributes
         # validate simple type children
         self.gds_validate_builtin_ST_(self.gds_validate_string, self.mRID, 'mRID')
-        self.gds_check_cardinality_(self.mRID, 'mRID', min_occurs=0, max_occurs=1)
+        self.gds_check_cardinality_(self.mRID, 'mRID', min_occurs=1, max_occurs=1)
         self.gds_validate_builtin_ST_(self.gds_validate_string, self.name, 'name')
         self.gds_check_cardinality_(self.name, 'name', min_occurs=0, max_occurs=1)
         # validate complex type children
+        self.gds_check_cardinality_(self.SwitchAction, 'SwitchAction', min_occurs=1, max_occurs=1)
         if recursive:
-            pass
+            if self.SwitchAction is not None:
+                self.SwitchAction.validate_(gds_collector, recursive=True)
         return message_count == len(self.gds_collector_.get_messages())
     def generateRecursively_(self, level=0):
         yield (self, level)
+        # generate complex type children
+        level += 1
+        yield from self.SwitchAction.generateRecursively_(level)
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1090,16 +1243,324 @@ class PowerSystemResource(GeneratedsSuper):
             value_ = self.gds_validate_string(value_, node, 'name')
             self.name = value_
             self.name_nsprefix_ = child_.prefix
-# end class PowerSystemResource
+        elif nodeName_ == 'SwitchAction':
+            obj_ = SwitchAction.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.SwitchAction = obj_
+            obj_.original_tagname_ = 'SwitchAction'
+# end class ProtectedSwitch
 
 
-class ReportingGroup(GeneratedsSuper):
-    """A reporting group is used for various ad-hoc groupings used for
-    reporting."""
+class SwitchAction(GeneratedsSuper):
+    """Action on switch as a switching step."""
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
-    def __init__(self, mRID=None, name=None, gds_collector_=None, **kwargs_):
+    def __init__(self, executedDateTime=None, isFreeSequence=None, issuedDateTime=None, kind=None, plannedDateTime=None, sequenceNumber=None, OperatedSwitch=None, SwitchingPlan=None, gds_collector_=None, **kwargs_):
+        self.gds_collector_ = gds_collector_
+        self.gds_elementtree_node_ = None
+        self.original_tagname_ = None
+        self.parent_object_ = kwargs_.get('parent_object_')
+        self.ns_prefix_ = None
+        if isinstance(executedDateTime, BaseStrType_):
+            initvalue_ = datetime_.datetime.strptime(executedDateTime, '%Y-%m-%dT%H:%M:%S')
+        else:
+            initvalue_ = executedDateTime
+        self.executedDateTime = initvalue_
+        self.executedDateTime_nsprefix_ = None
+        self.isFreeSequence = isFreeSequence
+        self.isFreeSequence_nsprefix_ = None
+        if isinstance(issuedDateTime, BaseStrType_):
+            initvalue_ = datetime_.datetime.strptime(issuedDateTime, '%Y-%m-%dT%H:%M:%S')
+        else:
+            initvalue_ = issuedDateTime
+        self.issuedDateTime = initvalue_
+        self.issuedDateTime_nsprefix_ = None
+        self.kind = kind
+        self.validate_SwitchActionKind(self.kind)
+        self.kind_nsprefix_ = None
+        if isinstance(plannedDateTime, BaseStrType_):
+            initvalue_ = datetime_.datetime.strptime(plannedDateTime, '%Y-%m-%dT%H:%M:%S')
+        else:
+            initvalue_ = plannedDateTime
+        self.plannedDateTime = initvalue_
+        self.plannedDateTime_nsprefix_ = None
+        self.sequenceNumber = sequenceNumber
+        self.sequenceNumber_nsprefix_ = None
+        self.OperatedSwitch = OperatedSwitch
+        self.OperatedSwitch_nsprefix_ = None
+        self.SwitchingPlan = SwitchingPlan
+        self.SwitchingPlan_nsprefix_ = None
+    def factory(*args_, **kwargs_):
+        if CurrentSubclassModule_ is not None:
+            subclass = getSubclassFromModule_(
+                CurrentSubclassModule_, SwitchAction)
+            if subclass is not None:
+                return subclass(*args_, **kwargs_)
+        if SwitchAction.subclass:
+            return SwitchAction.subclass(*args_, **kwargs_)
+        else:
+            return SwitchAction(*args_, **kwargs_)
+    factory = staticmethod(factory)
+    def get_ns_prefix_(self):
+        return self.ns_prefix_
+    def set_ns_prefix_(self, ns_prefix):
+        self.ns_prefix_ = ns_prefix
+    def get_executedDateTime(self):
+        return self.executedDateTime
+    def set_executedDateTime(self, executedDateTime):
+        self.executedDateTime = executedDateTime
+    def get_isFreeSequence(self):
+        return self.isFreeSequence
+    def set_isFreeSequence(self, isFreeSequence):
+        self.isFreeSequence = isFreeSequence
+    def get_issuedDateTime(self):
+        return self.issuedDateTime
+    def set_issuedDateTime(self, issuedDateTime):
+        self.issuedDateTime = issuedDateTime
+    def get_kind(self):
+        return self.kind
+    def set_kind(self, kind):
+        self.kind = kind
+    def get_plannedDateTime(self):
+        return self.plannedDateTime
+    def set_plannedDateTime(self, plannedDateTime):
+        self.plannedDateTime = plannedDateTime
+    def get_sequenceNumber(self):
+        return self.sequenceNumber
+    def set_sequenceNumber(self, sequenceNumber):
+        self.sequenceNumber = sequenceNumber
+    def get_OperatedSwitch(self):
+        return self.OperatedSwitch
+    def set_OperatedSwitch(self, OperatedSwitch):
+        self.OperatedSwitch = OperatedSwitch
+    def get_SwitchingPlan(self):
+        return self.SwitchingPlan
+    def set_SwitchingPlan(self, SwitchingPlan):
+        self.SwitchingPlan = SwitchingPlan
+    def validate_SwitchActionKind(self, value):
+        result = True
+        # Validate type SwitchActionKind, a restriction on xs:string.
+        if value is not None and Validate_simpletypes_ and self.gds_collector_ is not None:
+            if not isinstance(value, str):
+                lineno = self.gds_get_node_lineno_()
+                self.gds_collector_.add_message('Value "%(value)s"%(lineno)s is not of the correct base simple type (str)' % {"value": value, "lineno": lineno, })
+                return False
+            value = value
+            enumerations = ['close', 'open']
+            if value not in enumerations:
+                lineno = self.gds_get_node_lineno_()
+                self.gds_collector_.add_message('Value "%(value)s"%(lineno)s does not match xsd enumeration restriction on SwitchActionKind' % {"value" : encode_str_2_3(value), "lineno": lineno} )
+                result = False
+        return result
+    def hasContent_(self):
+        if (
+            self.executedDateTime is not None or
+            self.isFreeSequence is not None or
+            self.issuedDateTime is not None or
+            self.kind is not None or
+            self.plannedDateTime is not None or
+            self.sequenceNumber is not None or
+            self.OperatedSwitch is not None or
+            self.SwitchingPlan is not None
+        ):
+            return True
+        else:
+            return False
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='SwitchAction', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('SwitchAction')
+        if imported_ns_def_ is not None:
+            namespacedef_ = imported_ns_def_
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.original_tagname_ is not None and name_ == 'SwitchAction':
+            name_ = self.original_tagname_
+        if UseCapturedNS_ and self.ns_prefix_:
+            namespaceprefix_ = self.ns_prefix_ + ':'
+        showIndent(outfile, level, pretty_print)
+        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
+        already_processed = set()
+        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='SwitchAction')
+        if self.hasContent_():
+            outfile.write('>%s' % (eol_, ))
+            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='SwitchAction', pretty_print=pretty_print)
+            showIndent(outfile, level, pretty_print)
+            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
+        else:
+            outfile.write('/>%s' % (eol_, ))
+    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='SwitchAction'):
+        pass
+    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='SwitchAction', fromsubclass_=False, pretty_print=True):
+        if pretty_print:
+            eol_ = '\n'
+        else:
+            eol_ = ''
+        if self.executedDateTime is not None:
+            namespaceprefix_ = self.executedDateTime_nsprefix_ + ':' if (UseCapturedNS_ and self.executedDateTime_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%sexecutedDateTime>%s</%sexecutedDateTime>%s' % (namespaceprefix_ , self.gds_format_datetime(self.executedDateTime, input_name='executedDateTime'), namespaceprefix_ , eol_))
+        if self.isFreeSequence is not None:
+            namespaceprefix_ = self.isFreeSequence_nsprefix_ + ':' if (UseCapturedNS_ and self.isFreeSequence_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%sisFreeSequence>%s</%sisFreeSequence>%s' % (namespaceprefix_ , self.gds_format_boolean(self.isFreeSequence, input_name='isFreeSequence'), namespaceprefix_ , eol_))
+        if self.issuedDateTime is not None:
+            namespaceprefix_ = self.issuedDateTime_nsprefix_ + ':' if (UseCapturedNS_ and self.issuedDateTime_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%sissuedDateTime>%s</%sissuedDateTime>%s' % (namespaceprefix_ , self.gds_format_datetime(self.issuedDateTime, input_name='issuedDateTime'), namespaceprefix_ , eol_))
+        if self.kind is not None:
+            namespaceprefix_ = self.kind_nsprefix_ + ':' if (UseCapturedNS_ and self.kind_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%skind>%s</%skind>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.kind), input_name='kind')), namespaceprefix_ , eol_))
+        if self.plannedDateTime is not None:
+            namespaceprefix_ = self.plannedDateTime_nsprefix_ + ':' if (UseCapturedNS_ and self.plannedDateTime_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%splannedDateTime>%s</%splannedDateTime>%s' % (namespaceprefix_ , self.gds_format_datetime(self.plannedDateTime, input_name='plannedDateTime'), namespaceprefix_ , eol_))
+        if self.sequenceNumber is not None:
+            namespaceprefix_ = self.sequenceNumber_nsprefix_ + ':' if (UseCapturedNS_ and self.sequenceNumber_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%ssequenceNumber>%s</%ssequenceNumber>%s' % (namespaceprefix_ , self.gds_format_integer(self.sequenceNumber, input_name='sequenceNumber'), namespaceprefix_ , eol_))
+        if self.OperatedSwitch is not None:
+            namespaceprefix_ = self.OperatedSwitch_nsprefix_ + ':' if (UseCapturedNS_ and self.OperatedSwitch_nsprefix_) else ''
+            self.OperatedSwitch.export(outfile, level, namespaceprefix_, namespacedef_='', name_='OperatedSwitch', pretty_print=pretty_print)
+        if self.SwitchingPlan is not None:
+            namespaceprefix_ = self.SwitchingPlan_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchingPlan_nsprefix_) else ''
+            self.SwitchingPlan.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchingPlan', pretty_print=pretty_print)
+    def to_etree(self, parent_element=None, name_='SwitchAction', mapping_=None, nsmap_=None):
+        if parent_element is None:
+            element = etree_.Element('{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
+        else:
+            element = etree_.SubElement(parent_element, '{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
+        if self.executedDateTime is not None:
+            executedDateTime_ = self.executedDateTime
+            etree_.SubElement(element, '{grei.ufc.br/smad#}executedDateTime').text = self.gds_format_datetime(executedDateTime_)
+        if self.isFreeSequence is not None:
+            isFreeSequence_ = self.isFreeSequence
+            etree_.SubElement(element, '{grei.ufc.br/smad#}isFreeSequence').text = self.gds_format_boolean(isFreeSequence_)
+        if self.issuedDateTime is not None:
+            issuedDateTime_ = self.issuedDateTime
+            etree_.SubElement(element, '{grei.ufc.br/smad#}issuedDateTime').text = self.gds_format_datetime(issuedDateTime_)
+        if self.kind is not None:
+            kind_ = self.kind
+            etree_.SubElement(element, '{grei.ufc.br/smad#}kind').text = self.gds_format_string(kind_)
+        if self.plannedDateTime is not None:
+            plannedDateTime_ = self.plannedDateTime
+            etree_.SubElement(element, '{grei.ufc.br/smad#}plannedDateTime').text = self.gds_format_datetime(plannedDateTime_)
+        if self.sequenceNumber is not None:
+            sequenceNumber_ = self.sequenceNumber
+            etree_.SubElement(element, '{grei.ufc.br/smad#}sequenceNumber').text = self.gds_format_integer(sequenceNumber_)
+        if self.OperatedSwitch is not None:
+            OperatedSwitch_ = self.OperatedSwitch
+            OperatedSwitch_.to_etree(element, name_='OperatedSwitch', mapping_=mapping_, nsmap_=nsmap_)
+        if self.SwitchingPlan is not None:
+            SwitchingPlan_ = self.SwitchingPlan
+            SwitchingPlan_.to_etree(element, name_='SwitchingPlan', mapping_=mapping_, nsmap_=nsmap_)
+        if mapping_ is not None:
+            mapping_[id(self)] = element
+        return element
+    def validate_(self, gds_collector, recursive=False):
+        self.gds_collector_ = gds_collector
+        message_count = len(self.gds_collector_.get_messages())
+        # validate simple type attributes
+        # validate simple type children
+        self.gds_validate_builtin_ST_(self.gds_validate_datetime, self.executedDateTime, 'executedDateTime')
+        self.gds_check_cardinality_(self.executedDateTime, 'executedDateTime', min_occurs=0, max_occurs=1)
+        self.gds_validate_builtin_ST_(self.gds_validate_boolean, self.isFreeSequence, 'isFreeSequence')
+        self.gds_check_cardinality_(self.isFreeSequence, 'isFreeSequence', min_occurs=0, max_occurs=1)
+        self.gds_validate_builtin_ST_(self.gds_validate_datetime, self.issuedDateTime, 'issuedDateTime')
+        self.gds_check_cardinality_(self.issuedDateTime, 'issuedDateTime', min_occurs=0, max_occurs=1)
+        self.gds_validate_defined_ST_(self.validate_SwitchActionKind, self.kind, 'kind')
+        self.gds_check_cardinality_(self.kind, 'kind', min_occurs=1, max_occurs=1)
+        self.gds_validate_builtin_ST_(self.gds_validate_datetime, self.plannedDateTime, 'plannedDateTime')
+        self.gds_check_cardinality_(self.plannedDateTime, 'plannedDateTime', min_occurs=0, max_occurs=1)
+        self.gds_validate_builtin_ST_(self.gds_validate_integer, self.sequenceNumber, 'sequenceNumber')
+        self.gds_check_cardinality_(self.sequenceNumber, 'sequenceNumber', min_occurs=0, max_occurs=1)
+        # validate complex type children
+        self.gds_check_cardinality_(self.OperatedSwitch, 'OperatedSwitch', min_occurs=1, max_occurs=1)
+        self.gds_check_cardinality_(self.SwitchingPlan, 'SwitchingPlan', min_occurs=1, max_occurs=1)
+        if recursive:
+            if self.OperatedSwitch is not None:
+                self.OperatedSwitch.validate_(gds_collector, recursive=True)
+            if self.SwitchingPlan is not None:
+                self.SwitchingPlan.validate_(gds_collector, recursive=True)
+        return message_count == len(self.gds_collector_.get_messages())
+    def generateRecursively_(self, level=0):
+        yield (self, level)
+        # generate complex type children
+        level += 1
+        yield from self.OperatedSwitch.generateRecursively_(level)
+        yield from self.SwitchingPlan.generateRecursively_(level)
+    def build(self, node, gds_collector_=None):
+        self.gds_collector_ = gds_collector_
+        if SaveElementTreeNode:
+            self.gds_elementtree_node_ = node
+        already_processed = set()
+        self.ns_prefix_ = node.prefix
+        self.buildAttributes(node, node.attrib, already_processed)
+        for child in node:
+            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
+            self.buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
+        return self
+    def buildAttributes(self, node, attrs, already_processed):
+        pass
+    def buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
+        if nodeName_ == 'executedDateTime':
+            sval_ = child_.text
+            dval_ = self.gds_parse_datetime(sval_)
+            self.executedDateTime = dval_
+            self.executedDateTime_nsprefix_ = child_.prefix
+        elif nodeName_ == 'isFreeSequence':
+            sval_ = child_.text
+            ival_ = self.gds_parse_boolean(sval_, node, 'isFreeSequence')
+            ival_ = self.gds_validate_boolean(ival_, node, 'isFreeSequence')
+            self.isFreeSequence = ival_
+            self.isFreeSequence_nsprefix_ = child_.prefix
+        elif nodeName_ == 'issuedDateTime':
+            sval_ = child_.text
+            dval_ = self.gds_parse_datetime(sval_)
+            self.issuedDateTime = dval_
+            self.issuedDateTime_nsprefix_ = child_.prefix
+        elif nodeName_ == 'kind':
+            value_ = child_.text
+            value_ = self.gds_parse_string(value_, node, 'kind')
+            value_ = self.gds_validate_string(value_, node, 'kind')
+            self.kind = value_
+            self.kind_nsprefix_ = child_.prefix
+            # validate type SwitchActionKind
+            self.validate_SwitchActionKind(self.kind)
+        elif nodeName_ == 'plannedDateTime':
+            sval_ = child_.text
+            dval_ = self.gds_parse_datetime(sval_)
+            self.plannedDateTime = dval_
+            self.plannedDateTime_nsprefix_ = child_.prefix
+        elif nodeName_ == 'sequenceNumber' and child_.text:
+            sval_ = child_.text
+            ival_ = self.gds_parse_integer(sval_, node, 'sequenceNumber')
+            ival_ = self.gds_validate_integer(ival_, node, 'sequenceNumber')
+            self.sequenceNumber = ival_
+            self.sequenceNumber_nsprefix_ = child_.prefix
+        elif nodeName_ == 'OperatedSwitch':
+            obj_ = ProtectedSwitch.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.OperatedSwitch = obj_
+            obj_.original_tagname_ = 'OperatedSwitch'
+        elif nodeName_ == 'SwitchingPlan':
+            obj_ = SwitchingPlan.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.SwitchingPlan = obj_
+            obj_.original_tagname_ = 'SwitchingPlan'
+# end class SwitchAction
+
+
+class SwitchingPlan(GeneratedsSuper):
+    """A sequence of grouped or atomic steps intended to:- de-energise
+    equipment or part of the network for safe work, and/or- bring back in
+    service previously de-energised equipment or part of the network."""
+    __hash__ = GeneratedsSuper.__hash__
+    subclass = None
+    superclass = None
+    def __init__(self, mRID=None, createdDateTime=None, name=None, purpose=None, SwitchAction=None, gds_collector_=None, **kwargs_):
         self.gds_collector_ = gds_collector_
         self.gds_elementtree_node_ = None
         self.original_tagname_ = None
@@ -1107,18 +1568,32 @@ class ReportingGroup(GeneratedsSuper):
         self.ns_prefix_ = None
         self.mRID = mRID
         self.mRID_nsprefix_ = None
+        if isinstance(createdDateTime, BaseStrType_):
+            initvalue_ = datetime_.datetime.strptime(createdDateTime, '%Y-%m-%dT%H:%M:%S')
+        else:
+            initvalue_ = createdDateTime
+        self.createdDateTime = initvalue_
+        self.createdDateTime_nsprefix_ = None
         self.name = name
         self.name_nsprefix_ = None
+        self.purpose = purpose
+        self.validate_Purpose(self.purpose)
+        self.purpose_nsprefix_ = None
+        if SwitchAction is None:
+            self.SwitchAction = []
+        else:
+            self.SwitchAction = SwitchAction
+        self.SwitchAction_nsprefix_ = None
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, ReportingGroup)
+                CurrentSubclassModule_, SwitchingPlan)
             if subclass is not None:
                 return subclass(*args_, **kwargs_)
-        if ReportingGroup.subclass:
-            return ReportingGroup.subclass(*args_, **kwargs_)
+        if SwitchingPlan.subclass:
+            return SwitchingPlan.subclass(*args_, **kwargs_)
         else:
-            return ReportingGroup(*args_, **kwargs_)
+            return SwitchingPlan(*args_, **kwargs_)
     factory = staticmethod(factory)
     def get_ns_prefix_(self):
         return self.ns_prefix_
@@ -1128,44 +1603,80 @@ class ReportingGroup(GeneratedsSuper):
         return self.mRID
     def set_mRID(self, mRID):
         self.mRID = mRID
+    def get_createdDateTime(self):
+        return self.createdDateTime
+    def set_createdDateTime(self, createdDateTime):
+        self.createdDateTime = createdDateTime
     def get_name(self):
         return self.name
     def set_name(self, name):
         self.name = name
+    def get_purpose(self):
+        return self.purpose
+    def set_purpose(self, purpose):
+        self.purpose = purpose
+    def get_SwitchAction(self):
+        return self.SwitchAction
+    def set_SwitchAction(self, SwitchAction):
+        self.SwitchAction = SwitchAction
+    def add_SwitchAction(self, value):
+        self.SwitchAction.append(value)
+    def insert_SwitchAction_at(self, index, value):
+        self.SwitchAction.insert(index, value)
+    def replace_SwitchAction_at(self, index, value):
+        self.SwitchAction[index] = value
+    def validate_Purpose(self, value):
+        result = True
+        # Validate type Purpose, a restriction on xs:string.
+        if value is not None and Validate_simpletypes_ and self.gds_collector_ is not None:
+            if not isinstance(value, str):
+                lineno = self.gds_get_node_lineno_()
+                self.gds_collector_.add_message('Value "%(value)s"%(lineno)s is not of the correct base simple type (str)' % {"value": value, "lineno": lineno, })
+                return False
+            value = value
+            enumerations = ['Coordination', 'Isolation', 'Restoration']
+            if value not in enumerations:
+                lineno = self.gds_get_node_lineno_()
+                self.gds_collector_.add_message('Value "%(value)s"%(lineno)s does not match xsd enumeration restriction on Purpose' % {"value" : encode_str_2_3(value), "lineno": lineno} )
+                result = False
+        return result
     def hasContent_(self):
         if (
             self.mRID is not None or
-            self.name is not None
+            self.createdDateTime is not None or
+            self.name is not None or
+            self.purpose is not None or
+            self.SwitchAction
         ):
             return True
         else:
             return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="http://iec.ch/TC57/te#"', name_='ReportingGroup', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('ReportingGroup')
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='SwitchingPlan', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('SwitchingPlan')
         if imported_ns_def_ is not None:
             namespacedef_ = imported_ns_def_
         if pretty_print:
             eol_ = '\n'
         else:
             eol_ = ''
-        if self.original_tagname_ is not None:
+        if self.original_tagname_ is not None and name_ == 'SwitchingPlan':
             name_ = self.original_tagname_
         if UseCapturedNS_ and self.ns_prefix_:
             namespaceprefix_ = self.ns_prefix_ + ':'
         showIndent(outfile, level, pretty_print)
         outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
         already_processed = set()
-        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='ReportingGroup')
+        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='SwitchingPlan')
         if self.hasContent_():
             outfile.write('>%s' % (eol_, ))
-            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='ReportingGroup', pretty_print=pretty_print)
+            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='SwitchingPlan', pretty_print=pretty_print)
             showIndent(outfile, level, pretty_print)
             outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
         else:
             outfile.write('/>%s' % (eol_, ))
-    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='ReportingGroup'):
+    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='SwitchingPlan'):
         pass
-    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="http://iec.ch/TC57/te#"', name_='ReportingGroup', fromsubclass_=False, pretty_print=True):
+    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="grei.ufc.br/smad#"', name_='SwitchingPlan', fromsubclass_=False, pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -1174,21 +1685,40 @@ class ReportingGroup(GeneratedsSuper):
             namespaceprefix_ = self.mRID_nsprefix_ + ':' if (UseCapturedNS_ and self.mRID_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%smRID>%s</%smRID>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.mRID), input_name='mRID')), namespaceprefix_ , eol_))
+        if self.createdDateTime is not None:
+            namespaceprefix_ = self.createdDateTime_nsprefix_ + ':' if (UseCapturedNS_ and self.createdDateTime_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%screatedDateTime>%s</%screatedDateTime>%s' % (namespaceprefix_ , self.gds_format_datetime(self.createdDateTime, input_name='createdDateTime'), namespaceprefix_ , eol_))
         if self.name is not None:
             namespaceprefix_ = self.name_nsprefix_ + ':' if (UseCapturedNS_ and self.name_nsprefix_) else ''
             showIndent(outfile, level, pretty_print)
             outfile.write('<%sname>%s</%sname>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.name), input_name='name')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='ReportingGroup', mapping_=None):
+        if self.purpose is not None:
+            namespaceprefix_ = self.purpose_nsprefix_ + ':' if (UseCapturedNS_ and self.purpose_nsprefix_) else ''
+            showIndent(outfile, level, pretty_print)
+            outfile.write('<%spurpose>%s</%spurpose>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.purpose), input_name='purpose')), namespaceprefix_ , eol_))
+        for SwitchAction_ in self.SwitchAction:
+            namespaceprefix_ = self.SwitchAction_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchAction_nsprefix_) else ''
+            SwitchAction_.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchAction', pretty_print=pretty_print)
+    def to_etree(self, parent_element=None, name_='SwitchingPlan', mapping_=None, nsmap_=None):
         if parent_element is None:
-            element = etree_.Element('{http://iec.ch/TC57/te#}' + name_)
+            element = etree_.Element('{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
         else:
-            element = etree_.SubElement(parent_element, '{http://iec.ch/TC57/te#}' + name_)
+            element = etree_.SubElement(parent_element, '{grei.ufc.br/smad#}' + name_, nsmap=nsmap_)
         if self.mRID is not None:
             mRID_ = self.mRID
-            etree_.SubElement(element, '{http://iec.ch/TC57/te#}mRID').text = self.gds_format_string(mRID_)
+            etree_.SubElement(element, '{grei.ufc.br/smad#}mRID').text = self.gds_format_string(mRID_)
+        if self.createdDateTime is not None:
+            createdDateTime_ = self.createdDateTime
+            etree_.SubElement(element, '{grei.ufc.br/smad#}createdDateTime').text = self.gds_format_datetime(createdDateTime_)
         if self.name is not None:
             name_ = self.name
-            etree_.SubElement(element, '{http://iec.ch/TC57/te#}name').text = self.gds_format_string(name_)
+            etree_.SubElement(element, '{grei.ufc.br/smad#}name').text = self.gds_format_string(name_)
+        if self.purpose is not None:
+            purpose_ = self.purpose
+            etree_.SubElement(element, '{grei.ufc.br/smad#}purpose').text = self.gds_format_string(purpose_)
+        for SwitchAction_ in self.SwitchAction:
+            SwitchAction_.to_etree(element, name_='SwitchAction', mapping_=mapping_, nsmap_=nsmap_)
         if mapping_ is not None:
             mapping_[id(self)] = element
         return element
@@ -1198,15 +1728,24 @@ class ReportingGroup(GeneratedsSuper):
         # validate simple type attributes
         # validate simple type children
         self.gds_validate_builtin_ST_(self.gds_validate_string, self.mRID, 'mRID')
-        self.gds_check_cardinality_(self.mRID, 'mRID', min_occurs=0, max_occurs=1)
+        self.gds_check_cardinality_(self.mRID, 'mRID', min_occurs=1, max_occurs=1)
+        self.gds_validate_builtin_ST_(self.gds_validate_datetime, self.createdDateTime, 'createdDateTime')
+        self.gds_check_cardinality_(self.createdDateTime, 'createdDateTime', min_occurs=0, max_occurs=1)
         self.gds_validate_builtin_ST_(self.gds_validate_string, self.name, 'name')
         self.gds_check_cardinality_(self.name, 'name', min_occurs=0, max_occurs=1)
+        self.gds_validate_defined_ST_(self.validate_Purpose, self.purpose, 'purpose')
+        self.gds_check_cardinality_(self.purpose, 'purpose', min_occurs=0, max_occurs=1)
         # validate complex type children
+        self.gds_check_cardinality_(self.SwitchAction, 'SwitchAction', min_occurs=1, max_occurs=9999999)
         if recursive:
-            pass
+            for item in self.SwitchAction:
+                item.validate_(gds_collector, recursive=True)
         return message_count == len(self.gds_collector_.get_messages())
     def generateRecursively_(self, level=0):
         yield (self, level)
+        # generate complex type children
+        level += 1
+        yield from self.SwitchAction.generateRecursively_(level)
     def build(self, node, gds_collector_=None):
         self.gds_collector_ = gds_collector_
         if SaveElementTreeNode:
@@ -1227,160 +1766,35 @@ class ReportingGroup(GeneratedsSuper):
             value_ = self.gds_validate_string(value_, node, 'mRID')
             self.mRID = value_
             self.mRID_nsprefix_ = child_.prefix
+        elif nodeName_ == 'createdDateTime':
+            sval_ = child_.text
+            dval_ = self.gds_parse_datetime(sval_)
+            self.createdDateTime = dval_
+            self.createdDateTime_nsprefix_ = child_.prefix
         elif nodeName_ == 'name':
             value_ = child_.text
             value_ = self.gds_parse_string(value_, node, 'name')
             value_ = self.gds_validate_string(value_, node, 'name')
             self.name = value_
             self.name_nsprefix_ = child_.prefix
-# end class ReportingGroup
-
-
-class Switch(GeneratedsSuper):
-    """A generic device designed to close, or open, or both, one or more
-    electric circuits. All switches are two terminal devices including
-    grounding switches."""
-    __hash__ = GeneratedsSuper.__hash__
-    subclass = None
-    superclass = None
-    def __init__(self, mRID=None, name=None, gds_collector_=None, **kwargs_):
-        self.gds_collector_ = gds_collector_
-        self.gds_elementtree_node_ = None
-        self.original_tagname_ = None
-        self.parent_object_ = kwargs_.get('parent_object_')
-        self.ns_prefix_ = None
-        self.mRID = mRID
-        self.mRID_nsprefix_ = None
-        self.name = name
-        self.name_nsprefix_ = None
-    def factory(*args_, **kwargs_):
-        if CurrentSubclassModule_ is not None:
-            subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, Switch)
-            if subclass is not None:
-                return subclass(*args_, **kwargs_)
-        if Switch.subclass:
-            return Switch.subclass(*args_, **kwargs_)
-        else:
-            return Switch(*args_, **kwargs_)
-    factory = staticmethod(factory)
-    def get_ns_prefix_(self):
-        return self.ns_prefix_
-    def set_ns_prefix_(self, ns_prefix):
-        self.ns_prefix_ = ns_prefix
-    def get_mRID(self):
-        return self.mRID
-    def set_mRID(self, mRID):
-        self.mRID = mRID
-    def get_name(self):
-        return self.name
-    def set_name(self, name):
-        self.name = name
-    def hasContent_(self):
-        if (
-            self.mRID is not None or
-            self.name is not None
-        ):
-            return True
-        else:
-            return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="http://iec.ch/TC57/te#"', name_='Switch', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('Switch')
-        if imported_ns_def_ is not None:
-            namespacedef_ = imported_ns_def_
-        if pretty_print:
-            eol_ = '\n'
-        else:
-            eol_ = ''
-        if self.original_tagname_ is not None:
-            name_ = self.original_tagname_
-        if UseCapturedNS_ and self.ns_prefix_:
-            namespaceprefix_ = self.ns_prefix_ + ':'
-        showIndent(outfile, level, pretty_print)
-        outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
-        already_processed = set()
-        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='Switch')
-        if self.hasContent_():
-            outfile.write('>%s' % (eol_, ))
-            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='Switch', pretty_print=pretty_print)
-            showIndent(outfile, level, pretty_print)
-            outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
-        else:
-            outfile.write('/>%s' % (eol_, ))
-    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='Switch'):
-        pass
-    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:m="http://iec.ch/TC57/te#"', name_='Switch', fromsubclass_=False, pretty_print=True):
-        if pretty_print:
-            eol_ = '\n'
-        else:
-            eol_ = ''
-        if self.mRID is not None:
-            namespaceprefix_ = self.mRID_nsprefix_ + ':' if (UseCapturedNS_ and self.mRID_nsprefix_) else ''
-            showIndent(outfile, level, pretty_print)
-            outfile.write('<%smRID>%s</%smRID>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.mRID), input_name='mRID')), namespaceprefix_ , eol_))
-        if self.name is not None:
-            namespaceprefix_ = self.name_nsprefix_ + ':' if (UseCapturedNS_ and self.name_nsprefix_) else ''
-            showIndent(outfile, level, pretty_print)
-            outfile.write('<%sname>%s</%sname>%s' % (namespaceprefix_ , self.gds_encode(self.gds_format_string(quote_xml(self.name), input_name='name')), namespaceprefix_ , eol_))
-    def to_etree(self, parent_element=None, name_='Switch', mapping_=None):
-        if parent_element is None:
-            element = etree_.Element('{http://iec.ch/TC57/te#}' + name_)
-        else:
-            element = etree_.SubElement(parent_element, '{http://iec.ch/TC57/te#}' + name_)
-        if self.mRID is not None:
-            mRID_ = self.mRID
-            etree_.SubElement(element, '{http://iec.ch/TC57/te#}mRID').text = self.gds_format_string(mRID_)
-        if self.name is not None:
-            name_ = self.name
-            etree_.SubElement(element, '{http://iec.ch/TC57/te#}name').text = self.gds_format_string(name_)
-        if mapping_ is not None:
-            mapping_[id(self)] = element
-        return element
-    def validate_(self, gds_collector, recursive=False):
-        self.gds_collector_ = gds_collector
-        message_count = len(self.gds_collector_.get_messages())
-        # validate simple type attributes
-        # validate simple type children
-        self.gds_validate_builtin_ST_(self.gds_validate_string, self.mRID, 'mRID')
-        self.gds_check_cardinality_(self.mRID, 'mRID', min_occurs=0, max_occurs=1)
-        self.gds_validate_builtin_ST_(self.gds_validate_string, self.name, 'name')
-        self.gds_check_cardinality_(self.name, 'name', min_occurs=0, max_occurs=1)
-        # validate complex type children
-        if recursive:
-            pass
-        return message_count == len(self.gds_collector_.get_messages())
-    def generateRecursively_(self, level=0):
-        yield (self, level)
-    def build(self, node, gds_collector_=None):
-        self.gds_collector_ = gds_collector_
-        if SaveElementTreeNode:
-            self.gds_elementtree_node_ = node
-        already_processed = set()
-        self.ns_prefix_ = node.prefix
-        self.buildAttributes(node, node.attrib, already_processed)
-        for child in node:
-            nodeName_ = Tag_pattern_.match(child.tag).groups()[-1]
-            self.buildChildren(child, node, nodeName_, gds_collector_=gds_collector_)
-        return self
-    def buildAttributes(self, node, attrs, already_processed):
-        pass
-    def buildChildren(self, child_, node, nodeName_, fromsubclass_=False, gds_collector_=None):
-        if nodeName_ == 'mRID':
+        elif nodeName_ == 'purpose':
             value_ = child_.text
-            value_ = self.gds_parse_string(value_, node, 'mRID')
-            value_ = self.gds_validate_string(value_, node, 'mRID')
-            self.mRID = value_
-            self.mRID_nsprefix_ = child_.prefix
-        elif nodeName_ == 'name':
-            value_ = child_.text
-            value_ = self.gds_parse_string(value_, node, 'name')
-            value_ = self.gds_validate_string(value_, node, 'name')
-            self.name = value_
-            self.name_nsprefix_ = child_.prefix
-# end class Switch
+            value_ = self.gds_parse_string(value_, node, 'purpose')
+            value_ = self.gds_validate_string(value_, node, 'purpose')
+            self.purpose = value_
+            self.purpose_nsprefix_ = child_.prefix
+            # validate type Purpose
+            self.validate_Purpose(self.purpose)
+        elif nodeName_ == 'SwitchAction':
+            obj_ = SwitchAction.factory(parent_object_=self)
+            obj_.build(child_, gds_collector_=gds_collector_)
+            self.SwitchAction.append(obj_)
+            obj_.original_tagname_ = 'SwitchAction'
+# end class SwitchingPlan
 
 
 GDSClassesMapping = {
+    'SwitchingCommand': SwitchingCommand,
 }
 
 
@@ -1427,8 +1841,8 @@ def parse(inFileName, silence=False, print_warnings=True):
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'PowerSystemResource'
-        rootClass = PowerSystemResource
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     CapturedNsmap_, namespacedefs = get_required_ns_prefix_defs(rootNode)
@@ -1451,20 +1865,23 @@ def parse(inFileName, silence=False, print_warnings=True):
     return rootObj
 
 
-def parseEtree(inFileName, silence=False, print_warnings=True):
+def parseEtree(inFileName, silence=False, print_warnings=True,
+               mapping=None, nsmap=None):
     parser = None
     doc = parsexml_(inFileName, parser)
     gds_collector = GdsCollector_()
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'PowerSystemResource'
-        rootClass = PowerSystemResource
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     # Enable Python to collect the space used by the DOM.
-    mapping = {}
-    rootElement = rootObj.to_etree(None, name_=rootTag, mapping_=mapping)
+    if mapping is None:
+        mapping = {}
+    rootElement = rootObj.to_etree(
+        None, name_=rootTag, mapping_=mapping, nsmap_=nsmap)
     reverse_mapping = rootObj.gds_reverse_node_mapping(mapping)
     if not SaveElementTreeNode:
         doc = None
@@ -1499,8 +1916,8 @@ def parseString(inString, silence=False, print_warnings=True):
     gds_collector = GdsCollector_()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'PowerSystemResource'
-        rootClass = PowerSystemResource
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     if not SaveElementTreeNode:
@@ -1509,7 +1926,7 @@ def parseString(inString, silence=False, print_warnings=True):
 ##         sys.stdout.write('<?xml version="1.0" ?>\n')
 ##         rootObj.export(
 ##             sys.stdout, 0, name_=rootTag,
-##             namespacedef_='xmlns:m="http://iec.ch/TC57/te#"')
+##             namespacedef_='xmlns:m="grei.ufc.br/smad#"')
     if print_warnings and len(gds_collector.get_messages()) > 0:
         separator = ('-' * 50) + '\n'
         sys.stderr.write(separator)
@@ -1527,8 +1944,8 @@ def parseLiteral(inFileName, silence=False, print_warnings=True):
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'PowerSystemResource'
-        rootClass = PowerSystemResource
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     # Enable Python to collect the space used by the DOM.
@@ -1536,8 +1953,8 @@ def parseLiteral(inFileName, silence=False, print_warnings=True):
         doc = None
         rootNode = None
 ##     if not silence:
-##         sys.stdout.write('#from te import *\n\n')
-##         sys.stdout.write('import te as model_\n\n')
+##         sys.stdout.write('#from SwitchingCommand import *\n\n')
+##         sys.stdout.write('import SwitchingCommand as model_\n\n')
 ##         sys.stdout.write('rootObj = model_.rootClass(\n')
 ##         rootObj.exportLiteral(sys.stdout, 0, name_=rootTag)
 ##         sys.stdout.write(')\n')
@@ -1567,7 +1984,8 @@ RenameMappings_ = {
 }
 
 __all__ = [
-    "PowerSystemResource",
-    "ReportingGroup",
-    "Switch"
+    "ProtectedSwitch",
+    "SwitchAction",
+    "SwitchingCommand",
+    "SwitchingPlan"
 ]
