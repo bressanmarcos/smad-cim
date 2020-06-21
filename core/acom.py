@@ -9,7 +9,7 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
                                        FipaSubscribeProtocol, TimedBehaviour)
 from pade.misc.utility import display_message
 
-from common import AgenteSMAD, dump
+from common import AgenteSMAD, to_elementtree, to_string, dump
 
 import sys
 sys.path.insert(0, '../')
@@ -38,7 +38,7 @@ class EnvioDeDados(FipaSubscribeProtocol):
 class ReceberComando(FipaRequestProtocol):
     """Recebe lista de comandos (do ADC)
     para manobra de chaves
-    *SwitchingPlan*
+    *SwitchingCommand*
     """
 
     def __init__(self, agent: AgenteSMAD):
@@ -46,7 +46,7 @@ class ReceberComando(FipaRequestProtocol):
 
     def handle_request(self, message: ACLMessage):
         """Recepção de mensagem de comando 
-        (conteúdo deve ser um SwitchingPlan)
+        (conteúdo deve ser um SwitchingCommand)
         OBS: Mensagem recebida deve ser processada e respondida
         com agree / refuse / not_understood"""
 
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                     "CH18": "192.168.0.118",
                     "CH16": "192.168.0.116"}
     acom = AgenteCom(AID('acom1@localhost:9000'), 'S1', enderecos_S1)
-    acom.comandar_chave('CH13', 'close')
+
     #################################################
     # Exemmplo de Arquivo para ser recebido pelo ACOM
     swt = swc.ProtectedSwitch(mRID='CH13', name='Switch que protege minha casa')
@@ -122,6 +122,27 @@ if __name__ == "__main__":
         createdDateTime=datetime.datetime.now(),
         name='Plano de Teste', 
         purpose=swc.Purpose.COORDINATION, 
-        SwitchAction=[acao])
+        SwitchAction=[acao, acao])
     root = swc.SwitchingCommand(SwitchingPlan=plano)
-    dump(root.to_etree())
+
+    # Monta envelope de mensagem ACL
+    message = ACLMessage(performative=ACLMessage.INFORM)
+    message.set_ontology('SwitchingCommand')
+    message.set_content(to_elementtree(root))
+
+    def simular_recepcao_mensagem(message: ACLMessage):
+        """Simula o handle_request
+        O ACLMessage usa xml.etree.ElementTree, enquanto generateDS usa lxml.etree.Element, 
+        que são incompatíveis. Por isso é preciso converter e ler de strings.
+        """
+
+        # Recupera instância SwitchingCommand 
+        # uso um "cast" para dar uma dica pro Intellisense [Ctrl+Space]
+        root: swc.SwitchingCommand = swc.parseString(to_string(message.content))
+        plano = root.get_SwitchingPlan()
+        for acao in plano.get_SwitchAction():
+            dump(to_elementtree(acao))
+
+    simular_recepcao_mensagem(message)
+        
+
