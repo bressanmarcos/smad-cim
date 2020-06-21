@@ -11,9 +11,9 @@ from pade.misc.utility import display_message
 
 import sys
 sys.path.insert(0, '../')
-from core.common import AgenteSMAD, to_elementtree, to_string, dump
-from core.acom import AgenteCom
-from information_model import SwitchingCommand as swc
+from core.common import AgenteSMAD, to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
+from core.acom import AgenteCom # pylint: disable=import-error,no-name-in-module
+from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
 enderecos_S1 = {"CH1": "192.168.0.101",
                 "CH2": "192.168.0.102",
