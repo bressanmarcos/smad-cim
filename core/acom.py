@@ -56,8 +56,7 @@ class ReceberComando(FipaRequestProtocol):
             reply.set_performative(ACLMessage.NOT_UNDERSTOOD)
             reply.set_ontology('')
             reply.set_content(f'Unexpected ontology {message.ontology}')
-            dump(reply)
-            # self.agent.send(reply)
+            self.agent.send(reply)
             return
 
         # Lista que armazena ações requisitadas
@@ -80,8 +79,7 @@ class ReceberComando(FipaRequestProtocol):
             reply.set_performative(ACLMessage.NOT_UNDERSTOOD)
             reply.set_ontology('')
             reply.set_content(str(e))
-            dump(reply)
-            # self.agent.send(reply)
+            self.agent.send(reply)
             return
 
         # Ordena por sequenceNumber
@@ -96,24 +94,21 @@ class ReceberComando(FipaRequestProtocol):
             reply = message.create_reply()
             reply.set_performative(ACLMessage.FAILURE)
             reply.set_content(str(e))
-            dump(reply)
-            # self.agent.send(reply)
+            self.agent.send(reply)
             return
         except Exception as e:
             # Retorna falha genérica desconhecida
             reply = message.create_reply()
             reply.set_performative(ACLMessage.FAILURE)
             reply.set_content('Unknown issue')
-            dump(reply)
-            # self.agent.send(reply)
+            self.agent.send(reply)
             return
 
         # Retorna sucesso
         reply = message.create_reply()
         reply.set_performative(ACLMessage.INFORM)
         reply.set_ontology('')
-        dump(reply)
-        # self.agent.send(reply)
+        self.agent.send(reply)
         return   
         
 
