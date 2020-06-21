@@ -9,7 +9,7 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
                                        FipaSubscribeProtocol, TimedBehaviour)
 from pade.misc.utility import display_message
 
-from common import AgenteSMAD, to_elementtree, to_string, dump
+from core.common import AgenteSMAD, to_elementtree, to_string, dump
 
 import sys
 sys.path.insert(0, '../')
@@ -50,11 +50,72 @@ class ReceberComando(FipaRequestProtocol):
         OBS: Mensagem recebida deve ser processada e respondida
         com agree / refuse / not_understood"""
 
-        # Envia mensagem de agree
-        reply = message.create_reply()
-        reply.set_performative(ACLMessage.AGREE)
-        self.agent.send(reply)
+        # Esperado SwitchingCommand
+        if message.ontology != 'SwitchingCommand':
+            reply = message.create_reply()
+            reply.set_performative(ACLMessage.NOT_UNDERSTOOD)
+            reply.set_ontology('')
+            reply.set_content(f'Unexpected ontology {message.ontology}')
+            dump(reply)
+            # self.agent.send(reply)
+            return
 
+        # Lista que armazena ações requisitadas
+        buffer_leitura_acoes = []
+        # Lê documento recebido
+        try:
+            # Recupera instância SwitchingCommand ("cast" para dar uma dica pro Intellisense [Ctrl+Space])
+            root: swc.SwitchingCommand = swc.parseString(to_string(message.content))
+            # Iterar em lista de SwitchAction
+            for switchAction in root.get_SwitchingPlan().get_SwitchAction():
+                switchId = switchAction.get_OperatedSwitch().get_mRID()
+                actionKind = switchAction.get_kind()
+                sequenceNumber = switchAction.get_sequenceNumber()
+                buffer_leitura_acoes.append((sequenceNumber, switchId, actionKind))
+    
+        except Exception as e:
+            # Captura erro de má formatação do documento.
+            # Devolve uma mensagem not_understood e finaliza
+            reply = message.create_reply()
+            reply.set_performative(ACLMessage.NOT_UNDERSTOOD)
+            reply.set_ontology('')
+            reply.set_content(str(e))
+            dump(reply)
+            # self.agent.send(reply)
+            return
+
+        # Ordena por sequenceNumber
+        buffer_leitura_acoes.sort(key=lambda item: item[0])
+
+        # Realiza ações
+        try:
+            for sequenceNumber, switchId, actionKind in buffer_leitura_acoes:
+                self.agent.comandar_chave(switchId, actionKind)
+        except KeyError as e:
+            # Retorna falha ao não encontrar switchId
+            reply = message.create_reply()
+            reply.set_performative(ACLMessage.FAILURE)
+            reply.set_content(str(e))
+            dump(reply)
+            # self.agent.send(reply)
+            return
+        except Exception as e:
+            # Retorna falha genérica desconhecida
+            reply = message.create_reply()
+            reply.set_performative(ACLMessage.FAILURE)
+            reply.set_content('Unknown issue')
+            dump(reply)
+            # self.agent.send(reply)
+            return
+
+        # Retorna sucesso
+        reply = message.create_reply()
+        reply.set_performative(ACLMessage.INFORM)
+        reply.set_ontology('')
+        dump(reply)
+        # self.agent.send(reply)
+        return   
+        
 
 class AgenteCom(AgenteSMAD):
 
@@ -70,6 +131,8 @@ class AgenteCom(AgenteSMAD):
         Deve ser futuramente acoplado com a libiec61850 para controle de relés
         Atualmente é somente um stub para controle de uma ÚNICA chave
         """
+        if action not in ['open', 'close']:
+            raise ValueError(f'Invalid action: {action}') 
         value_to_write = 1 if action == 'open' else 2
         endereco = self.enderecos_IEDs[switchId]
         display_message(
@@ -78,71 +141,3 @@ class AgenteCom(AgenteSMAD):
     def definir_mensagem(self):
         # Diagnosticar falta::Informar atuação de chaves
         pass
-
-
-if __name__ == "__main__":
-    enderecos_S1 = {"CH1": "192.168.0.101",
-                    "CH2": "192.168.0.102",
-                    "CH3": "192.168.0.103",
-                    "CH6": "192.168.0.106",
-                    "CH7": "192.168.0.107",
-                    "CH8": "192.168.0.108",
-                    "CH9": "192.168.0.109",
-                    "CH10": "192.168.0.110",
-                    "CH11": "192.168.0.111",
-                    "CH13": "192.168.0.113",
-                    "CH14": "192.168.0.114",
-                    "CH15": "192.168.0.115",
-                    "CH16": "192.168.0.116"}
-    enderecos_S2 = {"CH4": "192.168.0.104",
-                    "CH5": "192.168.0.105",
-                    "CH3": "192.168.0.103",
-                    "CH8": "192.168.0.108",
-                    "CH11": "192.168.0.111",
-                    "CH12": "192.168.0.112",
-                    "CH16": "192.168.0.116"}
-    enderecos_S3 = {"CH17": "192.168.0.117",
-                    "CH18": "192.168.0.118",
-                    "CH16": "192.168.0.116"}
-    acom = AgenteCom(AID('acom1@localhost:9000'), 'S1', enderecos_S1)
-
-    #################################################
-    # Exemmplo de Arquivo para ser recebido pelo ACOM
-    swt = swc.ProtectedSwitch(mRID='CH13', name='Switch que protege minha casa')
-    acao = swc.SwitchAction(
-        executedDateTime=datetime.datetime.now(), 
-        isFreeSequence=True, 
-        issuedDateTime=datetime.datetime.now(), 
-        kind=swc.SwitchActionKind.CLOSE, 
-        plannedDateTime=datetime.datetime.now(), 
-        sequenceNumber=0, 
-        OperatedSwitch=swt)
-    plano = swc.SwitchingPlan(
-        mRID='PlanID', 
-        createdDateTime=datetime.datetime.now(),
-        name='Plano de Teste', 
-        purpose=swc.Purpose.COORDINATION, 
-        SwitchAction=[acao, acao])
-    root = swc.SwitchingCommand(SwitchingPlan=plano)
-
-    # Monta envelope de mensagem ACL
-    message = ACLMessage(performative=ACLMessage.INFORM)
-    message.set_ontology('SwitchingCommand')
-    message.set_content(to_elementtree(root))
-
-    def simular_recepcao_mensagem(message: ACLMessage):
-        """Simula o handle_request
-        O ACLMessage usa xml.etree.ElementTree, enquanto generateDS usa lxml.etree.Element, 
-        que são incompatíveis. Por isso é preciso converter e ler de strings.
-        """
-
-        # Recupera instância SwitchingCommand 
-        # uso um "cast" para dar uma dica pro Intellisense [Ctrl+Space]
-        root: swc.SwitchingCommand = swc.parseString(to_string(message.content))
-        plano = root.get_SwitchingPlan()
-        for acao in plano.get_SwitchAction():
-            dump(to_elementtree(acao))
-
-    simular_recepcao_mensagem(message)
-        
-
