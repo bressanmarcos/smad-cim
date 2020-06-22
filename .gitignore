@@ -3,3 +3,4 @@ mygrid
 generateDS
 .vscode
 *.pyc
+*cache*
