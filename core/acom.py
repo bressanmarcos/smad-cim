@@ -40,6 +40,7 @@ class ReceberComando(FipaRequestProtocol):
     para manobra de chaves
     *SwitchingCommand*
     """
+    obj = 'SwitchingCommand'
 
     def __init__(self, agent: AgenteSMAD):
         super().__init__(agent, is_initiator=False)
@@ -51,7 +52,7 @@ class ReceberComando(FipaRequestProtocol):
         com agree / refuse / not_understood"""
 
         # Esperado SwitchingCommand
-        if message.ontology != 'SwitchingCommand':
+        if message.ontology != ReceberComando.obj:
             reply = message.create_reply()
             reply.set_performative(ACLMessage.NOT_UNDERSTOOD)
             reply.set_ontology('')
@@ -119,7 +120,6 @@ class AgenteCom(AgenteSMAD):
         self.enderecos_IEDs = enderecos_IEDs
         self.behaviours.append(EnvioDeDados(self))
         self.behaviours.append(ReceberComando(self))
-        # self.call_later(10, self.definir_mensagem)
 
     def comandar_chave(self, switchId=None, action='open'):
         """Implementa rotina low-level para use case Comandar chave
@@ -132,7 +132,3 @@ class AgenteCom(AgenteSMAD):
         endereco = self.enderecos_IEDs[switchId]
         display_message(
             self.aid.name, f'Comando "{value_to_write}" ({action}) --> {switchId} [{endereco}]')
-
-    def definir_mensagem(self):
-        # Diagnosticar falta::Informar atuação de chaves
-        pass

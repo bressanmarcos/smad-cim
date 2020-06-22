@@ -1,5 +1,4 @@
 import datetime
-import time
 from random import random
 from uuid import uuid4
 
@@ -9,22 +8,22 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
                                        FipaSubscribeProtocol, TimedBehaviour)
 from pade.misc.utility import display_message
 
-from common import AgenteSMAD, to_elementtree, to_string, dump
+from core.common import AgenteSMAD, to_elementtree, to_string, dump
+from core.acom import AgenteCom
 
 import sys
 sys.path.insert(0, '../')
 from information_model import SwitchingCommand as swc
 
-class SubscriptionACom(FipaSubscribeProtocol):
+class SubscreverACom(FipaSubscribeProtocol):
     def __init__(self, agent: AgenteSMAD, message=None, is_initiator=True):
         super().__init__(agent, message=message, is_initiator=is_initiator)
-        self.on_start()
-
+        
     def handle_agree(self, message):
-        display_message(self.agent.aid.name, 'Fui aceito!')
+        display_message(self.agent.aid.name, 'Inscrito em ACom')
 
     def handle_inform(self, message: ACLMessage):    
-        # Funções chamadas de acordo com a ontologia da mensagem
+        # TODO: Funções chamadas de acordo com a ontologia da mensagem
         def outage(message):
             display_message(self.agent.aid.name, 'Mensagem INFORM recebida de %s' % message.sender.localname)
             print(message.content)
@@ -39,8 +38,8 @@ class SubscriptionACom(FipaSubscribeProtocol):
             self.agent.send(not_understood)
 
 class EnviarComando(FipaRequestProtocol):
-    def __init__(self, agent, message=None):
-        super().__init__(agent, message, is_initiator=True)
+    def __init__(self, agent):
+        super().__init__(agent, message=None, is_initiator=True)
 
     def handle_not_understood(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Mensagem não compreendida')
@@ -55,17 +54,22 @@ class EnviarComando(FipaRequestProtocol):
         display_message(self.agent.aid.name, message.content)
 
 class AgenteDC(AgenteSMAD):
-    def __init__(self, aid, subestacao, message=None, debug=False):
+    def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, subestacao, debug)
-        self.behaviours.append(EnviarComando(self, message))
-        # self.call_later(10, self.later)
+        self.behaviours.append(EnviarComando(self))
 
-    def later(self):
-        display_message(self.aid.name, 'Vou me subscrever com o ACom')
-        subscribe_message = ACLMessage(ACLMessage.SUBSCRIBE)
-        subscribe_message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
-        for agent_name, agent_address in self.agentInstance.table.items():
-            if agent_name.startswith('agente_com'):
-                subscribe_message.add_receiver(agent_address)
-
-        self.behaviours.append(SubscriptionACom(self, subscribe_message))
+    def subscribe_to(self, acom_aid: AID):
+        """Subcribe to ``AgenteCom``"""
+        message = ACLMessage(ACLMessage.SUBSCRIBE)
+        message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
+        message.add_receiver(acom_aid)
+        self.subscribe_behaviour = SubscreverACom(self, message, is_initiator=True)
+        self.behaviours.append(self.subscribe_behaviour)
+        def later():
+            if hasattr(self, 'agentInstance') and acom_aid.name in self.agentInstance.table:
+                # Envia mensagem
+                self.subscribe_behaviour.on_start()
+            else:
+                # Reenvia mensagem mais tarde
+                self.call_later(5.0, later)
+        later()
