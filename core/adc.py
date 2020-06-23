@@ -43,20 +43,38 @@ class EnviarComando(FipaRequestProtocol):
 
     def handle_not_understood(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Mensagem não compreendida')
-        display_message(self.agent.aid.name, message.content)
+        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
 
     def handle_failure(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Falha em execução de comando')
-        display_message(self.agent.aid.name, message.content)
+        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
 
     def handle_inform(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Chaveamento realizado')
-        display_message(self.agent.aid.name, message.content)
+        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
 
 class AgenteDC(AgenteSMAD):
     def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, subestacao, debug)
         self.behaviours.append(EnviarComando(self))
+
+    def enviar_comando_de_chave(self, switching_command: swc.SwitchingCommand, acom_aid: AID):
+        # Monta envelope de mensagem ACL
+        message = ACLMessage(ACLMessage.REQUEST)
+        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+        message.add_receiver(acom_aid)
+        message.set_ontology('SwitchingCommand')
+        message.set_content(to_elementtree(switching_command))
+        def later():
+            # Se o ACom já estiver na tabela
+            if hasattr(self, 'agentInstance') and acom_aid.name in self.agentInstance.table:
+                # Envia mensagem
+                self.send(message)
+            else:
+                # Reenvia mensagem 5 segundos mais tarde
+                self.call_later(5.0, later)
+        later()
+
 
     def subscribe_to(self, acom_aid: AID):
         """Subcribe to ``AgenteCom``"""

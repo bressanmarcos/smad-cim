@@ -80,7 +80,7 @@ def test_acom():
     root = swc.SwitchingCommand(SwitchingPlan=plano)
 
     # Monta envelope de mensagem ACL
-    message = ACLMessage(performative=ACLMessage.INFORM)
+    message = ACLMessage(performative=ACLMessage.REQUEST)
     message.set_ontology('SwitchingCommand')
     message.set_content(to_elementtree(root))
 
