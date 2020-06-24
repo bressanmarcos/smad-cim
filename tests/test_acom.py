@@ -2,6 +2,7 @@ import pytest
 import datetime
 import time
 from random import random
+import multiprocessing
 from uuid import uuid4
 
 from pade.acl.aid import AID
@@ -12,11 +13,26 @@ from pade.core.agent import Agent_
 import sys
 sys.path.insert(0, '../')
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
-from core.acom import AgenteCom # pylint: disable=import-error,no-name-in-module
+from core.acom import AgenteCom, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
-def test_handle_request(deactivate_send_message):
-    """Testa (sem Rede) o handle_request do ACom"""
+queue = None
+@pytest.fixture(scope='function')
+def debug_comandar_chave(monkeypatch):
+    """Injeta um retorno das mensagens recebidas pela função
+    ``comandar_chave`` na fila ``queue``"""
+    global queue
+    queue = multiprocessing.Queue()
+    def stack_comandar_chave(comandar_chave):
+        def wrapper_comandar_chave(self, switchId=None, action='open'):
+            queue.put_nowait((switchId, action))
+            comandar_chave(self, switchId, action)
+        return wrapper_comandar_chave
+
+    monkeypatch.setattr(AgenteCom, 'comandar_chave', stack_comandar_chave(AgenteCom.comandar_chave))
+
+def test_handle_request(deactivate_send_message, debug_comandar_chave):
+    """Testa (sem Rede) o ReceberComando::handle_request do ACom"""
     enderecos_S1 = {"CH1": "192.168.0.101",
                     "CH2": "192.168.0.102",
                     "CH3": "192.168.0.103",
@@ -75,10 +91,13 @@ def test_handle_request(deactivate_send_message):
 
     # Monta envelope de mensagem ACL
     message = ACLMessage(performative=ACLMessage.REQUEST)
+    message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
     message.set_ontology('SwitchingCommand')
     message.set_content(to_elementtree(root))
 
     # Simula recepção de mensagem
-    print('Execução de handle_request')
-    acom.behaviours[1].handle_request(message)       
+    acom.behaviours[1].handle_request(message)      
 
+    # Testa valores retornados
+    assert queue.get_nowait() == ('CH14', swc.SwitchActionKind.OPEN)
+    assert queue.get_nowait() == ('CH13', swc.SwitchActionKind.CLOSE)
