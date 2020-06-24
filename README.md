@@ -5,7 +5,7 @@ Baixar última versão do:
 - cimrdf.py em https://github.com/bressanmarcos/cimrdf.py
 - mygrid em https://github.com/grei-ufc/MyGrid
 
-Para executar um agente:
+Para executar um ou mais agentes (não esquecer da chamada a ``start_loop``):
 ```
-pade start-runtime agente.py
+pade start-runtime agente1.py agente2.py [...]
 ``` 
