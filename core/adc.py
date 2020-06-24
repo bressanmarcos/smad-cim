@@ -12,7 +12,7 @@ from core.common import AgenteSMAD, to_elementtree, to_string, dump
 from core.acom import AgenteCom
 
 import sys
-sys.path.insert(0, '../')
+sys.path.insert(0, '../') # Adiciona a pasta pai no Path para ser usada na linha abaixo
 from information_model import SwitchingCommand as swc
 
 class SubscreverACom(FipaSubscribeProtocol):
@@ -24,13 +24,13 @@ class SubscreverACom(FipaSubscribeProtocol):
 
     def handle_inform(self, message: ACLMessage):    
         # TODO: Funções chamadas de acordo com a ontologia da mensagem
-        def outage(message):
+        def handle_outage(message):
             display_message(self.agent.aid.name, 'Mensagem INFORM recebida de %s' % message.sender.localname)
             print(message.content)
 
         # Chama a função que corresponde à ontologia da mensagem
         try:
-            locals()[message.ontology](message)
+            locals()[f'handle_{message.ontology}'](message)
         except:
             display_message(self.agent.aid.name, 'Mensagem não reconhecida')
             not_understood = message.create_reply()

@@ -14,43 +14,31 @@ from pade.misc.utility import start_loop
 import sys
 sys.path.insert(0, '../')
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
-from core.adc import AgenteDC, SubscreverACom # pylint: disable=import-error,no-name-in-module
-from core.acom import AgenteCom, EnvioDeDados # pylint: disable=import-error,no-name-in-module
+from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
+from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
-@pytest.fixture
-def delete_call_later(monkeypatch):
-    """Impede o uso de call_later"""
-    monkeypatch.setattr(Agent_, "call_later", lambda self, time, method, *args: 1)
-
-@pytest.fixture()
-def mock_debug_send_message(monkeypatch):
-
-    def stack_send(original_send):
-        def wrap_send(self, message, receivers):
-            dump(message)
-            return original_send(self, message, receivers)
-        return wrap_send
-
-    monkeypatch.setattr(Agent_, '_send', stack_send(Agent_._send))
-
-queue = []
-@pytest.fixture
-def injetar_queue(monkeypatch):
+queue = None
+@pytest.fixture(scope='function')
+def testar_recepcao_de_mensagem_1(monkeypatch):
+    """Injeta um retorno das mensagens recebidas pelos
+    comandos EnvioDeDados::handle_subscribe do ACom e 
+    SubscreverACom::handle_agree do ADC.
+    Valores podem ser recuperados pela Fila ``queue``"""
     global queue
+    queue = multiprocessing.Queue()
     def stash(original, queue):
         def wrapper(self, message):
-            queue.append(message.performative)
-            print(queue)
+            queue.put_nowait(message.performative)
             return original(self, message)
         return wrapper
 
     monkeypatch.setattr(EnvioDeDados, 'handle_subscribe', stash(EnvioDeDados.handle_subscribe, queue))
     monkeypatch.setattr(SubscreverACom, 'handle_agree', stash(SubscreverACom.handle_agree, queue))
 
-def test_subscribe(with_ams, injetar_queue):
-    def process():
-        sniffer = with_ams
+def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
+    def parallel_process():
+        sniffer = run_ams
         acom = AgenteCom(AID('acom@localhost:9001'), 'S1', debug=True)
         acom.ams = sniffer.ams
         adc = AgenteDC(AID('agentdc@localhost:9000'), 'S1', debug=True)
@@ -58,13 +46,35 @@ def test_subscribe(with_ams, injetar_queue):
         adc.ams = sniffer.ams
         start_loop([sniffer, adc, acom])
 
-    p = multiprocessing.Process(target=process)
-    p.start(), time.sleep(20), p.terminate()
+    p = multiprocessing.Process(target=parallel_process)
+    p.start(), time.sleep(20.0), p.kill()
 
-def test_comando_de_chaves(with_ams):
+    # Testar ordem de recepção de mensagens (performatives)
+    assert queue.get_nowait() == 'subscribe'
+    assert queue.get_nowait() == 'agree'
+
+
+@pytest.fixture(scope='function')
+def testar_recepcao_de_mensagem_2(monkeypatch):
+    """Injeta um retorno das mensagens recebidas pelos
+    comandos EnviarComando::handle_inform do ADC e 
+    ReceberComando::handle_request do ACom
+    Valores podem ser recuperados pela Fila ``queue``"""
+    global queue
+    queue = multiprocessing.Queue()
+    def stash(original, queue):
+        def wrapper(self, message):
+            queue.put_nowait(message.performative)
+            return original(self, message)
+        return wrapper
+
+    monkeypatch.setattr(EnviarComando, 'handle_inform', stash(EnviarComando.handle_inform, queue))
+    monkeypatch.setattr(ReceberComando, 'handle_request', stash(ReceberComando.handle_request, queue))
+
+def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mensagem_2):
 
     def parallel_process():
-        sniffer = with_ams
+        sniffer = run_ams
         # Define lista de chaves do ACom
         enderecos_S1 = {"CH1": "192.168.0.101",
                     "CH2": "192.168.0.102",
@@ -119,5 +129,10 @@ def test_comando_de_chaves(with_ams):
         start_loop([sniffer, adc, acom])
 
     p = multiprocessing.Process(target=parallel_process)
-    p.start(), time.sleep(20), p.terminate()
+    p.start(), time.sleep(20.0), p.kill()
+
+    # Testar ordem de recepção de mensagens (performatives)
+    assert queue.get_nowait() == 'request'
+    assert queue.get_nowait() == 'inform'
+    
 

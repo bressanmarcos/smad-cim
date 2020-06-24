@@ -15,14 +15,8 @@ from core.common import to_elementtree, to_string, dump # pylint: disable=import
 from core.acom import AgenteCom # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
-@pytest.fixture(autouse=True)
-def mock_send_message(monkeypatch):
-    """Evita o envio de mensagem pelo ator, 
-    Em vez disso, imprime na tela a mensagem que seria enviada
-    """
-    monkeypatch.setattr(Agent_, "_send", lambda self, message, receivers: dump(message))
-
-def test_acom():
+def test_handle_request(deactivate_send_message):
+    """Testa (sem Rede) o handle_request do ACom"""
     enderecos_S1 = {"CH1": "192.168.0.101",
                     "CH2": "192.168.0.102",
                     "CH3": "192.168.0.103",
