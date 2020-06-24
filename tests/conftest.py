@@ -26,7 +26,7 @@ def run_ams():
     ams_dict = {'name': 'localhost', 'port': randint(10000, 60000)}
 
     # Executa AMS num subprocesso com ``python new_ams.py user email pass {porta}``
-    commands = ['python', new_ams.__file__, 'user', 'email', 'pass', str(ams_dict['port'])]
+    commands = ['python', new_ams.__file__, 'pade_user', 'email@', '12345', str(ams_dict['port'])]
     p = subprocess.Popen(commands, stdin=subprocess.PIPE)
 
     # Instancia Sniffer para ser executado na {porta+1}
