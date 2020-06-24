@@ -12,7 +12,7 @@ from pade.core.agent import Agent_
 
 import sys
 sys.path.insert(0, '../')
-from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
+from core.common import to_elementtree, to_string, dump, validate # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
@@ -88,7 +88,7 @@ def test_handle_request(deactivate_send_message, debug_comandar_chave):
         purpose=swc.Purpose.COORDINATION, 
         SwitchAction=[acao1, acao0])
     root = swc.SwitchingCommand(SwitchingPlan=plano)
-
+    validate(root)
     # Monta envelope de mensagem ACL
     message = ACLMessage(performative=ACLMessage.REQUEST)
     message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)

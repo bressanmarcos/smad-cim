@@ -1,13 +1,18 @@
 """Contém funções e classes úteis
 """
 
-from pade.core.agent import Agent
-from pade.acl.aid import AID
-from pade.acl.messages import ACLMessage
+import sys
+
 import xml.etree.ElementTree as ET
 import lxml.etree as lET
 from xml.dom.minidom import parseString
 
+from pade.core.agent import Agent
+from pade.acl.aid import AID
+from pade.acl.messages import ACLMessage
+
+sys.path.insert(0, '../')
+from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
 def to_elementtree(document, name_=None):
     """Converte elemento do generateDS em ElementTree
@@ -33,6 +38,13 @@ def dump(elementtree):
     rough_string = to_string(elementtree)
     reparsed = parseString(rough_string)
     print(reparsed.toprettyxml(indent=' '*4))
+
+def validate(information_object):
+    gds = swc.GdsCollector_()
+    information_object.validate_(gds, recursive=True)
+    if len(gds.get_messages()) != 0:
+        for message in gds.get_messages():
+            raise Warning(message)
 
 
 class AgenteSMAD(Agent):

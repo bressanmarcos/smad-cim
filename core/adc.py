@@ -8,7 +8,7 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
                                        FipaSubscribeProtocol, TimedBehaviour)
 from pade.misc.utility import display_message
 
-from core.common import AgenteSMAD, to_elementtree, to_string, dump
+from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
 from core.acom import AgenteCom
 
 import sys
@@ -59,6 +59,8 @@ class AgenteDC(AgenteSMAD):
         self.behaviours.append(EnviarComando(self))
 
     def enviar_comando_de_chave(self, switching_command: swc.SwitchingCommand, acom_aid: AID):
+        # Valida objeto de informação
+        validate(switching_command)
         # Monta envelope de mensagem ACL
         message = ACLMessage(ACLMessage.REQUEST)
         message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
