@@ -92,10 +92,6 @@ def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mens
     # Enviar mensagem
     adc.enviar_comando_de_chave(switching_command=root, acom_aid=acom_aid)
     
-    def parallel_process():
-        # Rodar agentes
-        start_loop([adc, acom])
-
     # Executa agentes em outro processo por 20 segundos
     p = multiprocessing.Process(target=start_loop, args=([adc, acom],))
     p.start(), time.sleep(20.0), p.kill()

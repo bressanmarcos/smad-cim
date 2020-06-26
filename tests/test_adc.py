@@ -47,10 +47,6 @@ def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     adc.ams = sniffer.ams
     adc.subscribe_to(acom_aid)
 
-    def parallel_process():
-        # Rodar agentes
-        start_loop([adc, acom])
-
     # Executa agentes em outro processo por 20 segunds
     p = multiprocessing.Process(target=start_loop, args=([adc, acom],))
     p.start(), time.sleep(20.0), p.kill()
