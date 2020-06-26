@@ -2,7 +2,7 @@ import pytest
 import datetime
 import time
 import multiprocessing
-from random import random
+from random import randint
 from uuid import uuid4
 
 from pade.acl.aid import AID
@@ -37,16 +37,22 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
     monkeypatch.setattr(SubscreverACom, 'handle_agree', stash(SubscreverACom.handle_agree, queue))
 
 def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
-    def parallel_process():
-        sniffer = run_ams
-        acom = AgenteCom(AID('acom@localhost:9001'), 'S1', debug=True)
-        acom.ams = sniffer.ams
-        adc = AgenteDC(AID('agentdc@localhost:9000'), 'S1', debug=True)
-        adc.subscribe_to(AID('acom@localhost:9001'))
-        adc.ams = sniffer.ams
-        start_loop([sniffer, adc, acom])
+    
+    sniffer = run_ams
+    acom_aid = AID(f'acom@localhost:{randint(10000, 60000)}')
+    acom = AgenteCom(acom_aid, 'S1', debug=True)
+    acom.ams = sniffer.ams
+    adc_aid = AID(f'agentdc@localhost:{randint(10000, 60000)}')
+    adc = AgenteDC(adc_aid, 'S1', debug=True)
+    adc.ams = sniffer.ams
+    adc.subscribe_to(acom_aid)
 
-    p = multiprocessing.Process(target=parallel_process)
+    def parallel_process():
+        # Rodar agentes
+        start_loop([adc, acom])
+
+    # Executa agentes em outro processo por 20 segunds
+    p = multiprocessing.Process(target=start_loop, args=([adc, acom],))
     p.start(), time.sleep(20.0), p.kill()
 
     # Testar ordem de recepção de mensagens (performatives)

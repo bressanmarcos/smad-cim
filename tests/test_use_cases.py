@@ -2,7 +2,7 @@ import pytest
 import datetime
 import time
 import multiprocessing
-from random import random
+from random import randint
 from uuid import uuid4
 
 from pade.acl.aid import AID
@@ -38,62 +38,66 @@ def testar_recepcao_de_mensagem_2(monkeypatch):
 
 def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mensagem_2):
 
+    sniffer = run_ams
+    # Define lista de chaves do ACom
+    enderecos_S1 = {"CH1": "192.168.0.101",
+                "CH2": "192.168.0.102",
+                "CH3": "192.168.0.103",
+                "CH6": "192.168.0.106",
+                "CH7": "192.168.0.107",
+                "CH8": "192.168.0.108",
+                "CH9": "192.168.0.109",
+                "CH10": "192.168.0.110",
+                "CH11": "192.168.0.111",
+                "CH13": "192.168.0.113",
+                "CH14": "192.168.0.114",
+                "CH15": "192.168.0.115",
+                "CH16": "192.168.0.116"}
+    # Definir agentes ADC e ACom
+    acom_aid = AID(f'acom@localhost:{randint(10000, 60000)}')
+    adc_aid = AID(f'agentdc@localhost:{randint(10000, 60000)}')
+    acom = AgenteCom(acom_aid, 'S1', enderecos_IEDs=enderecos_S1, debug=True)
+    adc = AgenteDC(adc_aid, 'S1', debug=True)
+    # Configurar endereço do AMS de teste
+    acom.ams = sniffer.ams
+    adc.ams = sniffer.ams
+    # Criar objeto a enviar
+    swt13 = swc.ProtectedSwitch(
+        mRID='CH13', name='Switch que protege minha casa')
+    swt14 = swc.ProtectedSwitch(
+        mRID='CH14', name='Switch do portão')
+    acao1 = swc.SwitchAction(
+        executedDateTime=datetime.datetime.now(),
+        isFreeSequence=False,
+        issuedDateTime=datetime.datetime.now(),
+        kind=swc.SwitchActionKind.CLOSE,
+        plannedDateTime=datetime.datetime.now(),
+        sequenceNumber=1,
+        OperatedSwitch=swt13)
+    acao0 = swc.SwitchAction(
+        executedDateTime=datetime.datetime.now(),
+        isFreeSequence=False,
+        issuedDateTime=datetime.datetime.now(),
+        kind=swc.SwitchActionKind.OPEN,
+        plannedDateTime=datetime.datetime.now(),
+        sequenceNumber=0,
+        OperatedSwitch=swt14)
+    plano = swc.SwitchingPlan(
+        mRID=str(uuid4()), 
+        createdDateTime=datetime.datetime.now(),
+        name='Plano de Teste', 
+        purpose=swc.Purpose.COORDINATION, 
+        SwitchAction=[acao1, acao0])
+    root = swc.SwitchingCommand(SwitchingPlan=plano)
+    # Enviar mensagem
+    adc.enviar_comando_de_chave(switching_command=root, acom_aid=acom_aid)
+    
     def parallel_process():
-        sniffer = run_ams
-        # Define lista de chaves do ACom
-        enderecos_S1 = {"CH1": "192.168.0.101",
-                    "CH2": "192.168.0.102",
-                    "CH3": "192.168.0.103",
-                    "CH6": "192.168.0.106",
-                    "CH7": "192.168.0.107",
-                    "CH8": "192.168.0.108",
-                    "CH9": "192.168.0.109",
-                    "CH10": "192.168.0.110",
-                    "CH11": "192.168.0.111",
-                    "CH13": "192.168.0.113",
-                    "CH14": "192.168.0.114",
-                    "CH15": "192.168.0.115",
-                    "CH16": "192.168.0.116"}
-        # Definir agentes ADC e ACom
-        acom = AgenteCom(AID('acom@localhost:9001'), 'S1', enderecos_IEDs=enderecos_S1, debug=True)
-        adc = AgenteDC(AID('agentdc@localhost:9000'), 'S1', debug=True)
-        # Configurar endereço do AMS de teste
-        acom.ams = sniffer.ams
-        adc.ams = sniffer.ams
-        # Criar objeto a enviar
-        swt13 = swc.ProtectedSwitch(
-            mRID='CH13', name='Switch que protege minha casa')
-        swt14 = swc.ProtectedSwitch(
-            mRID='CH14', name='Switch do portão')
-        acao1 = swc.SwitchAction(
-            executedDateTime=datetime.datetime.now(),
-            isFreeSequence=False,
-            issuedDateTime=datetime.datetime.now(),
-            kind=swc.SwitchActionKind.CLOSE,
-            plannedDateTime=datetime.datetime.now(),
-            sequenceNumber=1,
-            OperatedSwitch=swt13)
-        acao0 = swc.SwitchAction(
-            executedDateTime=datetime.datetime.now(),
-            isFreeSequence=False,
-            issuedDateTime=datetime.datetime.now(),
-            kind=swc.SwitchActionKind.OPEN,
-            plannedDateTime=datetime.datetime.now(),
-            sequenceNumber=0,
-            OperatedSwitch=swt14)
-        plano = swc.SwitchingPlan(
-            mRID=str(uuid4()), 
-            createdDateTime=datetime.datetime.now(),
-            name='Plano de Teste', 
-            purpose=swc.Purpose.COORDINATION, 
-            SwitchAction=[acao1, acao0])
-        root = swc.SwitchingCommand(SwitchingPlan=plano)
-        # Enviar mensagem
-        adc.enviar_comando_de_chave(switching_command=root, acom_aid=AID('acom@localhost:9001'))
         # Rodar agentes
-        start_loop([sniffer, adc, acom])
+        start_loop([adc, acom])
 
-    p = multiprocessing.Process(target=parallel_process)
+    # Executa agentes em outro processo por 20 segundos
+    p = multiprocessing.Process(target=start_loop, args=([adc, acom],))
     p.start(), time.sleep(20.0), p.kill()
 
     # Testar ordem de recepção de mensagens (performatives)

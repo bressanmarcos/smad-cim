@@ -1,7 +1,7 @@
 import pytest
 import datetime
 import time
-from random import random
+from random import randint
 import multiprocessing
 from uuid import uuid4
 
@@ -57,7 +57,7 @@ def test_handle_request(deactivate_send_message, debug_comandar_chave):
                     "CH18": "192.168.0.118",
                     "CH16": "192.168.0.116"}
 
-    acom = AgenteCom(AID('acom1@localhost:9000'), 'S1', enderecos_S1)
+    acom = AgenteCom(AID(f'acom1@localhost:{randint(10000, 60000)}'), 'S1', enderecos_S1)
 
     #################################################
     # Exemplo de Arquivo para ser recebido pelo ACOM
