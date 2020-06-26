@@ -29,7 +29,7 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
     queue = multiprocessing.Queue()
     def stash(original, queue):
         def wrapper(self, message):
-            queue.put_nowait(message.performative)
+            queue.put_nowait(message)
             return original(self, message)
         return wrapper
 
@@ -50,7 +50,7 @@ def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     p.start(), time.sleep(20.0), p.kill()
 
     # Testar ordem de recepção de mensagens (performatives)
-    assert queue.get_nowait() == 'subscribe'
-    assert queue.get_nowait() == 'agree'
+    assert queue.get_nowait().performative == 'subscribe'
+    assert queue.get_nowait().performative == 'agree'
 
 

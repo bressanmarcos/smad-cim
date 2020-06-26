@@ -29,7 +29,7 @@ def testar_recepcao_de_mensagem_2(monkeypatch):
     queue = multiprocessing.Queue()
     def stash(original, queue):
         def wrapper(self, message):
-            queue.put_nowait(message.performative)
+            queue.put_nowait(message)
             return original(self, message)
         return wrapper
 
@@ -97,6 +97,6 @@ def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mens
     p.start(), time.sleep(20.0), p.kill()
 
     # Testar ordem de recepção de mensagens (performatives)
-    assert queue.get_nowait() == 'request'
-    assert queue.get_nowait() == 'inform'
+    assert queue.get_nowait().performative == 'request'
+    assert queue.get_nowait().performative == 'inform'
     
