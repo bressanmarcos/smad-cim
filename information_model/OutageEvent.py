@@ -800,7 +800,7 @@ class MixedContainer:
     CategoryText = 1
     CategorySimple = 2
     CategoryComplex = 3
-    # Constants for content_type:
+    # Constants for content:
     TypeNone = 0
     TypeText = 1
     TypeString = 2
@@ -810,15 +810,15 @@ class MixedContainer:
     TypeDouble = 6
     TypeBoolean = 7
     TypeBase64 = 8
-    def __init__(self, category, content_type, name, value):
+    def __init__(self, category, content, name, value):
         self.category = category
-        self.content_type = content_type
+        self.content = content
         self.name = name
         self.value = value
     def getCategory(self):
         return self.category
-    def getContenttype(self, content_type):
-        return self.content_type
+    def getContenttype(self, content):
+        return self.content
     def getValue(self):
         return self.value
     def getName(self):
@@ -836,21 +836,21 @@ class MixedContainer:
                 outfile, level, namespace, name_=name,
                 pretty_print=pretty_print)
     def exportSimple(self, outfile, level, name):
-        if self.content_type == MixedContainer.TypeString:
+        if self.content == MixedContainer.TypeString:
             outfile.write('<%s>%s</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeInteger or \
-                self.content_type == MixedContainer.TypeBoolean:
+        elif self.content == MixedContainer.TypeInteger or \
+                self.content == MixedContainer.TypeBoolean:
             outfile.write('<%s>%d</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeFloat or \
-                self.content_type == MixedContainer.TypeDecimal:
+        elif self.content == MixedContainer.TypeFloat or \
+                self.content == MixedContainer.TypeDecimal:
             outfile.write('<%s>%f</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeDouble:
+        elif self.content == MixedContainer.TypeDouble:
             outfile.write('<%s>%g</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeBase64:
+        elif self.content == MixedContainer.TypeBase64:
             outfile.write('<%s>%s</%s>' % (
                 self.name,
                 base64.b64encode(self.value),
@@ -876,17 +876,17 @@ class MixedContainer:
         else:    # category == MixedContainer.CategoryComplex
             self.value.to_etree(element)
     def to_etree_simple(self, mapping_=None, nsmap_=None):
-        if self.content_type == MixedContainer.TypeString:
+        if self.content == MixedContainer.TypeString:
             text = self.value
-        elif (self.content_type == MixedContainer.TypeInteger or
-                self.content_type == MixedContainer.TypeBoolean):
+        elif (self.content == MixedContainer.TypeInteger or
+                self.content == MixedContainer.TypeBoolean):
             text = '%d' % self.value
-        elif (self.content_type == MixedContainer.TypeFloat or
-                self.content_type == MixedContainer.TypeDecimal):
+        elif (self.content == MixedContainer.TypeFloat or
+                self.content == MixedContainer.TypeDecimal):
             text = '%f' % self.value
-        elif self.content_type == MixedContainer.TypeDouble:
+        elif self.content == MixedContainer.TypeDouble:
             text = '%g' % self.value
-        elif self.content_type == MixedContainer.TypeBase64:
+        elif self.content == MixedContainer.TypeBase64:
             text = '%s' % base64.b64encode(self.value)
         return text
     def exportLiteral(self, outfile, level, name):
@@ -894,45 +894,45 @@ class MixedContainer:
             showIndent(outfile, level)
             outfile.write(
                 'model_.MixedContainer(%d, %d, "%s", "%s"),\n' % (
-                    self.category, self.content_type,
+                    self.category, self.content,
                     self.name, self.value))
         elif self.category == MixedContainer.CategorySimple:
             showIndent(outfile, level)
             outfile.write(
                 'model_.MixedContainer(%d, %d, "%s", "%s"),\n' % (
-                    self.category, self.content_type,
+                    self.category, self.content,
                     self.name, self.value))
         else:    # category == MixedContainer.CategoryComplex
             showIndent(outfile, level)
             outfile.write(
                 'model_.MixedContainer(%d, %d, "%s",\n' % (
-                    self.category, self.content_type, self.name,))
+                    self.category, self.content, self.name,))
             self.value.exportLiteral(outfile, level + 1)
             showIndent(outfile, level)
             outfile.write(')\n')
 
 
 class MemberSpec_(object):
-    def __init__(self, name='', data_type='', container=0,
+    def __init__(self, name='', data='', container=0,
             optional=0, child_attrs=None, choice=None):
         self.name = name
-        self.data_type = data_type
+        self.data = data
         self.container = container
         self.child_attrs = child_attrs
         self.choice = choice
         self.optional = optional
     def set_name(self, name): self.name = name
     def get_name(self): return self.name
-    def set_data_type(self, data_type): self.data_type = data_type
-    def get_data_type_chain(self): return self.data_type
-    def get_data_type(self):
-        if isinstance(self.data_type, list):
-            if len(self.data_type) > 0:
-                return self.data_type[-1]
+    def set_data(self, data): self.data = data
+    def get_data_chain(self): return self.data
+    def get_data(self):
+        if isinstance(self.data, list):
+            if len(self.data) > 0:
+                return self.data[-1]
             else:
                 return 'xs:string'
         else:
-            return self.data_type
+            return self.data
     def set_container(self, container): self.container = container
     def get_container(self): return self.container
     def set_child_attrs(self, child_attrs): self.child_attrs = child_attrs
@@ -2052,7 +2052,7 @@ class Outage(GeneratedsSuper):
 # end class Outage
 
 
-class OutageEvent_Type(GeneratedsSuper):
+class OutageEvent(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
@@ -2067,13 +2067,13 @@ class OutageEvent_Type(GeneratedsSuper):
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, OutageEvent_Type)
+                CurrentSubclassModule_, OutageEvent)
             if subclass is not None:
                 return subclass(*args_, **kwargs_)
-        if OutageEvent_Type.subclass:
-            return OutageEvent_Type.subclass(*args_, **kwargs_)
+        if OutageEvent.subclass:
+            return OutageEvent.subclass(*args_, **kwargs_)
         else:
-            return OutageEvent_Type(*args_, **kwargs_)
+            return OutageEvent(*args_, **kwargs_)
     factory = staticmethod(factory)
     def get_ns_prefix_(self):
         return self.ns_prefix_
@@ -2090,32 +2090,32 @@ class OutageEvent_Type(GeneratedsSuper):
             return True
         else:
             return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='OutageEvent_Type', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('OutageEvent_Type')
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='OutageEvent', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('OutageEvent')
         if imported_ns_def_ is not None:
             namespacedef_ = imported_ns_def_
         if pretty_print:
             eol_ = '\n'
         else:
             eol_ = ''
-        if self.original_tagname_ is not None and name_ == 'OutageEvent_Type':
+        if self.original_tagname_ is not None and name_ == 'OutageEvent':
             name_ = self.original_tagname_
         if UseCapturedNS_ and self.ns_prefix_:
             namespaceprefix_ = self.ns_prefix_ + ':'
         showIndent(outfile, level, pretty_print)
         outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
         already_processed = set()
-        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='OutageEvent_Type')
+        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='OutageEvent')
         if self.hasContent_():
             outfile.write('>%s' % (eol_, ))
-            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='OutageEvent_Type', pretty_print=pretty_print)
+            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='OutageEvent', pretty_print=pretty_print)
             showIndent(outfile, level, pretty_print)
             outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
         else:
             outfile.write('/>%s' % (eol_, ))
-    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='OutageEvent_Type'):
+    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='OutageEvent'):
         pass
-    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='OutageEvent_Type', fromsubclass_=False, pretty_print=True):
+    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='OutageEvent', fromsubclass_=False, pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -2123,7 +2123,7 @@ class OutageEvent_Type(GeneratedsSuper):
         if self.Outage is not None:
             namespaceprefix_ = self.Outage_nsprefix_ + ':' if (UseCapturedNS_ and self.Outage_nsprefix_) else ''
             self.Outage.export(outfile, level, namespaceprefix_, namespacedef_='', name_='Outage', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='OutageEvent_Type', mapping_=None, nsmap_=None):
+    def to_etree(self, parent_element=None, name_='OutageEvent', mapping_=None, nsmap_=None):
         if parent_element is None:
             element = etree_.Element('{grei.ufc.br/smad}' + name_, nsmap=nsmap_)
         else:
@@ -2169,7 +2169,7 @@ class OutageEvent_Type(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.Outage = obj_
             obj_.original_tagname_ = 'Outage'
-# end class OutageEvent_Type
+# end class OutageEvent
 
 
 class ProtectedSwitch(GeneratedsSuper):
@@ -2822,7 +2822,7 @@ class Breaker_DiscreteValue_Integer(GeneratedsSuper):
 
 
 GDSClassesMapping = {
-    'OutageEvent': OutageEvent_Type,
+    'OutageEvent': OutageEvent,
 }
 
 
@@ -2869,8 +2869,8 @@ def parse(inFileName, silence=False, print_warnings=True):
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'OutageEvent_Type'
-        rootClass = OutageEvent_Type
+        rootTag = 'OutageEvent'
+        rootClass = OutageEvent
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     CapturedNsmap_, namespacedefs = get_required_ns_prefix_defs(rootNode)
@@ -2901,8 +2901,8 @@ def parseEtree(inFileName, silence=False, print_warnings=True,
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'OutageEvent_Type'
-        rootClass = OutageEvent_Type
+        rootTag = 'OutageEvent'
+        rootClass = OutageEvent
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     # Enable Python to collect the space used by the DOM.
@@ -2944,8 +2944,8 @@ def parseString(inString, silence=False, print_warnings=True):
     gds_collector = GdsCollector_()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'OutageEvent_Type'
-        rootClass = OutageEvent_Type
+        rootTag = 'OutageEvent'
+        rootClass = OutageEvent
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     if not SaveElementTreeNode:
@@ -2972,8 +2972,8 @@ def parseLiteral(inFileName, silence=False, print_warnings=True):
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'OutageEvent_Type'
-        rootClass = OutageEvent_Type
+        rootTag = 'OutageEvent'
+        rootClass = OutageEvent
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     # Enable Python to collect the space used by the DOM.
@@ -3018,7 +3018,7 @@ __all__ = [
     "Discrete",
     "DiscreteValue",
     "Outage",
-    "OutageEvent_Type",
+    "OutageEvent",
     "ProtectedSwitch",
     "ValueAliasSet",
     "ValueToAlias"

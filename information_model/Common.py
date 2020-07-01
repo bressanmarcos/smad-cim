@@ -800,7 +800,7 @@ class MixedContainer:
     CategoryText = 1
     CategorySimple = 2
     CategoryComplex = 3
-    # Constants for content_type:
+    # Constants for content:
     TypeNone = 0
     TypeText = 1
     TypeString = 2
@@ -810,15 +810,15 @@ class MixedContainer:
     TypeDouble = 6
     TypeBoolean = 7
     TypeBase64 = 8
-    def __init__(self, category, content_type, name, value):
+    def __init__(self, category, content, name, value):
         self.category = category
-        self.content_type = content_type
+        self.content = content
         self.name = name
         self.value = value
     def getCategory(self):
         return self.category
-    def getContenttype(self, content_type):
-        return self.content_type
+    def getContenttype(self, content):
+        return self.content
     def getValue(self):
         return self.value
     def getName(self):
@@ -836,21 +836,21 @@ class MixedContainer:
                 outfile, level, namespace, name_=name,
                 pretty_print=pretty_print)
     def exportSimple(self, outfile, level, name):
-        if self.content_type == MixedContainer.TypeString:
+        if self.content == MixedContainer.TypeString:
             outfile.write('<%s>%s</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeInteger or \
-                self.content_type == MixedContainer.TypeBoolean:
+        elif self.content == MixedContainer.TypeInteger or \
+                self.content == MixedContainer.TypeBoolean:
             outfile.write('<%s>%d</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeFloat or \
-                self.content_type == MixedContainer.TypeDecimal:
+        elif self.content == MixedContainer.TypeFloat or \
+                self.content == MixedContainer.TypeDecimal:
             outfile.write('<%s>%f</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeDouble:
+        elif self.content == MixedContainer.TypeDouble:
             outfile.write('<%s>%g</%s>' % (
                 self.name, self.value, self.name))
-        elif self.content_type == MixedContainer.TypeBase64:
+        elif self.content == MixedContainer.TypeBase64:
             outfile.write('<%s>%s</%s>' % (
                 self.name,
                 base64.b64encode(self.value),
@@ -876,17 +876,17 @@ class MixedContainer:
         else:    # category == MixedContainer.CategoryComplex
             self.value.to_etree(element)
     def to_etree_simple(self, mapping_=None, nsmap_=None):
-        if self.content_type == MixedContainer.TypeString:
+        if self.content == MixedContainer.TypeString:
             text = self.value
-        elif (self.content_type == MixedContainer.TypeInteger or
-                self.content_type == MixedContainer.TypeBoolean):
+        elif (self.content == MixedContainer.TypeInteger or
+                self.content == MixedContainer.TypeBoolean):
             text = '%d' % self.value
-        elif (self.content_type == MixedContainer.TypeFloat or
-                self.content_type == MixedContainer.TypeDecimal):
+        elif (self.content == MixedContainer.TypeFloat or
+                self.content == MixedContainer.TypeDecimal):
             text = '%f' % self.value
-        elif self.content_type == MixedContainer.TypeDouble:
+        elif self.content == MixedContainer.TypeDouble:
             text = '%g' % self.value
-        elif self.content_type == MixedContainer.TypeBase64:
+        elif self.content == MixedContainer.TypeBase64:
             text = '%s' % base64.b64encode(self.value)
         return text
     def exportLiteral(self, outfile, level, name):
@@ -894,45 +894,45 @@ class MixedContainer:
             showIndent(outfile, level)
             outfile.write(
                 'model_.MixedContainer(%d, %d, "%s", "%s"),\n' % (
-                    self.category, self.content_type,
+                    self.category, self.content,
                     self.name, self.value))
         elif self.category == MixedContainer.CategorySimple:
             showIndent(outfile, level)
             outfile.write(
                 'model_.MixedContainer(%d, %d, "%s", "%s"),\n' % (
-                    self.category, self.content_type,
+                    self.category, self.content,
                     self.name, self.value))
         else:    # category == MixedContainer.CategoryComplex
             showIndent(outfile, level)
             outfile.write(
                 'model_.MixedContainer(%d, %d, "%s",\n' % (
-                    self.category, self.content_type, self.name,))
+                    self.category, self.content, self.name,))
             self.value.exportLiteral(outfile, level + 1)
             showIndent(outfile, level)
             outfile.write(')\n')
 
 
 class MemberSpec_(object):
-    def __init__(self, name='', data_type='', container=0,
+    def __init__(self, name='', data='', container=0,
             optional=0, child_attrs=None, choice=None):
         self.name = name
-        self.data_type = data_type
+        self.data = data
         self.container = container
         self.child_attrs = child_attrs
         self.choice = choice
         self.optional = optional
     def set_name(self, name): self.name = name
     def get_name(self): return self.name
-    def set_data_type(self, data_type): self.data_type = data_type
-    def get_data_type_chain(self): return self.data_type
-    def get_data_type(self):
-        if isinstance(self.data_type, list):
-            if len(self.data_type) > 0:
-                return self.data_type[-1]
+    def set_data(self, data): self.data = data
+    def get_data_chain(self): return self.data
+    def get_data(self):
+        if isinstance(self.data, list):
+            if len(self.data) > 0:
+                return self.data[-1]
             else:
                 return 'xs:string'
         else:
-            return self.data_type
+            return self.data
     def set_container(self, container): self.container = container
     def get_container(self): return self.container
     def set_child_attrs(self, child_attrs): self.child_attrs = child_attrs

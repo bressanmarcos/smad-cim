@@ -1461,7 +1461,7 @@ class SwitchAction(GeneratedsSuper):
 # end class SwitchAction
 
 
-class SwitchingCommand_Type(GeneratedsSuper):
+class SwitchingCommand(GeneratedsSuper):
     __hash__ = GeneratedsSuper.__hash__
     subclass = None
     superclass = None
@@ -1476,13 +1476,13 @@ class SwitchingCommand_Type(GeneratedsSuper):
     def factory(*args_, **kwargs_):
         if CurrentSubclassModule_ is not None:
             subclass = getSubclassFromModule_(
-                CurrentSubclassModule_, SwitchingCommand_Type)
+                CurrentSubclassModule_, SwitchingCommand)
             if subclass is not None:
                 return subclass(*args_, **kwargs_)
-        if SwitchingCommand_Type.subclass:
-            return SwitchingCommand_Type.subclass(*args_, **kwargs_)
+        if SwitchingCommand.subclass:
+            return SwitchingCommand.subclass(*args_, **kwargs_)
         else:
-            return SwitchingCommand_Type(*args_, **kwargs_)
+            return SwitchingCommand(*args_, **kwargs_)
     factory = staticmethod(factory)
     def get_ns_prefix_(self):
         return self.ns_prefix_
@@ -1499,32 +1499,32 @@ class SwitchingCommand_Type(GeneratedsSuper):
             return True
         else:
             return False
-    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='SwitchingCommand_Type', pretty_print=True):
-        imported_ns_def_ = GenerateDSNamespaceDefs_.get('SwitchingCommand_Type')
+    def export(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='SwitchingCommand', pretty_print=True):
+        imported_ns_def_ = GenerateDSNamespaceDefs_.get('SwitchingCommand')
         if imported_ns_def_ is not None:
             namespacedef_ = imported_ns_def_
         if pretty_print:
             eol_ = '\n'
         else:
             eol_ = ''
-        if self.original_tagname_ is not None and name_ == 'SwitchingCommand_Type':
+        if self.original_tagname_ is not None and name_ == 'SwitchingCommand':
             name_ = self.original_tagname_
         if UseCapturedNS_ and self.ns_prefix_:
             namespaceprefix_ = self.ns_prefix_ + ':'
         showIndent(outfile, level, pretty_print)
         outfile.write('<%s%s%s' % (namespaceprefix_, name_, namespacedef_ and ' ' + namespacedef_ or '', ))
         already_processed = set()
-        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='SwitchingCommand_Type')
+        self.exportAttributes(outfile, level, already_processed, namespaceprefix_, name_='SwitchingCommand')
         if self.hasContent_():
             outfile.write('>%s' % (eol_, ))
-            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='SwitchingCommand_Type', pretty_print=pretty_print)
+            self.exportChildren(outfile, level + 1, namespaceprefix_, namespacedef_, name_='SwitchingCommand', pretty_print=pretty_print)
             showIndent(outfile, level, pretty_print)
             outfile.write('</%s%s>%s' % (namespaceprefix_, name_, eol_))
         else:
             outfile.write('/>%s' % (eol_, ))
-    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='SwitchingCommand_Type'):
+    def exportAttributes(self, outfile, level, already_processed, namespaceprefix_='', name_='SwitchingCommand'):
         pass
-    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='SwitchingCommand_Type', fromsubclass_=False, pretty_print=True):
+    def exportChildren(self, outfile, level, namespaceprefix_='', namespacedef_='xmlns:smad="grei.ufc.br/smad"', name_='SwitchingCommand', fromsubclass_=False, pretty_print=True):
         if pretty_print:
             eol_ = '\n'
         else:
@@ -1532,7 +1532,7 @@ class SwitchingCommand_Type(GeneratedsSuper):
         if self.SwitchingPlan is not None:
             namespaceprefix_ = self.SwitchingPlan_nsprefix_ + ':' if (UseCapturedNS_ and self.SwitchingPlan_nsprefix_) else ''
             self.SwitchingPlan.export(outfile, level, namespaceprefix_, namespacedef_='', name_='SwitchingPlan', pretty_print=pretty_print)
-    def to_etree(self, parent_element=None, name_='SwitchingCommand_Type', mapping_=None, nsmap_=None):
+    def to_etree(self, parent_element=None, name_='SwitchingCommand', mapping_=None, nsmap_=None):
         if parent_element is None:
             element = etree_.Element('{grei.ufc.br/smad}' + name_, nsmap=nsmap_)
         else:
@@ -1578,7 +1578,7 @@ class SwitchingCommand_Type(GeneratedsSuper):
             obj_.build(child_, gds_collector_=gds_collector_)
             self.SwitchingPlan = obj_
             obj_.original_tagname_ = 'SwitchingPlan'
-# end class SwitchingCommand_Type
+# end class SwitchingCommand
 
 
 class SwitchingPlan(GeneratedsSuper):
@@ -1926,7 +1926,7 @@ class Breaker_DiscreteValue_Integer(GeneratedsSuper):
 
 
 GDSClassesMapping = {
-    'SwitchingCommand': SwitchingCommand_Type,
+    'SwitchingCommand': SwitchingCommand,
 }
 
 
@@ -1973,8 +1973,8 @@ def parse(inFileName, silence=False, print_warnings=True):
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'SwitchingCommand_Type'
-        rootClass = SwitchingCommand_Type
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     CapturedNsmap_, namespacedefs = get_required_ns_prefix_defs(rootNode)
@@ -2005,8 +2005,8 @@ def parseEtree(inFileName, silence=False, print_warnings=True,
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'SwitchingCommand_Type'
-        rootClass = SwitchingCommand_Type
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     # Enable Python to collect the space used by the DOM.
@@ -2048,8 +2048,8 @@ def parseString(inString, silence=False, print_warnings=True):
     gds_collector = GdsCollector_()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'SwitchingCommand_Type'
-        rootClass = SwitchingCommand_Type
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     if not SaveElementTreeNode:
@@ -2076,8 +2076,8 @@ def parseLiteral(inFileName, silence=False, print_warnings=True):
     rootNode = doc.getroot()
     rootTag, rootClass = get_root_tag(rootNode)
     if rootClass is None:
-        rootTag = 'SwitchingCommand_Type'
-        rootClass = SwitchingCommand_Type
+        rootTag = 'SwitchingCommand'
+        rootClass = SwitchingCommand
     rootObj = rootClass.factory()
     rootObj.build(rootNode, gds_collector_=gds_collector)
     # Enable Python to collect the space used by the DOM.
@@ -2119,6 +2119,6 @@ __all__ = [
     "Breaker_DiscreteValue_Integer",
     "ProtectedSwitch",
     "SwitchAction",
-    "SwitchingCommand_Type",
+    "SwitchingCommand",
     "SwitchingPlan"
 ]
