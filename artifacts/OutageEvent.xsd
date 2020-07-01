@@ -1,374 +1,216 @@
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:sawsdl="http://www.w3.org/ns/sawsdl" xmlns:m="grei.ufc.br/smad#" targetNamespace="grei.ufc.br/smad#" elementFormDefault="qualified" attributeFormDefault="unqualified">&amp;#13;
-	<xs:element name="OutageEvent" type="m:OutageEvent"/>&amp;#13;
-	<xs:complexType name="OutageEvent">&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="Outage" type="m:Outage" minOccurs="1" maxOccurs="1"/>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:complexType name="Analog" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>Analog represents an analog Measurement.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="name" minOccurs="1" maxOccurs="1" type="m:Analog_Meas" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog.name">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The name is any free human readable and possibly non unique text naming the object.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="phases" minOccurs="1" maxOccurs="1" type="m:PhaseCode" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog.phases">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Indicates to which phases the measurement applies and avoids the need to use 'measurementType' to also encode phase information (which would explode the types). The phase information in Measurement, along with 'measurementType' and 'phases' uniquely defines a Measurement for a device, based on normal network phase. Their meaning will not change when the computed energizing phasing is changed due to jumpers or other reasons.</xs:documentation>&amp;#13;
-					<xs:documentation>If the attribute is missing three phases (ABC) shall be assumed.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="unitMultiplier" minOccurs="1" maxOccurs="1" type="m:UnitMultiplier" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog.unitMultiplier">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The unit multiplier of the measured quantity.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="unitSymbol" minOccurs="1" maxOccurs="1" type="m:UnitSymbol" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog.unitSymbol">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The unit of measure of the measured quantity.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="AnalogValue" minOccurs="1" maxOccurs="1" type="m:AnalogValue" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog.AnalogValue">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The values connected to this measurement.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:complexType name="AnalogValue" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#AnalogValue">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>AnalogValue represents an analog MeasurementValue.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="timeStamp" minOccurs="0" maxOccurs="1" type="xs:dateTime" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#AnalogValue.timeStamp">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The time when the value was last updated</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="value" minOccurs="1" maxOccurs="1" type="xs:float" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#AnalogValue.value">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The value to supervise.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:simpleType name="Analog_Meas" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog_Meas">&amp;#13;
-		<xs:restriction base="xs:string">&amp;#13;
-			<xs:enumeration value="CurrentMagnitude" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog_Meas.CurrentMagnitude"/>&amp;#13;
-			<xs:enumeration value="CurrentPhase" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Analog_Meas.CurrentPhase"/>&amp;#13;
-		</xs:restriction>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:simpleType name="Breaker_DiscreteMeasAlias" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias">&amp;#13;
-		<xs:restriction base="xs:string">&amp;#13;
-			<xs:enumeration value="Close" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias.Close"/>&amp;#13;
-			<xs:enumeration value="False" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias.False"/>&amp;#13;
-			<xs:enumeration value="Intermediate" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias.Intermediate"/>&amp;#13;
-			<xs:enumeration value="Invalid" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias.Invalid"/>&amp;#13;
-			<xs:enumeration value="Open" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias.Open"/>&amp;#13;
-			<xs:enumeration value="True" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteMeasAlias.True"/>&amp;#13;
-		</xs:restriction>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:simpleType name="Breaker_DiscreteValue_Integer" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Breaker_DiscreteValue_Integer">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>An integer number. The range is unspecified and not limited.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:restriction base=""/>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:complexType name="Discrete" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>Discrete represents a discrete Measurement, i.e. a Measurement representing discrete values, e.g. a Breaker position.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="name" minOccurs="1" maxOccurs="1" type="m:Discrete_Meas" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete.name">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The name is any free human readable and possibly non unique text naming the object.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="DiscreteValue" minOccurs="1" maxOccurs="1" type="m:DiscreteValue" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete.DiscreteValue">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The values connected to this measurement.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="ValueAliasSet" minOccurs="0" maxOccurs="1" type="m:ValueAliasSet" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete.ValueAliasSet">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The ValueAliasSet used for translation of a MeasurementValue.value to a name.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:complexType name="DiscreteValue" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#DiscreteValue">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>DiscreteValue represents a discrete MeasurementValue.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="timeStamp" minOccurs="0" maxOccurs="1" type="xs:dateTime" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#DiscreteValue.timeStamp">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The time when the value was last updated</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="value" minOccurs="1" maxOccurs="1" type="m:Breaker_DiscreteValue_Integer" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#DiscreteValue.value">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The value to supervise.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:simpleType name="Discrete_Meas" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete_Meas">&amp;#13;
-		<xs:restriction base="xs:string">&amp;#13;
-			<xs:enumeration value="BreakerFailure" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete_Meas.BreakerFailure"/>&amp;#13;
-			<xs:enumeration value="BreakerPosition" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Discrete_Meas.BreakerPosition"/>&amp;#13;
-		</xs:restriction>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:complexType name="Outage" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>Document describing details of an active or planned outage in a part of the electrical network.</xs:documentation>&amp;#13;
-			<xs:documentation>A non-planned outage may be created upon:</xs:documentation>&amp;#13;
-			<xs:documentation>- a breaker trip,</xs:documentation>&amp;#13;
-			<xs:documentation>- a fault indicator status change,</xs:documentation>&amp;#13;
-			<xs:documentation>- a meter event indicating customer outage,</xs:documentation>&amp;#13;
-			<xs:documentation>- a reception of one or more customer trouble calls, or</xs:documentation>&amp;#13;
-			<xs:documentation>- an operator command, reflecting information obtained from the field crew.</xs:documentation>&amp;#13;
-			<xs:documentation>Outage restoration may be performed using a switching plan which complements the outage information with detailed switching activities, including the relationship to the crew and work.</xs:documentation>&amp;#13;
-			<xs:documentation>A planned outage may be created upon:</xs:documentation>&amp;#13;
-			<xs:documentation>- a request for service, maintenance or construction work in the field, or</xs:documentation>&amp;#13;
-			<xs:documentation>- an operator-defined outage for what-if/contingency network analysis.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="cause" minOccurs="0" maxOccurs="1" type="xs:string" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage.cause">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The cause of this outage.  This is the cause that is used to present to external entities.  That is, the cause is weather, equipment failure, etc.</xs:documentation>&amp;#13;
-					<xs:documentation>Note: At present, this is a free text; could be replaced with a separate associated class in case we have multiple causes (e.g. OutageCauseType, inheriting from IdentifiedObject).</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="createdDateTime" minOccurs="0" maxOccurs="1" type="xs:dateTime" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage.createdDateTime">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Date and time that this document was created.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="description" minOccurs="0" maxOccurs="1" type="xs:string" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage.description">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The description is a free human readable text describing or naming the object. It may be non unique and may not correlate to a naming hierarchy.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="name" minOccurs="0" maxOccurs="1" type="xs:string" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage.name">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The name is any free human readable and possibly non unique text naming the object.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="startTime" minOccurs="0" maxOccurs="1" type="xs:dateTime" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage.startTime">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The start time of the Outage - as reported by some system or individual</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="ProtectedSwitch" minOccurs="0" maxOccurs="unbounded" type="m:ProtectedSwitch" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#Outage.ProtectedSwitch">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>All equipments associated with this outage.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:simpleType name="PhaseCode" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>An unordered enumeration of phase identifiers.  Allows designation of phases for both transmission and distribution equipment, circuits and loads.   The enumeration, by itself, does not describe how the phases are connected together or connected to ground.  Ground is not explicitly denoted as a phase.</xs:documentation>&amp;#13;
-			<xs:documentation>Residential and small commercial loads are often served from single-phase, or split-phase, secondary circuits. For example of s12N, phases 1 and 2 refer to hot wires that are 180 degrees out of phase, while N refers to the neutral wire. Through single-phase transformer connections, these secondary circuits may be served from one or two of the primary phases A, B, and C. For three-phase loads, use the A, B, C phase codes instead of s12N.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:restriction base="xs:string">&amp;#13;
-			<xs:enumeration value="A" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.A">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phase A.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="AB" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.AB">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phases A and B.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="AC" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.AC">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phases A and C.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="AN" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.AN">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phases A and neutral.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="B" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.B">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phase B.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="BC" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.BC">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phases B and C.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="BN" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.BN">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phases B and neutral.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="C" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.C">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phase C.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="CN" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.CN">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Phases C and neutral.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="N" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#PhaseCode.N">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Neutral phase.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-		</xs:restriction>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:complexType name="ProtectedSwitch" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>A ProtectedSwitch is a switching device that can be operated by ProtectionEquipment.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="mRID" minOccurs="1" maxOccurs="1" type="xs:string" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.mRID">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.</xs:documentation>&amp;#13;
-					<xs:documentation>For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="name" minOccurs="0" maxOccurs="1" type="xs:string" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.name">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The name is any free human readable and possibly non unique text naming the object.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="normalOpen" minOccurs="0" maxOccurs="1" type="xs:boolean" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.normalOpen">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The attribute is used in cases when no Measurement for the status value is present. If the Switch has a status measurement the Discrete.normalValue is expected to match with the Switch.normalOpen.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="switchOnCount" minOccurs="0" maxOccurs="1" type="xs:integer" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.switchOnCount">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The switch on count since the switch was last reset or initialized.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="Analog_Measurement" minOccurs="0" maxOccurs="unbounded" type="m:Analog" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.Analog_Measurement">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The measurements associated with this power system resource.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="Discrete_Measurement" minOccurs="0" maxOccurs="unbounded" type="m:Discrete" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ProtectedSwitch.Discrete_Measurement">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The measurements associated with this power system resource.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:simpleType name="UnitMultiplier" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>The unit multipliers defined for the CIM.  When applied to unit symbols that already contain a multiplier, both multipliers are used. For example, to exchange kilograms using unit symbol of kg, one uses the "none" multiplier, to exchange metric ton (Mg), one uses the "k" multiplier.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:restriction base="xs:string">&amp;#13;
-			<xs:enumeration value="G" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier.G">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Giga 10**9.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="M" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier.M">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Mega 10**6.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="k" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier.k">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Kilo 10**3.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="m" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier.m">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Milli 10**-3.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="micro" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier.micro">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Micro 10**-6.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="none" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitMultiplier.none">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>No multiplier or equivalently multiply by 1.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-		</xs:restriction>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:simpleType name="UnitSymbol" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>The units defined for usage in the CIM.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:restriction base="xs:string">&amp;#13;
-			<xs:enumeration value="A" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol.A">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Current in Ampere.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="VA" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol.VA">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Apparent power in Volt Ampere (See also real power and reactive power.)</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="VAr" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol.VAr">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Reactive power in Volt Ampere reactive. The &#x201C;reactive&#x201D; or &#x201C;imaginary&#x201D; component of electrical power (VIsin(phi)). (See also real power and apparent power).</xs:documentation>&amp;#13;
-					<xs:documentation>Note: Different meter designs use different methods to arrive at their results. Some meters may compute reactive power as an arithmetic value, while others compute the value vectorially. The data consumer should determine the method in use and the suitability of the measurement for the intended purpose.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="W" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol.W">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Real power in Watt (J/s). Electrical power may have real and reactive components. The real portion of electrical power (I&#xB2;R or VIcos(phi)), is expressed in Watts. (See also apparent power and reactive power.)</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="deg" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol.deg">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Plane angle in degrees.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-			<xs:enumeration value="rad" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#UnitSymbol.rad">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>Plane angle in radian (m/m).</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:enumeration>&amp;#13;
-		</xs:restriction>&amp;#13;
-	</xs:simpleType>&amp;#13;
-	<xs:complexType name="ValueAliasSet" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ValueAliasSet">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>Describes the translation of a set of values into a name and is intendend to facilitate cusom translations. Each ValueAliasSet has a name, description etc. A specific Measurement may represent a discrete state like Open, Closed, Intermediate etc. This requires a translation from the MeasurementValue.value number to a string, e.g. 0-&amp;gt;"Invalid", 1-&amp;gt;"Open", 2-&amp;gt;"Closed", 3-&amp;gt;"Intermediate". Each ValueToAlias member in ValueAliasSet.Value describe a mapping for one particular value to a name.</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="Value" minOccurs="0" maxOccurs="unbounded" type="m:ValueToAlias" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ValueAliasSet.Value">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The ValueToAlias mappings included in the set.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-	<xs:complexType name="ValueToAlias" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ValueToAlias">&amp;#13;
-		<xs:annotation>&amp;#13;
-			<xs:documentation>Describes the translation of one particular value into a name, e.g. 1 as "Open".</xs:documentation>&amp;#13;
-		</xs:annotation>&amp;#13;
-		<xs:sequence>&amp;#13;
-			<xs:element name="aliasName" minOccurs="1" maxOccurs="1" type="m:Breaker_DiscreteMeasAlias" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ValueToAlias.aliasName">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The aliasName is free text human readable name of the object alternative to IdentifiedObject.name. It may be non unique and may not correlate to a naming hierarchy.</xs:documentation>&amp;#13;
-					<xs:documentation>The attribute aliasName is retained because of backwards compatibility between CIM relases. It is however recommended to replace aliasName with the Name class as aliasName is planned for retirement at a future time.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-			<xs:element name="value" minOccurs="1" maxOccurs="1" type="m:Breaker_DiscreteValue_Integer" sawsdl:modelReference="http://iec.ch/TC57/CIM-generic#ValueToAlias.value">&amp;#13;
-				<xs:annotation>&amp;#13;
-					<xs:documentation>The value that is mapped.</xs:documentation>&amp;#13;
-				</xs:annotation>&amp;#13;
-			</xs:element>&amp;#13;
-		</xs:sequence>&amp;#13;
-	</xs:complexType>&amp;#13;
-</xs:schema>
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xsd:schema targetNamespace="grei.ufc.br/smad" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:smad="grei.ufc.br/smad" elementFormDefault="qualified">
+	<xsd:include schemaLocation="Common.xsd"/>
+	<xsd:element name="OutageEvent" type="smad:OutageEvent_Type"/>
+	<xsd:complexType name="Analog">
+		<xsd:annotation>
+			<xsd:documentation>Analog represents an analog Measurement.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="name" type="smad:Analog_Meas" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="phases" type="smad:PhaseCode" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Indicates to which phases the measurement applies and avoids the need to use 'measurementType' to also encode phase information (which would explode the types). The phase information in Measurement, along with 'measurementType' and 'phases' uniquely defines a Measurement for a device, based on normal network phase. Their meaning will not change when the computed energizing phasing is changed due to jumpers or other reasons.
+If the attribute is missing three phases (ABC) shall be assumed.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="unitMultiplier" type="smad:UnitMultiplier" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The unit multiplier of the measured quantity.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="unitSymbol" type="smad:UnitSymbol" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The unit of measure of the measured quantity.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="AnalogValue" type="smad:AnalogValue" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The values connected to this measurement.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="AnalogValue">
+		<xsd:annotation>
+			<xsd:documentation>AnalogValue represents an analog MeasurementValue.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="value" type="xsd:float" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The value to supervise.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="timeStamp" type="xsd:dateTime" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The time when the value was last updated</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Discrete">
+		<xsd:annotation>
+			<xsd:documentation>Discrete represents a discrete Measurement, i.e. a Measurement representing discrete values, e.g. a Breaker position.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="name" type="smad:Discrete_Meas" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="DiscreteValue" type="smad:DiscreteValue" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The values connected to this measurement.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ValueAliasSet" type="smad:ValueAliasSet" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The ValueAliasSet used for translation of a MeasurementValue.value to a name.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="DiscreteValue">
+		<xsd:annotation>
+			<xsd:documentation>DiscreteValue represents a discrete MeasurementValue.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="value" type="smad:Breaker_DiscreteValue_Integer" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The value to supervise.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="timeStamp" type="xsd:dateTime" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The time when the value was last updated</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="Outage">
+		<xsd:annotation>
+			<xsd:documentation>Document describing details of an active or planned outage in a part of the electrical network.
+A non-planned outage may be created upon:
+- a breaker trip,
+- a fault indicator status change,
+- a meter event indicating customer outage,
+- a reception of one or more customer trouble calls, or
+- an operator command, reflecting information obtained from the field crew.
+Outage restoration may be performed using a switching plan which complements the outage information with detailed switching activities, including the relationship to the crew and work.
+A planned outage may be created upon:
+- a request for service, maintenance or construction work in the field, or
+- an operator-defined outage for what-if/contingency network analysis.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="startTime" type="xsd:dateTime" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The start time of the Outage - as reported by some system or individual</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="createdDateTime" type="xsd:dateTime" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Date and time that this document was created.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="description" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The description is a free human readable text describing or naming the object. It may be non unique and may not correlate to a naming hierarchy.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="cause" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The cause of this outage.  This is the cause that is used to present to external entities.  That is, the cause is weather, equipment failure, etc.
+
+Note: At present, this is a free text; could be replaced with a separate associated class in case we have multiple causes (e.g. OutageCauseType, inheriting from IdentifiedObject).</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="ProtectedSwitch" type="smad:ProtectedSwitch" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>All equipments associated with this outage.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="OutageEvent_Type">
+		<xsd:sequence>
+			<xsd:element name="Outage" type="smad:Outage" minOccurs="1" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ProtectedSwitch">
+		<xsd:annotation>
+			<xsd:documentation>A ProtectedSwitch is a switching device that can be operated by ProtectionEquipment.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="mRID" type="xsd:string" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>Master resource identifier issued by a model authority. The mRID is unique within an exchange context. Global uniqueness is easily achieved by using a UUID,  as specified in RFC 4122, for the mRID. The use of UUID is strongly recommended.
+For CIMXML data files in RDF syntax conforming to IEC 61970-552 Edition 1, the mRID is mapped to rdf:ID or rdf:about attributes that identify CIM object elements.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="name" type="xsd:string" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The name is any free human readable and possibly non unique text naming the object.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="normalOpen" type="xsd:boolean" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The attribute is used in cases when no Measurement for the status value is present. If the Switch has a status measurement the Discrete.normalValue is expected to match with the Switch.normalOpen.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="switchOnCount" type="xsd:integer" minOccurs="0" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The switch on count since the switch was last reset or initialized.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Discrete_Measurement" type="smad:Discrete" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>The measurements associated with this power system resource.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="Analog_Measurement" type="smad:Analog" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>The measurements associated with this power system resource.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ValueAliasSet">
+		<xsd:annotation>
+			<xsd:documentation>Describes the translation of a set of values into a name and is intendend to facilitate cusom translations. Each ValueAliasSet has a name, description etc. A specific Measurement may represent a discrete state like Open, Closed, Intermediate etc. This requires a translation from the MeasurementValue.value number to a string, e.g. 0-&gt;"Invalid", 1-&gt;"Open", 2-&gt;"Closed", 3-&gt;"Intermediate". Each ValueToAlias member in ValueAliasSet.Value describe a mapping for one particular value to a name.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="Value" type="smad:ValueToAlias" minOccurs="0" maxOccurs="unbounded">
+				<xsd:annotation>
+					<xsd:documentation>The ValueToAlias mappings included in the set.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:complexType name="ValueToAlias">
+		<xsd:annotation>
+			<xsd:documentation>Describes the translation of one particular value into a name, e.g. 1 as "Open".</xsd:documentation>
+		</xsd:annotation>
+		<xsd:sequence>
+			<xsd:element name="value" type="smad:Breaker_DiscreteValue_Integer" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The value that is mapped.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+			<xsd:element name="aliasName" type="smad:Breaker_DiscreteMeasAlias" minOccurs="1" maxOccurs="1">
+				<xsd:annotation>
+					<xsd:documentation>The aliasName is free text human readable name of the object alternative to IdentifiedObject.name. It may be non unique and may not correlate to a naming hierarchy.
+The attribute aliasName is retained because of backwards compatibility between CIM relases. It is however recommended to replace aliasName with the Name class as aliasName is planned for retirement at a future time.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:complexType>
+</xsd:schema>

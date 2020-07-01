@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xsd:schema targetNamespace="grei.ufc.br/smad" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:smad="grei.ufc.br/smad" elementFormDefault="qualified">
+	<xsd:simpleType name="Analog_Meas">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="CurrentMagnitude"/>
+			<xsd:enumeration value="CurrentPhase"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Breaker_DiscreteMeasAlias">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="False"/>
+			<xsd:enumeration value="True"/>
+			<xsd:enumeration value="Invalid"/>
+			<xsd:enumeration value="Open"/>
+			<xsd:enumeration value="Close"/>
+			<xsd:enumeration value="Intermediate"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Breaker_DiscreteValue_Integer_value">
+		<xsd:restriction base="xsd:integer">
+			<xsd:maxInclusive value="3"/>
+			<xsd:minInclusive value="0"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Discrete_Meas">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="BreakerPosition"/>
+			<xsd:enumeration value="BreakerFailure"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="PhaseCode">
+		<xsd:annotation>
+			<xsd:documentation>An unordered enumeration of phase identifiers.  Allows designation of phases for both transmission and distribution equipment, circuits and loads.   The enumeration, by itself, does not describe how the phases are connected together or connected to ground.  Ground is not explicitly denoted as a phase.
+Residential and small commercial loads are often served from single-phase, or split-phase, secondary circuits. For example of s12N, phases 1 and 2 refer to hot wires that are 180 degrees out of phase, while N refers to the neutral wire. Through single-phase transformer connections, these secondary circuits may be served from one or two of the primary phases A, B, and C. For three-phase loads, use the A, B, C phase codes instead of s12N.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="A">
+				<xsd:annotation>
+					<xsd:documentation>Phase A.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="B">
+				<xsd:annotation>
+					<xsd:documentation>Phase B.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="C">
+				<xsd:annotation>
+					<xsd:documentation>Phase C.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="N">
+				<xsd:annotation>
+					<xsd:documentation>Neutral phase.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="AB">
+				<xsd:annotation>
+					<xsd:documentation>Phases A and B.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="AC">
+				<xsd:annotation>
+					<xsd:documentation>Phases A and C.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="BC">
+				<xsd:annotation>
+					<xsd:documentation>Phases B and C.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="AN">
+				<xsd:annotation>
+					<xsd:documentation>Phases A and neutral.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="BN">
+				<xsd:annotation>
+					<xsd:documentation>Phases B and neutral.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="CN">
+				<xsd:annotation>
+					<xsd:documentation>Phases C and neutral.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="Purpose">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="Coordination"/>
+			<xsd:enumeration value="Isolation"/>
+			<xsd:enumeration value="Restoration"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="ReportName">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="FaultReport"/>
+			<xsd:enumeration value="RestorationReport"/>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="SwitchActionKind">
+		<xsd:annotation>
+			<xsd:documentation>Kind of action on switch.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="open">
+				<xsd:annotation>
+					<xsd:documentation>Open the switch.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="close">
+				<xsd:annotation>
+					<xsd:documentation>Close the switch.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="UnitMultiplier">
+		<xsd:annotation>
+			<xsd:documentation>The unit multipliers defined for the CIM.  When applied to unit symbols that already contain a multiplier, both multipliers are used. For example, to exchange kilograms using unit symbol of kg, one uses the "none" multiplier, to exchange metric ton (Mg), one uses the "k" multiplier.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="none">
+				<xsd:annotation>
+					<xsd:documentation>No multiplier or equivalently multiply by 1.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="micro">
+				<xsd:annotation>
+					<xsd:documentation>Micro 10**-6.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="m">
+				<xsd:annotation>
+					<xsd:documentation>Milli 10**-3.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="k">
+				<xsd:annotation>
+					<xsd:documentation>Kilo 10**3.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="M">
+				<xsd:annotation>
+					<xsd:documentation>Mega 10**6.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="G">
+				<xsd:annotation>
+					<xsd:documentation>Giga 10**9.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:simpleType name="UnitSymbol">
+		<xsd:annotation>
+			<xsd:documentation>The units defined for usage in the CIM.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="A">
+				<xsd:annotation>
+					<xsd:documentation>Current in Ampere.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="deg">
+				<xsd:annotation>
+					<xsd:documentation>Plane angle in degrees.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="rad">
+				<xsd:annotation>
+					<xsd:documentation>Plane angle in radian (m/m).</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="W">
+				<xsd:annotation>
+					<xsd:documentation>Real power in Watt (J/s). Electrical power may have real and reactive components. The real portion of electrical power (I²R or VIcos(phi)), is expressed in Watts. (See also apparent power and reactive power.)</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="VA">
+				<xsd:annotation>
+					<xsd:documentation>Apparent power in Volt Ampere (See also real power and reactive power.)</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+			<xsd:enumeration value="VAr">
+				<xsd:annotation>
+					<xsd:documentation>Reactive power in Volt Ampere reactive. The “reactive” or “imaginary” component of electrical power (VIsin(phi)). (See also real power and apparent power).
+Note: Different meter designs use different methods to arrive at their results. Some meters may compute reactive power as an arithmetic value, while others compute the value vectorially. The data consumer should determine the method in use and the suitability of the measurement for the intended purpose.</xsd:documentation>
+				</xsd:annotation>
+			</xsd:enumeration>
+		</xsd:restriction>
+	</xsd:simpleType>
+	<xsd:complexType name="Breaker_DiscreteValue_Integer">
+		<xsd:annotation>
+			<xsd:documentation>An integer number. The range is unspecified and not limited.</xsd:documentation>
+		</xsd:annotation>
+		<xsd:simpleContent>
+			<xsd:extension base="smad:Breaker_DiscreteValue_Integer_value"/>
+		</xsd:simpleContent>
+	</xsd:complexType>
+</xsd:schema>
