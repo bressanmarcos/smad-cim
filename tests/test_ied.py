@@ -9,9 +9,8 @@ from conftest import start_loop
 
 import sys
 sys.path.insert(0, '../')
-from core.ied import IED # pylint: disable=import-error
-from core.acom import AgenteCom # pylint: disable=import-error
-
+from core.ied import IED # pylint: disable=import-error disable=no-name-in-module
+from core.acom import AgenteCom # pylint: disable=import-error disable=no-name-in-module
 
 class MockIED(IED):
     pass
