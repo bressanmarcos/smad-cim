@@ -9,7 +9,6 @@ from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
 from pade.misc.utility import display_message
 from pade.core.agent import Agent_
-from pade.misc.utility import start_loop
 
 import sys
 sys.path.insert(0, '../')
@@ -17,6 +16,8 @@ from core.common import to_elementtree, to_string, dump # pylint: disable=import
 from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
+
+from conftest import start_loop
 
 queue = None
 @pytest.fixture(scope='function')
@@ -93,8 +94,7 @@ def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mens
     adc.enviar_comando_de_chave(switching_command=root, acom_aid=acom_aid)
     
     # Executa agentes em outro processo por 20 segundos
-    p = multiprocessing.Process(target=start_loop, args=([adc, acom],))
-    p.start(), time.sleep(20.0), p.kill()
+    start_loop([adc, acom])
 
     # Testar ordem de recepção de mensagens (performatives)
     assert queue.get_nowait().performative == 'request'

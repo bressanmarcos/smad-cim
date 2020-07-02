@@ -5,12 +5,12 @@ import multiprocessing
 from random import randint
 
 from pade.acl.aid import AID
-from pade.misc.utility import display_message, start_loop, call_in_thread
+from conftest import start_loop
 
 import sys
 sys.path.insert(0, '../')
-from core.ied import IED
-from core.acom import AgenteCom
+from core.ied import IED # pylint: disable=import-error
+from core.acom import AgenteCom # pylint: disable=import-error
 
 
 class MockIED(IED):
@@ -34,6 +34,5 @@ def test_ied(run_ams):
     acom = AgenteCom(AID(f'acom@localhost:{randint(10000, 60000)}'), 'S1', enderecos_S1, True)
     acom.ams = sniffer.ams
 
-    p = multiprocessing.Process(target=start_loop, args=([acom],))
-    p.start(), time.sleep(30.0), p.kill()
+    start_loop([acom])
 

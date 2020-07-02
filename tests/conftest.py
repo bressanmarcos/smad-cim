@@ -7,11 +7,20 @@ from random import randint
 
 from pade.core import new_ams
 from pade.core.sniffer import Sniffer
-from pade.misc.utility import start_loop
+from pade.misc.utility import start_loop as st_loop
 from pade.core.agent import Agent_
 
 sys.path.insert(0, '../')
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
+
+def start_loop(agents, seconds=20.0):
+    """Encapsula o start_loop de modo que quando chamado
+    ele seja executado em outro processo por 20 segundos. \\
+    Ideal para ser usado em testes"""
+
+    p = multiprocessing.Process(target=st_loop, args=(agents,))
+    p.start(), time.sleep(seconds), p.kill()
+
 
 @pytest.fixture(scope='function')
 def run_ams():
