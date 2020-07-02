@@ -66,7 +66,7 @@ def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     adc.subscribe_to(acom_aid)
 
     # Executa agentes em outro processo por 20 segundos
-    start_loop([adc, acom], 50)
+    start_loop([adc, acom])
 
     # Testar ordem de recepção de mensagens (performatives)
     assert queue.get_nowait().performative == 'subscribe'
