@@ -10,7 +10,6 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
 from pade.misc.utility import display_message
 
 from core.common import AgenteSMAD, to_elementtree, to_string, dump
-from core.ied import IED
 
 import sys
 sys.path.insert(0, '../')
@@ -118,29 +117,19 @@ class AgenteCom(AgenteSMAD):
 
     def __init__(self, aid: AID, substation: str, enderecos_IEDs={}, debug=False):
         super().__init__(aid, substation, debug)
-        self.IEDs = {}
-        for (_id, ip) in enderecos_IEDs.items():
-            self.IEDs[_id] = IED(_id, ip, call_on_event=self.receber_evento, initial_breaker_position='close')
+        self.enderecos_IEDs = enderecos_IEDs
         self.behaviours.append(EnvioDeDados(self))
         self.behaviours.append(ReceberComando(self))
-
-    def on_start(self):
-        super().on_start()
-        # Inicia conexão com todos os IEDs
-        for ied, handle in self.IEDs.items():
-            handle.connect()        
-
-    def receber_evento(self, *args):
-        """Função invocada quando ACom recebe mensagem do IED. Formato de entrada: \\
-        ``args = ('PTOC', 'XCBR', BRKF')`` \\
-        Mensagens dos recebidas pelo ACom são reunidas durante um ``deadtime``
-        antes de serem todas encaminhadas (no formato adequado) ao ADC."""
-        # TODO: Para UC de diagóstico de Chaves
-        display_message(self.aid.name, f'Evento recebido: {args}')
-        pass
+        display_message(self.aid.name, "Agente instanciado")
 
     def comandar_chave(self, switchId=None, action='open'):
-        """Chama a instância do IED para operar chave. 
-        A ``id`` do switch coincide com a ``id`` do IED
+        """Implementa rotina low-level para use case Comandar chave
+        Deve ser futuramente acoplado com a libiec61850 para controle de relés
+        Atualmente é somente um stub para controle de uma ÚNICA chave
         """
-        self.IEDs[switchId].operate(action)
+        if action not in ['open', 'close']:
+            raise ValueError(f'Invalid action: {action}') 
+        value_to_write = 1 if action == 'open' else 2
+        endereco = self.enderecos_IEDs[switchId]
+        display_message(
+            self.aid.name, f'Comando "{value_to_write}" ({action}) --> {switchId} [{endereco}]')
