@@ -10,11 +10,14 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
 from pade.misc.utility import display_message
 
 from core.common import AgenteSMAD, to_elementtree, to_string, dump
+from core.ied import IED
 
 import sys
+
 sys.path.insert(0, '../')
 from information_model import SwitchingCommand as swc
- 
+
+
 class EnvioDeDados(FipaSubscribeProtocol):
     """Permite o cadastro de assinantes (em especial, o ADC)
     para que recebam mensagens relativas
@@ -46,7 +49,7 @@ class ReceberComando(FipaRequestProtocol):
         super().__init__(agent, is_initiator=False)
 
     def handle_request(self, message: ACLMessage):
-        """Recepção de mensagem de comando 
+        """Recepção de mensagem de comando
         (conteúdo deve ser um SwitchingCommand)
         OBS: Mensagem recebida deve ser processada e respondida
         com agree / refuse / not_understood"""
@@ -72,7 +75,7 @@ class ReceberComando(FipaRequestProtocol):
                 actionKind = switchAction.get_kind()
                 sequenceNumber = switchAction.get_sequenceNumber()
                 buffer_leitura_acoes.append((sequenceNumber, switchId, actionKind))
-    
+
         except Exception as e:
             # Captura erro de má formatação do documento.
             # Devolve uma mensagem not_understood e finaliza
@@ -110,26 +113,36 @@ class ReceberComando(FipaRequestProtocol):
         reply.set_performative(ACLMessage.INFORM)
         reply.set_ontology('')
         self.agent.send(reply)
-        return   
-        
+        return
+
 
 class AgenteCom(AgenteSMAD):
 
     def __init__(self, aid: AID, substation: str, enderecos_IEDs={}, debug=False):
         super().__init__(aid, substation, debug)
-        self.enderecos_IEDs = enderecos_IEDs
+        self.IEDs = {}
+        for (_id, ip) in enderecos_IEDs.items():
+            self.IEDs[_id] = IED(_id, ip, call_on_event=self.receber_evento, initial_breaker_position='close')
         self.behaviours.append(EnvioDeDados(self))
         self.behaviours.append(ReceberComando(self))
-        display_message(self.aid.name, "Agente instanciado")
+
+    def on_start(self):
+        super().on_start()
+        # Inicia conexão com todos os IEDs
+        for ied, handle in self.IEDs.items():
+            handle.connect()
+
+    def receber_evento(self, *args):
+        """Função invocada quando ACom recebe mensagem do IED. Formato de entrada: \\
+        ``args = ('PTOC', 'XCBR', BRKF')`` \\
+        Mensagens dos recebidas pelo ACom são reunidas durante um ``deadtime``
+        antes de serem todas encaminhadas (no formato adequado) ao ADC."""
+        # TODO: Para UC de diagóstico de Chaves
+        display_message(self.aid.name, f'Evento recebido: {args}')
+        pass
 
     def comandar_chave(self, switchId=None, action='open'):
-        """Implementa rotina low-level para use case Comandar chave
-        Deve ser futuramente acoplado com a libiec61850 para controle de relés
-        Atualmente é somente um stub para controle de uma ÚNICA chave
+        """Chama a instância do IED para operar chave.
+        A ``id`` do switch coincide com a ``id`` do IED
         """
-        if action not in ['open', 'close']:
-            raise ValueError(f'Invalid action: {action}') 
-        value_to_write = 1 if action == 'open' else 2
-        endereco = self.enderecos_IEDs[switchId]
-        display_message(
-            self.aid.name, f'Comando "{value_to_write}" ({action}) --> {switchId} [{endereco}]')
+        self.IEDs[switchId].operate(action)

@@ -10,6 +10,7 @@ from core.adc import AgenteDC
 from core.acom import AgenteCom
 from core.an import AgenteN
 
+from random import randint
 
 def config_agents():
     # Criterios para Agente Negociacao
@@ -124,8 +125,5 @@ class AgenteB(Agent):
 
 
 if __name__ == "__main__":
-    a = AgenteA(AID('elifranio@127.0.0.1:10000'), debug=False)
-    b = AgenteB(AID('agente_b@127.0.0.1:20000'), debug=False)
 
-
-    start_loop([a, b] + config_agents())
+    start_loop(config_agents())
