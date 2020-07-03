@@ -4,16 +4,16 @@ from uuid import uuid4
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
-from pade.behaviours.protocols import (FipaRequestProtocol,
-                                       FipaSubscribeProtocol, TimedBehaviour)
+from pade.behaviours.protocols import (FipaRequestProtocol, FipaSubscribeProtocol, FipaContractNetProtocol)
 from pade.misc.utility import display_message
 
 from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
-from core.acom import AgenteCom
 
 import sys
 sys.path.insert(0, '../') # Adiciona a pasta pai no Path para ser usada na linha abaixo
 from information_model import SwitchingCommand as swc
+
+from rede.xml2objects import carregar_topologia
 
 class SubscreverACom(FipaSubscribeProtocol):
     def __init__(self, agent: AgenteSMAD, message=None, is_initiator=True):
@@ -53,10 +53,26 @@ class EnviarComando(FipaRequestProtocol):
         display_message(self.agent.aid.name, 'Chaveamento realizado')
         display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
 
+
 class AgenteDC(AgenteSMAD):
     def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, subestacao, debug)
         self.behaviours.append(EnviarComando(self))
+        display_message(self.aid.name, "Agente instanciado")
+
+        #Inicio cod Tiago para o agente diagnostico
+        self.subestacao = subestacao
+        self.relatorios_restauracao = list()
+        self.topologia_subestacao = carregar_topologia(subestacao)
+        display_message(self.aid.name,"Subestacao {SE} carregada com sucesso".format(SE=subestacao))
+        self.podas = list()
+        self.podas_possiveis = list()
+        self.setores_faltosos = list()
+        #comportamento_requisicao = CompRequest1(self)
+        #self.behaviours.append(comportamento_requisicao)
+        #comp_contractnet_participante = CompContractNet1(self)
+        #self.behaviours.append(comp_contractnet_participante)
+        #Final cod Tiago para o agente diagnostico
 
     def enviar_comando_de_chave(self, switching_command: swc.SwitchingCommand, acom_aid: AID):
         # Valida objeto de informação
@@ -93,3 +109,4 @@ class AgenteDC(AgenteSMAD):
                 # Reenvia mensagem mais tarde
                 self.call_later(5.0, later)
         later()
+

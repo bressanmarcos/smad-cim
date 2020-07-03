@@ -13,11 +13,11 @@ from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
 from core.ied import IED
 
 import sys
+
 sys.path.insert(0, '../')
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
 
- 
 class EnvioDeDados(FipaSubscribeProtocol):
     """Permite o cadastro de assinantes (em especial, o ADC)
     para que recebam mensagens relativas
@@ -49,7 +49,7 @@ class ReceberComando(FipaRequestProtocol):
         super().__init__(agent, is_initiator=False)
 
     def handle_request(self, message: ACLMessage):
-        """Recepção de mensagem de comando 
+        """Recepção de mensagem de comando
         (conteúdo deve ser um SwitchingCommand)
         OBS: Mensagem recebida deve ser processada e respondida
         com agree / refuse / not_understood"""
@@ -75,7 +75,7 @@ class ReceberComando(FipaRequestProtocol):
                 actionKind = switchAction.get_kind()
                 sequenceNumber = switchAction.get_sequenceNumber()
                 buffer_leitura_acoes.append((sequenceNumber, switchId, actionKind))
-    
+
         except Exception as e:
             # Captura erro de má formatação do documento.
             # Devolve uma mensagem not_understood e finaliza
@@ -113,8 +113,8 @@ class ReceberComando(FipaRequestProtocol):
         reply.set_performative(ACLMessage.INFORM)
         reply.set_ontology('')
         self.agent.send(reply)
-        return   
-        
+        return
+
 
 class AgenteCom(AgenteSMAD):
 
@@ -141,7 +141,7 @@ class AgenteCom(AgenteSMAD):
         super().on_start()
         # Inicia conexão com todos os IEDs
         for ied, handle in self.IEDs.items():
-            handle.connect()        
+            handle.connect()
 
     def receber_evento(self, *args):
         """Função invocada quando ACom recebe mensagem do IED. Formato de entrada: \\
@@ -223,7 +223,7 @@ class AgenteCom(AgenteSMAD):
         self.document_to_send.get_Outage().add_ProtectedSwitch(switch)
 
     def comandar_chave(self, switchId=None, action='open'):
-        """Chama a instância do IED para operar chave. 
+        """Chama a instância do IED para operar chave.
         A ``id`` do switch coincide com a ``id`` do IED
         """
         self.IEDs[switchId].operate(action)
