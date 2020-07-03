@@ -12,6 +12,7 @@ from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
 import sys
 sys.path.insert(0, '../') # Adiciona a pasta pai no Path para ser usada na linha abaixo
 from information_model import SwitchingCommand as swc
+from information_model import OutageEvent as out
 
 from rede.xml2objects import carregar_topologia
 
@@ -23,19 +24,28 @@ class SubscreverACom(FipaSubscribeProtocol):
         display_message(self.agent.aid.name, 'Inscrito em ACom')
 
     def handle_inform(self, message: ACLMessage):    
-        # TODO: Funções chamadas de acordo com a ontologia da mensagem
-        def handle_outage(message):
-            display_message(self.agent.aid.name, 'Mensagem INFORM recebida de %s' % message.sender.localname)
-            print(message.content)
+        """Receve notificação de evento do ACom. \\
+        ``message.content`` é recebida no formato OutageEvent"""
+        lista_de_chaves = {}
+        root: out.OutageEvent = out.parseString(to_string(message.content))
+        for switch in root.get_Outage().get_ProtectedSwitch():
+            switch: out.ProtectedSwitch
+            switchId = switch.get_mRID()
 
-        # Chama a função que corresponde à ontologia da mensagem
-        try:
-            locals()[f'handle_{message.ontology}'](message)
-        except:
-            display_message(self.agent.aid.name, 'Mensagem não reconhecida')
-            not_understood = message.create_reply()
-            not_understood.set_performative(ACLMessage.NOT_UNDERSTOOD)
-            self.agent.send(not_understood)
+            lista_de_chaves[switchId] = []
+
+            for discrete_meas in switch.get_Discrete_Measurement():
+                discrete_meas: out.Discrete
+                discrete_meas_name = discrete_meas.get_name()
+                discrete_meas_value = discrete_meas.get_DiscreteValue().get_value().get_valueOf_()
+                if discrete_meas_name == out.Discrete_Meas.BREAKER_POSITION:
+                    if discrete_meas_value == '1':
+                        lista_de_chaves[switchId].append('breaker_position_open')
+                elif discrete_meas_name == out.Discrete_Meas.BREAKER_FAILURE:
+                    if discrete_meas_value == '1':
+                        lista_de_chaves[switchId].append('breaker_failure')
+
+        print(lista_de_chaves)
 
 class EnviarComando(FipaRequestProtocol):
     def __init__(self, agent):
