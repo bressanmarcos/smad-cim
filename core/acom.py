@@ -158,6 +158,7 @@ class AgenteCom(AgenteSMAD):
             # Cria pacote de mensagem e envia ao ADC
             message = ACLMessage(performative=ACLMessage.INFORM)
             message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
+            message.set_ontology('OutageEvent')
             message.set_content(to_elementtree(self.document_to_send))
             self.behaviours_enviodedados.notify(message)
 
