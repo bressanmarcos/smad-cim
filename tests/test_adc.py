@@ -4,6 +4,7 @@ import time
 import multiprocessing
 from random import randint
 from uuid import uuid4
+from pathlib import Path
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
@@ -33,22 +34,38 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
             queue.put_nowait(message)
             return original(self, message)
         return wrapper
-
     monkeypatch.setattr(EnvioDeDados, 'handle_subscribe', stash(EnvioDeDados.handle_subscribe, queue))
-    monkeypatch.setattr(SubscreverACom, 'handle_agree', stash(SubscreverACom.handle_agree, queue))
+
+    def stash_2(original, queue):
+        def wrapper(self, message):
+            # Joga valor na queue
+            queue.put_nowait(message)
+            # Modifica arquivos de IEDs para inserir valores de teste
+            with open(Path(f'../core/ied/CH13.txt'), 'w') as file:
+                file.write('XCBR BRKF')
+            with open(Path(f'../core/ied/CH14.txt'), 'w') as file:
+                file.write('XCBR')
+
+            return original(self, message)
+        return wrapper
+    monkeypatch.setattr(SubscreverACom, 'handle_agree', stash_2(SubscreverACom.handle_agree, queue))
+
+    monkeypatch.setattr(SubscreverACom, 'handle_inform', lambda self, message: dump(message.content))
 
 def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     
     sniffer = run_ams
+
     acom_aid = AID(f'acom@localhost:{randint(10000, 60000)}')
-    acom = AgenteCom(acom_aid, 'S1', debug=True)
+    acom = AgenteCom(acom_aid, 'S1', {'CH13': 'localhost', 'CH14': 'localhost'}, debug=True)
     acom.ams = sniffer.ams
+
     adc_aid = AID(f'agentdc@localhost:{randint(10000, 60000)}')
     adc = AgenteDC(adc_aid, 'S1', debug=True)
     adc.ams = sniffer.ams
     adc.subscribe_to(acom_aid)
 
-    # Executa agentes em outro processo por 20 segunds
+    # Executa agentes em outro processo por 20 segundos
     start_loop([adc, acom])
 
     # Testar ordem de recepção de mensagens (performatives)

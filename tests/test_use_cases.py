@@ -15,6 +15,7 @@ sys.path.insert(0, '../')
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
+from core.ied import IED  # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
 from conftest import start_loop
@@ -29,13 +30,14 @@ def testar_recepcao_de_mensagem_2(monkeypatch):
     global queue
     queue = multiprocessing.Queue()
     def stash(original, queue):
-        def wrapper(self, message):
-            queue.put_nowait(message)
-            return original(self, message)
+        def wrapper(self, *args):
+            queue.put(args)
+            return original(self, *args)
         return wrapper
 
     monkeypatch.setattr(EnviarComando, 'handle_inform', stash(EnviarComando.handle_inform, queue))
     monkeypatch.setattr(ReceberComando, 'handle_request', stash(ReceberComando.handle_request, queue))
+    monkeypatch.setattr(IED, 'operate', stash(IED.operate, queue))
 
 def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mensagem_2):
 
@@ -97,6 +99,9 @@ def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mens
     start_loop([adc, acom])
 
     # Testar ordem de recepção de mensagens (performatives)
-    assert queue.get_nowait().performative == 'request'
-    assert queue.get_nowait().performative == 'inform'
+    assert queue.get_nowait()[0].performative == 'request'
+    assert queue.get_nowait()[0] == 'open'
+    assert queue.get_nowait()[0] == 'close'
+    assert queue.get_nowait()[0].performative == 'inform'
+
     

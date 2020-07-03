@@ -57,19 +57,21 @@ class IED():
     
 
     def run(self):
-        """Lê arquivos com o mesmo nome da IED do switch
-        a cada 5 segunds. Lê linha a linha e apaga.
+        """Lê arquivos com o mesmo nome da ID do switch
+        a cada 5 segundos. Lê linha a linha e apaga.
         Os arquivos lidos se localizam em ``/core/ied/``"""
         filename = Path(f'../core/ied/{self.id}.txt')
 
         def loop():
             try:
+                # Abertura de arquivo
                 with open(filename, 'r') as file:
                     # Lê primeira linha
                     data = file.readline().strip().split()
                     # Salva demais linhas
                     next_lines = file.readlines()
-
+                
+                # Reescreve demais linhas no mesmo arquivo
                 with open(filename, 'w') as file:
                     # Reescreve demais linhas
                     for line in next_lines:
@@ -79,26 +81,12 @@ class IED():
                     # Envia para função que manipula recepção de valor
                     self.handle_receive(*data)
 
-            except FileNotFoundError as e:
+            except FileNotFoundError:
+                # Caso o arquivo não exista
                 pass
 
-            call_later(3.0, loop)
+            # Chama função novamente em 1 segundo
+            call_later(1.0, loop)
 
+        # Chama função pela primeira vez depois de 3 segundos
         call_later(3.0, loop)
-
-if __name__ == "__main__":
-    ied = IED('CH14', '3123ip', lambda *args: args, initial_breaker_position='close')
-    ied.connect()
-    ied.operate('open')
-    ied.run()
-
-    # print('main:')
-
-    # with open('file.txt', 'r') as file:
-    #     line = file.readline()[:-1]
-    #     print({line})
-    #     lines = file.readlines()
-
-    # with open('file.txt', 'w') as file:
-    #     for line in lines:
-    #         file.write(line)
