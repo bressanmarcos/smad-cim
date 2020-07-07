@@ -1,11 +1,11 @@
 # Para realizar todos os testes
 
-1) de dentro da pasta raiz do projeto:
-```bash
+- de dentro da pasta raiz do projeto:
+```
 python -m pytest
 ```
-2) de dentro da pasta _tests_:
-```bash
+- ou simplesmente
+```
 pytest
 ```
 Os testes podem ser bastante demorados devido à necessidade de se ativar o PADE AMS em algum deles.

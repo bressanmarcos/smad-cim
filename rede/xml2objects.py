@@ -27,10 +27,11 @@ O código em xml deve ter a seguinte estrutura:
 from mygrid.rede import Subestacao, Alimentador, Setor, Chave
 from mygrid.rede import Trecho, NoDeCarga, Transformador, Condutor
 from mygrid.util import Fasor
+from pathlib import Path
 from bs4 import BeautifulSoup
 
 # carraga o arquivo com as definições em xml
-f = open('../rede/rede-rnp.xml')
+f = open(Path('./rede/rede-rnp.xml'))
 # f = open('rede_adaptada.xml')
 
 # gera o objeto para iteração em xml do BeautifulSoup

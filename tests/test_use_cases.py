@@ -1,3 +1,4 @@
+import os
 import pytest
 import datetime
 import time
@@ -10,15 +11,14 @@ from pade.acl.messages import ACLMessage
 from pade.misc.utility import display_message
 from pade.core.agent import Agent_
 
-import sys
-sys.path.insert(0, '../')
+os.sys.path.insert(0, os.getcwd())
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
-from conftest import start_loop
+from tests.conftest import start_loop
 
 queue = None
 @pytest.fixture(scope='function')

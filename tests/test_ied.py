@@ -1,16 +1,18 @@
+import os
 import pytest
 import time
+from pathlib import Path
 import multiprocessing
 
 from random import randint
 
 from pade.acl.aid import AID
-from conftest import start_loop
 
-import sys
-sys.path.insert(0, '../')
+os.sys.path.insert(0, os.getcwd())
 from core.ied import IED # pylint: disable=import-error disable=no-name-in-module
 from core.acom import AgenteCom # pylint: disable=import-error disable=no-name-in-module
+
+from tests.conftest import start_loop
 
 class MockIED(IED):
     pass

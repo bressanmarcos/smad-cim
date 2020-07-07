@@ -1,3 +1,4 @@
+import os
 import pytest
 import datetime
 import time
@@ -11,14 +12,13 @@ from pade.acl.messages import ACLMessage
 from pade.misc.utility import display_message
 from pade.core.agent import Agent_
 
-import sys
-sys.path.insert(0, '../')
+os.sys.path.insert(0, os.getcwd())
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
-from conftest import start_loop
+from tests.conftest import start_loop
 
 queue = None
 @pytest.fixture(scope='function')
@@ -41,9 +41,9 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
             # Joga valor na queue
             queue.put_nowait(message)
             # Modifica arquivos de IEDs para inserir valores de teste
-            with open(Path(f'../core/ied/CH13.txt'), 'w') as file:
+            with open(Path(f'./core/ied/CH13.txt'), 'w') as file:
                 file.write('XCBR BRKF')
-            with open(Path(f'../core/ied/CH14.txt'), 'w') as file:
+            with open(Path(f'./core/ied/CH14.txt'), 'w') as file:
                 file.write('XCBR')
 
             return original(self, message)
