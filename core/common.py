@@ -1,7 +1,7 @@
 """Contém funções e classes úteis
 """
 
-import sys
+import os
 
 import xml.etree.ElementTree as ET
 import lxml.etree as lET
@@ -11,7 +11,7 @@ from pade.core.agent import Agent
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
 
-sys.path.insert(0, '../')
+os.sys.path.insert(0, os.getcwd())
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
 def to_elementtree(document, name_=None):
