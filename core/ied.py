@@ -60,7 +60,7 @@ class IED():
         """Lê arquivos com o mesmo nome da ID do switch
         a cada 5 segundos. Lê linha a linha e apaga.
         Os arquivos lidos se localizam em ``/core/ied/``"""
-        filename = Path(f'../core/ied/{self.id}.txt')
+        filename = Path(f'./core/ied/{self.id}.txt')
 
         def loop():
             try:
