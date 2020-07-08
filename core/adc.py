@@ -14,7 +14,7 @@ sys.path.insert(0, '../') # Adiciona a pasta pai no Path para ser usada na linha
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
 
-from rede.xml2objects import carregar_topologia
+from rede.rdf2mygrid import carregar_topologia
 
 class SubscreverACom(FipaSubscribeProtocol):
     def __init__(self, agent: AgenteSMAD, message=None, is_initiator=True):
@@ -25,7 +25,13 @@ class SubscreverACom(FipaSubscribeProtocol):
 
     def handle_inform(self, message: ACLMessage):    
         """Receve notificação de evento do ACom. \\
-        ``message.content`` é recebida no formato OutageEvent"""
+        ``message.content`` é recebida no formato OutageEvent
+        """
+        """Sequência de operações realizada:
+            - 1) Análise de descoordenação
+            -- a) Encontrar alimentador da chave (ver topologia carregada)
+            -- b) 
+        """
         lista_de_chaves = {}
         root: out.OutageEvent = out.parseString(to_string(message.content))
         for switch in root.get_Outage().get_ProtectedSwitch():
@@ -73,7 +79,8 @@ class AgenteDC(AgenteSMAD):
         #Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
         self.relatorios_restauracao = list()
-        self.topologia_subestacao = carregar_topologia(subestacao)
+        self.topologia_subestacao = carregar_topologia('./rede/rede-cim.xml', subestacao)
+
         display_message(self.aid.name,"Subestacao {SE} carregada com sucesso".format(SE=subestacao))
         self.podas = list()
         self.podas_possiveis = list()
@@ -85,6 +92,7 @@ class AgenteDC(AgenteSMAD):
         #Final cod Tiago para o agente diagnostico
 
     def enviar_comando_de_chave(self, switching_command: swc.SwitchingCommand, acom_aid: AID):
+        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
         # Valida objeto de informação
         validate(switching_command)
         # Monta envelope de mensagem ACL
