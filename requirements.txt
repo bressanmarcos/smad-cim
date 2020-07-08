@@ -1,5 +1,8 @@
+-e git://github.com/grei-ufc/pade.git#egg=pade
+-e git://github.com/grei-ufc/MyGrid.git#egg=MyGrid
+-e git://github.com/bressanmarcos/generateDS.git#egg=generateDS
+-e git://github.com/bressanmarcos/cimrdf.py.git#egg=cimrdf.py
+si_prefix
+pathlib
+uuid
 lxml
-pade
-generateDS
-cimrdf.py
-mygrid
