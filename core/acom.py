@@ -20,8 +20,7 @@ from information_model import OutageEvent as out
 
 class EnvioDeDados(FipaSubscribeProtocol):
     """Permite o cadastro de assinantes (em especial, o ADC)
-    para que recebam mensagens relativas
-    à ocorrência de uma falta
+    para que recebam mensagens relativas à ocorrência de uma falta
     """
 
     def __init__(self, agent: AgenteSMAD):
@@ -201,7 +200,7 @@ class AgenteCom(AgenteSMAD):
                     DiscreteValue=discrete_value,
                     ValueAliasSet=value_alias_set)
                 switch.add_Discrete_Measurement(discrete)
-            elif function in 'BRKF':
+            elif function == 'BRKF':
                 # Código do retorno
                 value = out.Breaker_DiscreteValue_Integer('1')
                 discrete_value = out.DiscreteValue(value=value)

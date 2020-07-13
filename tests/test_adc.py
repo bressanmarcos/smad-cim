@@ -72,4 +72,7 @@ def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     assert queue.get_nowait().performative == 'subscribe'
     assert queue.get_nowait().performative == 'agree'
 
-
+def test_dev():
+    adc_aid = AID(f'agentdc@localhost:{randint(10000, 60000)}')
+    adc = AgenteDC(adc_aid, 'S1', debug=True)
+    

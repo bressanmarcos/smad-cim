@@ -1,3 +1,6 @@
+import os
+os.sys.path.append(os.getcwd())
+
 from pade.misc.utility import display_message, start_loop
 from pade.core.agent import Agent
 from pade.acl.aid import AID
