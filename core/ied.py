@@ -65,6 +65,7 @@ class IED():
         Os arquivos lidos se localizam em ``/core/ied/``"""
         filename = Path(f'./core/ied/{self.id}.txt')
 
+
         def loop():
             try:
                 # Abertura de arquivo
@@ -89,7 +90,7 @@ class IED():
                 pass
 
             # Chama função novamente em 1 segundo
-            call_later(1.0, loop)
+            call_later(7.0, loop)
 
         # Chama função pela primeira vez depois de 3 segundos
-        call_later(3.0, loop)
+        call_later(9.0, loop)

@@ -52,7 +52,7 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
         return wrapper
     monkeypatch.setattr(SubscreverACom, 'handle_agree', stash_2(SubscreverACom.handle_agree, queue))
 
-    monkeypatch.setattr(SubscreverACom, 'handle_inform', lambda self, message: dump(message.content))
+    #monkeypatch.setattr(SubscreverACom, 'handle_inform', lambda self, message: dump(message.content))
 
 def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     
