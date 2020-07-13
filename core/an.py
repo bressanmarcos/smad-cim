@@ -1,3 +1,7 @@
+import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
+
 from pade.core.agent import Agent
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage

@@ -2,6 +2,8 @@
 """
 
 import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
 
 import xml.etree.ElementTree as ET
 import lxml.etree as lET
@@ -11,8 +13,7 @@ from pade.core.agent import Agent
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
 
-os.sys.path.insert(0, os.getcwd())
-from information_model import SwitchingCommand as swc # pylint: disable=import-error
+from information_model import SwitchingCommand as swc
 
 def to_elementtree(document, name_=None):
     """Converte elemento do generateDS em ElementTree

@@ -1,4 +1,7 @@
 import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
+
 import pytest
 import multiprocessing
 import subprocess
@@ -10,7 +13,6 @@ from pade.core.sniffer import Sniffer
 from pade.misc.utility import start_loop as st_loop
 from pade.core.agent import Agent_
 
-os.sys.path.insert(0, os.getcwd())
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 
 def start_loop(agents, seconds=20.0):

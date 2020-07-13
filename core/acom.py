@@ -1,3 +1,7 @@
+import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
+
 import datetime
 import time
 from random import random
@@ -12,9 +16,6 @@ from pade.misc.utility import display_message
 from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
 from core.ied import IED
 
-import sys
-
-sys.path.insert(0, '../')
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
 

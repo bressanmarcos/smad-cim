@@ -1,5 +1,6 @@
 import os
-os.sys.path.append(os.getcwd())
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
 
 from pade.misc.utility import display_message, start_loop
 from pade.core.agent import Agent

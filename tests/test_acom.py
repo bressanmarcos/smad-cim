@@ -1,4 +1,7 @@
 import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
+
 import pytest
 import datetime
 import time
@@ -11,7 +14,6 @@ from pade.acl.messages import ACLMessage
 from pade.misc.utility import display_message
 from pade.core.agent import Agent_
 
-os.sys.path.insert(0, os.getcwd())
 from core.common import to_elementtree, to_string, dump, validate # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error

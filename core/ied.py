@@ -1,3 +1,6 @@
+import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
 
 from pathlib import Path
 from pade.misc.utility import display_message, call_in_thread, call_later

@@ -1,4 +1,7 @@
 import os
+os.sys.path.insert(0, os.getcwd()) 
+# Adiciona ao Path a pasta raiz do projeto
+
 import pytest
 import time
 from pathlib import Path
@@ -8,9 +11,8 @@ from random import randint
 
 from pade.acl.aid import AID
 
-os.sys.path.insert(0, os.getcwd())
-from core.ied import IED # pylint: disable=import-error disable=no-name-in-module
-from core.acom import AgenteCom # pylint: disable=import-error disable=no-name-in-module
+from core.ied import IED
+from core.acom import AgenteCom
 
 from tests.conftest import start_loop
 
