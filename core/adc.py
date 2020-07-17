@@ -21,6 +21,7 @@ from information_model import OutageEvent as out
 from rede import rdf2mygrid
 
 
+
 class SubscreverACom(FipaSubscribeProtocol):
     def __init__(self, agent: 'AgenteDC', message=None, is_initiator=True):
         super().__init__(agent, message=message, is_initiator=is_initiator)
@@ -166,6 +167,7 @@ class AgenteDC(AgenteSMAD):
 
         #Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
+        self.enderecos_IEDs = enderecos_IEDs[subestacao]
         self.relatorios_restauracao = list()
         self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/rede-cim.xml'), subestacao)
 
