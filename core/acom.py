@@ -140,7 +140,7 @@ class AgenteCom(AgenteSMAD):
     def on_start(self):
         super().on_start()
         # Inicia conexão com todos os IEDs
-        for ied, handle in self.IEDs.items():
+        for ied_id, handle in self.IEDs.items():
             handle.connect()
 
     def receber_evento(self, *args):
@@ -231,6 +231,7 @@ class AgenteCom(AgenteSMAD):
 if __name__ == "__main__":
     from pade.misc.utility import start_loop
     from random import randint
+
     enderecos_S1 = {"CH1": "192.168.0.101",
                     "CH2": "192.168.0.102",
                     "CH3": "192.168.0.103",
@@ -246,3 +247,4 @@ if __name__ == "__main__":
                     "CH16": "192.168.0.116"}
     acom = AgenteCom(AID('acom@localhost:20001'), 'S1', enderecos_S1, True)
     start_loop([acom])
+    
