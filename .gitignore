@@ -2,6 +2,7 @@ pade
 mygrid
 generateDS
 .vscode
+core/ied/*.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

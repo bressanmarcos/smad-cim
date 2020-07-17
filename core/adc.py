@@ -5,6 +5,7 @@ os.sys.path.insert(0, os.getcwd())
 import datetime
 from random import random
 from uuid import uuid4
+from pathlib import Path
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
@@ -35,13 +36,13 @@ class SubscreverACom(FipaSubscribeProtocol):
             -- a) Encontrar alimentador da chave (ver topologia carregada)
             -- b) 
         """
-        lista_de_chaves = {}
+        lista_de_chaves = {'chaves': [], 'leitura_falta': []}
         root: out.OutageEvent = out.parseString(to_string(message.content))
         for switch in root.get_Outage().get_ProtectedSwitch():
             switch: out.ProtectedSwitch
             switchId = switch.get_mRID()
 
-            lista_de_chaves[switchId] = []
+            lista_de_chaves['chaves'] = []
 
             for discrete_meas in switch.get_Discrete_Measurement():
                 discrete_meas: out.Discrete
@@ -49,19 +50,21 @@ class SubscreverACom(FipaSubscribeProtocol):
                 discrete_meas_value = discrete_meas.get_DiscreteValue().get_value().get_valueOf_()
                 if discrete_meas_name == out.Discrete_Meas.BREAKER_POSITION:
                     if discrete_meas_value == '1':
-                        lista_de_chaves[switchId].append('breaker_position_open')
+                        lista_de_chaves['chaves'].append(switchId)
                 elif discrete_meas_name == out.Discrete_Meas.BREAKER_FAILURE:
                     if discrete_meas_value == '1':
-                        lista_de_chaves[switchId].append('breaker_failure')
+                        if not '50BF' in lista_de_chaves:
+                            lista_de_chaves['50BF'] = []
+                        lista_de_chaves['50BF'].append(switchId)
 
         print(lista_de_chaves)
-        #lista de chaves para teste
-        lista_teste = {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], 'ctime': 'Fri Jul  3 18:20:58 2020'}
+        lista_de_chaves = {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], '50BF': ['CH14']}
 
         #Inicio da analise de descoordenacao
-        dados_falta = self.agent.analise_descoordenacao(lista_teste)
+        dados_falta = self.agent.analise_descoordenacao(lista_de_chaves)
         print(dados_falta)
         content = {"dados": dados_falta}
+
         if dados_falta["coordenado"] == False:
         #Corrigir descoordenacao
         #ALE: antigo agente de controle
@@ -80,8 +83,7 @@ class SubscreverACom(FipaSubscribeProtocol):
                     content2["correc_descoord_realizada"] = False
                 else:
                     display_message(self.agent.aid.name,
-                                    "Isolando trecho sob Falta [CH:{CH}]".format(
-                                        CH=content["dados"]["correc_descoord"]))
+                                    f"Isolando trecho sob Falta [CH:{content['dados']['correc_descoord']}]")
                     content2["correc_descoord_realizada"] = True
 
             # Se nao houver, a descoordenacao deve
@@ -192,9 +194,8 @@ class AgenteDC(AgenteSMAD):
 
         #Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
-        self.enderecos_IEDs = enderecos_IEDs[subestacao]
         self.relatorios_restauracao = list()
-        self.topologia_subestacao = carregar_topologia('./rede/rede-cim.xml', subestacao)
+        self.topologia_subestacao = carregar_topologia(Path('./rede/rede-cim.xml'), subestacao)
 
         display_message(self.aid.name,"Subestacao {SE} carregada com sucesso".format(SE=subestacao))
         self.podas = list()
@@ -243,62 +244,75 @@ class AgenteDC(AgenteSMAD):
                 self.call_later(2.0, later)
         later()
 
+
     #Inicio Cod Tiago
-    def localizar_chave(self, chave_busca):
+    def buscar_alimentador(self, chave):
         for alimentador in self.topologia_subestacao.alimentadores.keys():
-            if chave_busca in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
+            if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
                 # Proucura em qual alimentador da SE "chave" está.
-                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave_busca].estado == 1:
+                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave].estado == 1:
                     # "chave" pertence ao "alimentador" e seu estado é fechado (provavelmente NF)
                     return alimentador
 
-    # Exemplo de mensagem {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], 'ctime': 'Fri Jul  3 18:20:58 2020'}
     def analise_descoordenacao(self, dados_falta=dict):
-        alim = self.localizar_chave(dados_falta["chaves"][0])
-        dados_falta["alimentador"] = alim
+        # Exemplo de mensagem {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], 'ctime': 'Fri Jul  3 18:20:58 2020'}
+        
+        # Assume que todas as chaves estão sob o mesmo Alimentador
+        nome_alimentador = self.buscar_alimentador(dados_falta["chaves"][0])
+        dados_falta["alimentador"] = nome_alimentador
         display_message(self.aid.name, "------------------------")
-        display_message(self.aid.name, "Analise de Descoordenacao em {alim}".format(alim=dados_falta["alimentador"]))
+        display_message(self.aid.name, f"Analise de Descoordenacao em {nome_alimentador}")
 
-        campo_busca = dict()
-        rnp_busca = self.topologia_subestacao.alimentadores[alim].rnp_dic()
+        alimentador = self.topologia_subestacao.alimentadores[nome_alimentador]
+        rnp_alimentador = alimentador.rnp_dic()
+        chave_setor = {}
+
         for chave in dados_falta["leitura_falta"]:
-            campo_busca[chave] = self.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome
-        prof = 0
-        for chave in campo_busca:
-            i = int(rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome])
-            if i >= prof:
-                prof = i
+            chave_setor[chave] = alimentador.chaves[chave].n2.nome
+        
+        profundidade = 0
+        # Busca a chave de maior profundidade (antes do setor defeituoso)
+        for chave in chave_setor:
+            setor_jusante = alimentador.chaves[chave].n2.nome
+            i = int(rnp_alimentador[setor_jusante])
+            if i >= profundidade:
+                profundidade = i
                 chave_falta = chave
+        
+        dados_falta["chave_falta"] = chave_falta
+
+        # Verifica se no pacote só contém a chave em questão
         if dados_falta["chaves"] == [chave_falta]:
             # Coordenado
-            dados_falta["chave_falta"] = chave_falta
             dados_falta["coordenado"] = True
             display_message(self.aid.name, "Protecao Coordenada")
         else:
             # Descoordenado
-            dados_falta["chave_falta"] = chave_falta
-            try:
-                chave_50BF = dados_falta["50BF"][0]
-            except:
-                pass
             dados_falta["coordenado"] = False
             display_message(self.aid.name, "Protecao Descoordenada")
+
             # Verifica as chaves que nao podem ser operadas por 50BF
             if "50BF" in dados_falta:
+                setor_montante_falta = alimentador.chaves[chave_falta].n1.nome
+                setor_jusante_falta = alimentador.chaves[chave_falta].n2.nome
+                chave_50BF = dados_falta["50BF"][0]
+                setor_montante_50BF = alimentador.chaves[chave_50BF].n1.nome
+                setor_jusante_50BF = alimentador.chaves[chave_50BF].n2.nome
                 # Monta vetor de busca
                 ch_correc_descoord = dados_falta["leitura_falta"]
+
                 # Identifica profundidade da falta
-                if rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n1.nome] > rnp_busca[
-                    self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n2.nome]:
-                    prof_falta = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n1.nome]
+                if rnp_alimentador[setor_montante_falta] > rnp_alimentador[setor_jusante_falta]:
+                    prof_falta = rnp_alimentador[setor_montante_falta]
                 else:
-                    prof_falta = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n2.nome]
+                    prof_falta = rnp_alimentador[setor_jusante_falta]
+
                 # Identifica profundidade da 50BF
-                if rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n1.nome] > rnp_busca[
-                    self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n2.nome]:
-                    prof_50BF = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n1.nome]
+                if rnp_alimentador[setor_montante_50BF] > rnp_alimentador[setor_jusante_50BF]:
+                    prof_50BF = rnp_alimentador[setor_montante_50BF]
                 else:
-                    prof_50BF = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n2.nome]
+                    prof_50BF = rnp_alimentador[setor_jusante_50BF]
+                    
                 if prof_50BF < prof_falta:
                     # Se a 50BF ocorreu a montante -1  da falta
                     chave_correcao = chave_falta
@@ -311,8 +325,8 @@ class AgenteDC(AgenteSMAD):
                             ch_correc_descoord.remove(chave_falta)
                     prof_aux = 0
                     for chave in ch_correc_descoord:
-                        aux = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome] + \
-                              rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave].n1.nome]
+                        aux = rnp_alimentador[alimentador.chaves[chave].n2.nome] + \
+                              rnp_alimentador[alimentador.chaves[chave].n1.nome]
                         if aux > prof_aux:
                             prof_aux = aux
                             chave_correcao = chave
@@ -324,24 +338,24 @@ class AgenteDC(AgenteSMAD):
         display_message(self.aid.name, "------------------------")
         display_message(self.aid.name, "Iniciando Analise de Isolamento")
 
-        alim = self.localizar_chave(chave_falta)
-        rnp_alim = self.topologia_subestacao.alimentadores[alim].rnp_dic()
+        nome_alimentador = self.buscar_alimentador(chave_falta)
+        alimentador = self.topologia_subestacao.alimentadores[nome_alimentador]
+        rnp_alimentador = alimentador.rnp_dic()
 
         dados_falta = dict()
         dados_falta["chave_falta"] = chave_falta
-        dados_falta["alimentador"] = alim
-        dados_falta["setor"] = self.topologia_subestacao.alimentadores[alim].chaves[
-            dados_falta["chave_falta"]].n2.nome
+        dados_falta["alimentador"] = nome_alimentador
+        dados_falta["setor"] = alimentador.chaves[dados_falta["chave_falta"]].n2.nome
 
         display_message(self.aid.name, "Setor sob Falta: [Setor: {setor}]".format(setor=dados_falta["setor"]))
 
         # Verifica quem sao as chaves do alimentador
-        chaves_alim = list(self.topologia_subestacao.alimentadores[alim].chaves.keys())
+        chaves_alim = list(alimentador.chaves.keys())
 
         # Verifica quem sao as chaves NA
         chaves_NA = list()
         for chave in chaves_alim:
-            if self.topologia_subestacao.alimentadores[alim].chaves[chave].estado == 0:
+            if alimentador.chaves[chave].estado == 0:
                 chaves_NA.append(chave)
 
         # Verifica quem sao as chaves NF
@@ -350,7 +364,7 @@ class AgenteDC(AgenteSMAD):
             chaves_NF.remove(chave)
 
         # Verifica quem sao os vizinhos do setor faltoso
-        vizinhos_isolar = self.topologia_subestacao.alimentadores[alim].setores[dados_falta["setor"]].vizinhos
+        vizinhos_isolar = alimentador.setores[dados_falta["setor"]].vizinhos
 
         aux = list()
         aux2 = list()
@@ -358,10 +372,10 @@ class AgenteDC(AgenteSMAD):
         # Verifica quais setores sao do mesmo alimentador ou qual tem uma profundidade menor que o faltoso
         for setor in vizinhos_isolar:
 
-            if setor not in self.topologia_subestacao.alimentadores[alim].setores.keys():
+            if setor not in alimentador.setores:
                 aux2.append(setor)
 
-            elif rnp_alim[setor] > rnp_alim[dados_falta["setor"]]:
+            elif rnp_alimentador[setor] > rnp_alimentador[dados_falta["setor"]]:
                 aux.append(setor)
 
         for setor in aux2:
@@ -371,10 +385,10 @@ class AgenteDC(AgenteSMAD):
 
         # Realiza a poda dos setores a serem isolados
         for setor in vizinhos_isolar:
-            self.podas.append(self.topologia_subestacao.alimentadores[alim].podar(setor, True))
+            self.podas.append(alimentador.podar(setor, True))
 
         # Realiza a poda do setor faltoso a fim de atualizar a RNP
-        setor_faltoso = self.topologia_subestacao.alimentadores[alim].podar(dados_falta["setor"], True)
+        setor_faltoso = alimentador.podar(dados_falta["setor"], True)
         self.setores_faltosos.append(setor_faltoso)
 
         # Verifica quem sao os setores a serem isolados (meio fisico)
@@ -396,7 +410,7 @@ class AgenteDC(AgenteSMAD):
 
         dados_isolamento["setor_falta"] = dados_falta["setor"]
         dados_isolamento["chave_falta"] = dados_falta["chave_falta"]
-        dados_isolamento["alimentador"] = alim
+        dados_isolamento["alimentador"] = nome_alimentador
         dados_isolamento["chaves_NA_alim"] = chaves_NA
 
         if len(dados_isolamento["chaves"]) > 0:
@@ -429,23 +443,19 @@ class AgenteDC(AgenteSMAD):
                 i = self.podas.index(poda)
                 setores_poda = poda[0].keys()
                 # Exibe Mensagem no Terminal do SMA
-                display_message(self.aid.name, "Analisando Ramo {i} de {tot}".format(i=i + 1, tot=len(self.podas)))
-                display_message(self.aid.name,
-                                "Setores do Ramo {i}: {setores}".format(i=i + 1, setores=setores_poda))
+                display_message(self.aid.name, f"Analisando Ramo {i+1} de {len(self.podas)}")
+                display_message(self.aid.name, f"Setores do Ramo {i}: {setores_poda}")
                 # Varre os alimentadores da propria subestacao verificando se há possibilidade de recompor
                 # pela mesma SE
-                for alimentador in self.topologia_subestacao.alimentadores.keys():
+                for alimentador in self.topologia_subestacao.alimentadores:
                     # Verifica se alguma das chaves da poda pertence a outro alimentador
                     # da mesma SE
                     if dados_isolamento["alimentador"] != alimentador:
                         # Faz uma varredura nas chaves da poda e verifica se a chave pertence ao alimentador
                         # do laco for em questao (diferente do alimentador faltoso)
                         for chave in poda[6].keys():
-                            if chave in self.topologia_subestacao.alimentadores[
-                                alimentador].chaves.keys():  # Pertence
-                                display_message(self.aid.name,
-                                                "Possivel Restauracao de Ramo {i} pela mesma SE atraves de [CH: {ch}]".format(
-                                                    i=i + 1, ch=chave))
+                            if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():  # Pertence
+                                display_message(self.aid.name, f"Possivel Restauracao de Ramo {i} pela mesma SE atraves de [CH: {chave}]")
                                 podas_mesma_SE.append([poda, chave, alimentador])
                             elif chave in dados_isolamento[
                                 "chaves_NA_alim"]:  # Nao Pertence mas a poda tem chave NA
@@ -495,3 +505,10 @@ class AgenteDC(AgenteSMAD):
         else:
             display_message(self.aid.name, "Falta em Final de Trecho")
         #Final cod Tiago
+
+if __name__ == "__main__":
+    from pade.misc.utility import start_loop
+    from random import randint
+    adc_antigo = AgenteDC(AID(f'agentedc@localhost:{randint(10000, 60000)}'), 'S1')
+    adc_antigo.subscribe_to(AID('acom@localhost:20001'))
+    start_loop([adc_antigo])
