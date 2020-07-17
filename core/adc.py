@@ -62,12 +62,12 @@ class SubscreverACom(FipaSubscribeProtocol):
 
         #Inicio da analise de descoordenacao
         dados_falta = self.agent.analise_descoordenacao(lista_de_chaves)
-        print(dados_falta)
-        content = {"dados": dados_falta}
 
         if dados_falta["coordenado"] == False:
-        #Corrigir descoordenacao
-        #ALE: antigo agente de controle
+            #Corrigir descoordenacao
+            #ALE: antigo agente de controle
+            content = {"dados": dados_falta}
+
             content2 = dict()
             content2["chave_falta"] = content["dados"]["chave_falta"]
             display_message(self.agent.aid.name, "Iniciando correcao de Descoordenacao")
@@ -140,7 +140,7 @@ class SubscreverACom(FipaSubscribeProtocol):
                 display_message(self.agent.aid.name,
                                 "Impossivel corrigir descoordenacao.")
             print("final do ant ag controle:" + str(content2))
-        #ALE: Final antigo agente de controle
+            #ALE: Final antigo agente de controle
             #Voltando para o Agente diagnostico
             content = self.agent.analise_isolamento(content2["chave_falta"])
             print("voltando para o ag diag: " + str(content))
@@ -325,8 +325,8 @@ class AgenteDC(AgenteSMAD):
                             ch_correc_descoord.remove(chave_falta)
                     prof_aux = 0
                     for chave in ch_correc_descoord:
-                        aux = rnp_alimentador[alimentador.chaves[chave].n2.nome] + \
-                              rnp_alimentador[alimentador.chaves[chave].n1.nome]
+                        aux = int(rnp_alimentador[alimentador.chaves[chave].n2.nome]) + \
+                              int(rnp_alimentador[alimentador.chaves[chave].n1.nome])
                         if aux > prof_aux:
                             prof_aux = aux
                             chave_correcao = chave
