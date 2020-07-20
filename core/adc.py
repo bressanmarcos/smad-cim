@@ -167,7 +167,6 @@ class AgenteDC(AgenteSMAD):
 
         #Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
-        self.enderecos_IEDs = enderecos_IEDs[subestacao]
         self.relatorios_restauracao = list()
         self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/rede-cim.xml'), subestacao)
 
@@ -270,6 +269,7 @@ class AgenteDC(AgenteSMAD):
         self.analise_isolamento(content2["chave_falta"])
     
     def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id):
+        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.assinaturas} ({proposito})')
         self.command_behaviour.enviar_comando_de_chave(lista_de_comandos, proposito, conversation_id)
 
     #Inicio Cod Tiago
