@@ -22,7 +22,6 @@ class IED():
         """Conecta-se ao IED (stub)"""
         display_message(f'{self.id}@{self.ip}', 'Conectado')
         self.run()
-        # TODO: configurar self.receive como callback
         # TODO: Inicializar atributos da classe IED com dados do IED
 
 

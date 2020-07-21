@@ -47,8 +47,18 @@ def validate(information_object):
         for message in gds.get_messages():
             raise Warning(message)
 
-
 class AgenteSMAD(Agent):
     def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, debug)
         self.subestacao = subestacao
+
+    def send_until(self, message, tries=10, interval=2.0):
+        def later(tries, interval):
+            if hasattr(self, 'agentInstance') and all(receiver.name in self.agentInstance.table for receiver in message.receivers):
+                # Envia mensagem
+                self.send(message)
+            else:
+                # Reenvia mensagem mais tarde
+                self.call_later(interval, lambda: later(tries-1, interval))
+        later(tries, interval)
+

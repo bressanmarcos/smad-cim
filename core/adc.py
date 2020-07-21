@@ -8,6 +8,8 @@ os.sys.path.insert(0, os.getcwd())
 import datetime
 from random import random
 from uuid import uuid4
+from pathlib import Path
+import threading
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
@@ -19,193 +21,162 @@ from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
 
-from rede.rdf2mygrid import carregar_topologia
+from rede import rdf2mygrid
+
 
 from rede.IPs_IEDs import enderecos_IEDs
 
 
 class SubscreverACom(FipaSubscribeProtocol):
-    def __init__(self, agent: AgenteSMAD, message=None, is_initiator=True):
+    def __init__(self, agent: 'AgenteDC', message=None, is_initiator=True):
         super().__init__(agent, message=message, is_initiator=is_initiator)
 
-    def handle_agree(self, message):
-        display_message(self.agent.aid.name, 'Inscrito em ACom')
+        
+    def subscrever(self, acom_aid):
+        message = ACLMessage(ACLMessage.SUBSCRIBE)
+        message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
+        message.add_receiver(acom_aid)
+        self.agent.send_until(message)
 
-    def handle_inform(self, message: ACLMessage):
-        """Receve notificação de evento do ACom. \\
-        ``message.content`` é recebida no formato OutageEvent
+    def handle_agree(self, message: ACLMessage):
+        display_message(self.agent.aid.name, f'Inscrito em {message.sender.name}')
+        self.agent.assinaturas.append(message.sender)
+
+    def handle_inform(self, message: ACLMessage):    
+        """Recebe notificação de evento do ACom. \\
+        ``message.content`` é recebida no formato OutageEvent.
+
+        Conteúdo é convertido em dados tratáveis em Python e 
+        método do agente é chamado para processá-lo.
         """
-        """Sequência de operações realizada:
-            - 1) Análise de descoordenação
-            -- a) Encontrar alimentador da chave (ver topologia carregada)
-            -- b) 
-        """
-        lista_de_chaves = {}
+        lista_de_chaves = {'chaves': [], 'leitura_falta': []}
         root: out.OutageEvent = out.parseString(to_string(message.content))
         for switch in root.get_Outage().get_ProtectedSwitch():
             switch: out.ProtectedSwitch
             switchId = switch.get_mRID()
-
-            lista_de_chaves[switchId] = []
 
             for discrete_meas in switch.get_Discrete_Measurement():
                 discrete_meas: out.Discrete
                 discrete_meas_name = discrete_meas.get_name()
                 discrete_meas_value = discrete_meas.get_DiscreteValue().get_value().get_valueOf_()
                 if discrete_meas_name == out.Discrete_Meas.BREAKER_POSITION:
-                    if discrete_meas_value == '1':
-                        lista_de_chaves[switchId].append('breaker_position_open')
+                    if int(discrete_meas_value) == 1:
+                        lista_de_chaves['chaves'].append(switchId)
+                        lista_de_chaves['leitura_falta'].append(switchId)
                 elif discrete_meas_name == out.Discrete_Meas.BREAKER_FAILURE:
-                    if discrete_meas_value == '1':
-                        lista_de_chaves[switchId].append('breaker_failure')
+                    if int(discrete_meas_value) == 1:
+                        if not '50BF' in lista_de_chaves:
+                            lista_de_chaves['50BF'] = []
+                        lista_de_chaves['50BF'].append(switchId)
 
-        print(lista_de_chaves)
-        #***** juntar a mensagem recebida das IED com o codigo do Tiago
-        # lista de chaves para teste
-        lista_teste = {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'],
-                       'ctime': 'Fri Jul  3 18:20:58 2020'}
-
-        # Inicio da analise de descoordenacao
-        dados_falta = self.agent.analise_descoordenacao(lista_teste)
-        print(dados_falta)
-        content = {"dados": dados_falta}
-        if dados_falta["coordenado"] == False:
-            # Corrigir descoordenacao
-            # ALE: antigo agente de controle
-            content2 = dict()
-            content2["chave_falta"] = content["dados"]["chave_falta"]
-            display_message(self.agent.aid.name, "Iniciando correcao de Descoordenacao")
-            # Verifica se o pacote de dados tem a tag
-            # "correc_descoord" indicando que houve 50BF
-            # dentre as funcoes de protecao obtidas
-            if "correc_descoord" in content["dados"]:
-                if content["dados"]["correc_descoord"] in content["dados"]["chaves"]:
-                    pass
-                elif content["dados"]["correc_descoord"] not in self.agent.enderecos_IEDs.keys():
-                    display_message(self.agent.aid.name, str(
-                        "Chave " + content["dados"]["correc_descoord"] + " nao possui IP cadastrado"))
-                    content2["correc_descoord_realizada"] = False
-                else:
-                    display_message(self.agent.aid.name,
-                                    "Isolando trecho sob Falta [CH:{CH}]".format(
-                                        CH=content["dados"]["correc_descoord"]))
-                    content2["correc_descoord_realizada"] = True
-
-            # Se nao houver, a descoordenacao deve
-            # ser corrigida normalmente
-            elif content["dados"]["chave_falta"] not in self.agent.enderecos_IEDs.keys():
-                display_message(self.agent.aid.name, str(
-                    "Chave " + content["dados"]["chave_falta"] + " nao possui IP cadastrado"))
-                content2["correc_descoord_realizada"] = False
-            else:
-                display_message(self.agent.aid.name,
-                                "Isolando trecho sob Falta [CH:{CH}]".format(CH=content["dados"]["chave_falta"]))
-                content2["correc_descoord_realizada"] = True
-
-            # Opera as chaves para isolamento do setor
-            # sob falta, com ou seu descoordenacao
-            # self.agent.operacao_chaves()
-
-            # Verifica quais as chaves que devem ser
-            # operadas a fim de reenergizar os trechos
-            # desenergizados por descoordenacao
-            if content2["correc_descoord_realizada"] is True:
-                for chave in content["dados"]["chaves"]:
-                    if "correc_descoord" in content["dados"]:
-                        if chave != content["dados"]["chave_falta"] and chave != content["dados"]["correc_descoord"]:
-                            # Verifica cadastro de chave
-                            if chave in self.agent.enderecos_IEDs:
-                                display_message(self.agent.aid.name, str(
-                                    "Reestabelecendo trecho descoordenado [CH: " + chave + "]"))
-                                content2["correc_descoord_realizada"] = True
-                            # self.agent.operacao_chaves()
-                            else:
-                                display_message(self.agent.aid.name, str(
-                                    "Chave " + chave + " nao possui IP cadastrado"))
-                                content2["correc_descoord_realizada"] = False
-                    else:
-                        if chave != content["dados"]["chave_falta"] and chave in self.agent.enderecos_IEDs.keys():
-                            display_message(self.agent.aid.name, str(
-                                "Reestabelecendo trecho descoordenado [CH: " + chave + "]"))
-                            content2["correc_descoord_realizada"] = True
-
-                        elif chave != content["dados"]["chave_falta"]:
-                            display_message(self.agent.aid.name, str(
-                                "Chave " + chave + " nao possui IP cadastrado"))
-                            content2["correc_descoord_realizada"] = False
-            else:
-                display_message(self.agent.aid.name,
-                                "Impossivel corrigir descoordenacao.")
-
-            # Se a chave aberta for a menos profunda
-            # em relacao a chave que indicou 50BF
-            # nao é possivel corrigir descoordenacao
-            if "correc_descoord" in content["dados"] and content["dados"]["chaves"] == [
-                content["dados"]["correc_descoord"]]:
-                display_message(self.agent.aid.name,
-                                "Impossivel corrigir descoordenacao.")
-            print("final do ant ag controle:" + str(content2))
-            # ALE: Final antigo agente de controle
-            # Voltando para o Agente diagnostico
-            content = self.agent.analise_isolamento(content2["chave_falta"])
-            print("voltando para o ag diag: " + str(content))
-            # Final do Agente diagnostico
-            # Voltando para o agente de controle R_03
-            # Indica inicio da analise
-            display_message(self.agent.aid.name, "Iniciando Isolamento de Trecho")
-            # Para todas as chaves que devem ser
-            # operadas no pacote de dados, chama a
-            # funcao de operacao de chave
-            for chave in content["chaves"]:
-                # Verifica se a chave faz parte da SE com conexo TCP-IP
-                if chave in self.agent.enderecos_IEDs.keys():
-                    display_message(self.agent.aid.name, str(
-                        "Isolando Trecho Defeituoso [CH:" + chave + "]"))
-                    content["isolamento_realizado"] = True
-                # self.agent.operacao_chaves()
-                else:
-                    display_message(self.agent.aid.name, str(
-                        "Chave " + chave + " nao possui IP cadastrado"))
-                    content["isolamento_realizado"] = False
-            print(content)
-            # final agente de controle R_03
-            #Agente diagnostico R_03 CompRequest3
-            self.agent.analise_recomposicao(content)
-
-        else:
-            self.agent.analise_isolamento(dados_falta["chave_falta"])
+        self.agent.tratar_informe(lista_de_chaves)
 
 
 class EnviarComando(FipaRequestProtocol):
     def __init__(self, agent):
         super().__init__(agent, message=None, is_initiator=True)
+        self.state_lock = threading.RLock()
 
     def handle_not_understood(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Mensagem não compreendida')
         display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
 
-    def handle_failure(self, message: ACLMessage):
-        display_message(self.agent.aid.name, 'Falha em execução de comando')
-        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
+    def register_state(self, state_id: str, callback_inform=None, callback_failure=None, awaits=1):
+        # Registra o conversation_id da Mensagem, 
+        # para manter estado
+        with self.state_lock:
+            if not hasattr(self, 'states'):
+                self.states = {}
+            self.states[state_id] = (callback_inform, callback_failure, awaits)
+
+    def retrieve_state(self, state_id):
+        # Recupera o estado a partir do conversation_id
+        with self.state_lock:
+            callback_inform, callback_failure, awaits = self.states[state_id]
+            awaits -= 1
+            if awaits == 0:
+                del self.states[state_id]
+            return callback_inform, callback_failure, awaits
+
+    def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id=str(uuid4())):
+        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
+        switch_actions = []
+        sequenceNumber = 0
+        for chave, comando in lista_de_comandos.items():
+            switch = swc.ProtectedSwitch(mRID=chave)
+            sequenceNumber += 1
+            if comando == 'open':
+                action_kind = swc.SwitchActionKind.OPEN
+            elif comando == 'close':
+                action_kind = swc.SwitchActionKind.CLOSE
+            action = swc.SwitchAction(
+                isFreeSequence=False,
+                issuedDateTime=datetime.datetime.now(),
+                kind=action_kind,
+                sequenceNumber=sequenceNumber,
+                OperatedSwitch=switch)
+            switch_actions.append(action)
+
+        if proposito == 'isolation':
+            purpose = swc.Purpose.ISOLATION
+        elif proposito == 'coordination':
+            purpose = swc.Purpose.COORDINATION
+
+        plano = swc.SwitchingPlan(
+            mRID=str(uuid4()), 
+            createdDateTime=datetime.datetime.now(),
+            name='Plano de Teste', 
+            purpose=purpose, 
+            SwitchAction=switch_actions)
+        root = swc.SwitchingCommand(SwitchingPlan=plano)
+        validate(root)
+        
+        # Monta envelope de mensagem ACL
+        message = ACLMessage(ACLMessage.REQUEST)
+        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+        message.set_ontology('SwitchingCommand')
+        message.set_content(to_elementtree(root))
+        message.set_conversation_id(conversation_id)
+        for acom_aid in self.agent.assinaturas:
+            message.add_receiver(acom_aid)
+
+        self.agent.send_until(message)
 
     def handle_inform(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Chaveamento realizado')
         display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
+        callback_inform, _, awaits = self.retrieve_state(message.conversation_id)
+        if awaits == 0:
+            # Se não houver mais nenhuma mensagem de retorno, chama a função
+            # de callback
+            callback_inform()
+
+    def handle_failure(self, message: ACLMessage):
+        display_message(self.agent.aid.name, 'Falha em execução de comando')
+        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
+        _, callback_failure, awaits = self.retrieve_state(message.conversation_id)
+        if awaits == 0:
+            # Se não houver mais nenhuma mensagem de retorno, chama a função
+            # de callback
+            callback_failure()
+
 
 
 class AgenteDC(AgenteSMAD):
     def __init__(self, aid: AID, subestacao: str, debug=False):
         super().__init__(aid, subestacao, debug)
-        self.behaviours.append(EnviarComando(self))
-        display_message(self.aid.name, "Agente instanciado")
+        self.command_behaviour = EnviarComando(self)
+        self.subscribe_behaviour = SubscreverACom(self)
+        self.assinaturas = []
+        self.behaviours.append(self.command_behaviour)
+        self.behaviours.append(self.subscribe_behaviour)
 
         # Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
-        self.enderecos_IEDs = enderecos_IEDs[subestacao]
         self.relatorios_restauracao = list()
-        self.topologia_subestacao = carregar_topologia('./rede/rede-cim.xml', subestacao)
+        self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/rede-cim.xml'), subestacao)
 
-        display_message(self.aid.name, "Subestacao {SE} carregada com sucesso".format(SE=subestacao))
+        display_message(self.aid.name, f"Subestacao {subestacao} carregada com sucesso")
         self.podas = list()
         self.podas_possiveis = list()
         self.setores_faltosos = list()
@@ -215,102 +186,168 @@ class AgenteDC(AgenteSMAD):
         # self.behaviours.append(comp_contractnet_participante)
         # Final cod Tiago para o agente diagnostico
 
-    def enviar_comando_de_chave(self, switching_command: swc.SwitchingCommand, acom_aid: AID):
-        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
-        # Valida objeto de informação
-        validate(switching_command)
-        # Monta envelope de mensagem ACL
-        message = ACLMessage(ACLMessage.REQUEST)
-        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-        message.add_receiver(acom_aid)
-        message.set_ontology('SwitchingCommand')
-        message.set_content(to_elementtree(switching_command))
-
-        def later():
-            # Se o ACom já estiver na tabela
-            if hasattr(self, 'agentInstance') and acom_aid.name in self.agentInstance.table:
-                # Envia mensagem
-                self.send(message)
-            else:
-                # Reenvia mensagem 5 segundos mais tarde
-                self.call_later(5.0, later)
-
-        later()
-
-    def subscribe_to(self, acom_aid: AID):
+    def subscrever_a(self, acom_aid: AID):
         """Subcribe to ``AgenteCom``"""
-        message = ACLMessage(ACLMessage.SUBSCRIBE)
-        message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
-        message.add_receiver(acom_aid)
-        self.subscribe_behaviour = SubscreverACom(self, message, is_initiator=True)
-        self.behaviours.append(self.subscribe_behaviour)
+        self.subscribe_behaviour.subscrever(acom_aid)
 
-        def later():
-            if hasattr(self, 'agentInstance') and acom_aid.name in self.agentInstance.table:
-                # Envia mensagem
-                self.subscribe_behaviour.on_start()
+    def tratar_informe(self, lista_de_chaves):
+        """Mensagem recebida pelo ACom, já convertida no formato
+        dos métodos do Tiago
+        
+        lista_de_chaves = {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13']}
+        """
+        #Inicio da analise de descoordenacao
+        dados_falta = self.analise_descoordenacao(lista_de_chaves)
+        """Houve descoordenação, chave a corrigir:"""
+
+        if dados_falta["coordenado"] == False:
+            #Corrigir descoordenacao
+            #ALE: antigo agente de controle
+            content = {"dados": dados_falta}
+
+            content2 = dict()
+            content2["chave_falta"] = content["dados"]["chave_falta"]
+            # Verifica se o pacote de dados tem a tag
+            # "correc_descoord" indicando que houve 50BF
+            # dentre as funcoes de protecao obtidas
+            if "correc_descoord" in content["dados"]:
+                if content["dados"]["correc_descoord"] in content["dados"]["chaves"]:
+                    self.pos_coordenacao((content, content2, 'success'))
+                else:
+                    display_message(self.aid.name, f'Comando para isolar trecho sob Falta [CH:{content["dados"]["correc_descoord"]}]')
+                    conversation_id = str(uuid4())
+                    self.command_behaviour.register_state(conversation_id, lambda: self.pos_coordenacao((content, content2, 'success')), lambda: self.pos_coordenacao((content, content2, 'failure')))
+                    self.command_behaviour.enviar_comando_de_chave(lista_de_comandos={content["dados"]["correc_descoord"]: 'open'}, proposito='coordination', conversation_id=conversation_id)
+                    # Código deste nível continua em ''handle_inform'' ou ''handle_failure''
+
+            # Se nao houver, a descoordenacao deve
+            # ser corrigida normalmente
             else:
-                # Reenvia mensagem mais tarde
-                self.call_later(2.0, later)
+                display_message(self.aid.name, f"Comando para isolar trecho sob Falta [CH:{content['dados']['chave_falta']}]")
+                conversation_id = str(uuid4())
+                self.command_behaviour.register_state(conversation_id, lambda: self.pos_coordenacao((content, content2, 'success')), lambda: self.pos_coordenacao((content, content2, 'failure')))
+                self.command_behaviour.enviar_comando_de_chave(lista_de_comandos={content["dados"]["chave_falta"]: 'open'}, proposito='coordination', conversation_id=conversation_id)
 
-        later()
+            # Opera as chaves para isolamento do setor
+            # sob falta, com ou seu descoordenacao
+            # self.agent.operacao_chaves()
 
-    # Inicio Cod Tiago
-    def localizar_chave(self, chave_busca):
+        else:
+            self.analise_isolamento(dados_falta["chave_falta"])
+
+    def pos_coordenacao(self, state):
+        content, content2, result = state
+
+        content2["correc_descoord_realizada"] = (result == 'success')
+        # Verifica quais as chaves que devem ser
+        # operadas a fim de reenergizar os trechos
+        # desenergizados por descoordenacao
+        if content2["correc_descoord_realizada"] is True:
+            # Conta o número de comandos que serao enviados antes
+            # para saber quantas mensagens devem ser esperadas
+            lista_de_comandos = {}
+            for chave in content["dados"]["chaves"]:
+                if "correc_descoord" in content["dados"]:
+                    if chave != content["dados"]["chave_falta"] and chave != content["dados"]["correc_descoord"]:
+                        lista_de_comandos[chave] = 'close'
+                else:
+                    if chave != content["dados"]["chave_falta"]:
+                        lista_de_comandos[chave] = 'close'
+            
+            if len(lista_de_comandos):
+                display_message(self.aid.name, "Comando para reestabelecer trechos descoordenados [CH: " + str(lista_de_comandos) + "]")
+                conversation_id = str(uuid4())
+                self.command_behaviour.register_state(
+                    state_id=conversation_id, 
+                    callback_inform=lambda: self.analise_isolamento(content2["chave_falta"]), 
+                    callback_failure=lambda: self.analise_isolamento(content2["chave_falta"]))
+                self.command_behaviour.enviar_comando_de_chave(
+                    lista_de_comandos=lista_de_comandos, 
+                    proposito='coordination', 
+                    conversation_id=conversation_id)
+                return
+        else:
+            display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
+        
+        if "correc_descoord" in content["dados"] and content["dados"]["chaves"] == [content["dados"]["correc_descoord"]]:
+            display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
+
+        self.analise_isolamento(content2["chave_falta"])
+    
+    def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id):
+        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.assinaturas} ({proposito})')
+        self.command_behaviour.enviar_comando_de_chave(lista_de_comandos, proposito, conversation_id)
+
+    #Inicio Cod Tiago
+    def buscar_alimentador(self, chave):
         for alimentador in self.topologia_subestacao.alimentadores.keys():
-            if chave_busca in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
+            if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
                 # Proucura em qual alimentador da SE "chave" está.
-                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave_busca].estado == 1:
+                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave].estado == 1:
                     # "chave" pertence ao "alimentador" e seu estado é fechado (provavelmente NF)
                     return alimentador
 
-    # Exemplo de mensagem {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], 'ctime': 'Fri Jul  3 18:20:58 2020'}
     def analise_descoordenacao(self, dados_falta=dict):
-        alim = self.localizar_chave(dados_falta["chaves"][0])
-        dados_falta["alimentador"] = alim
-        display_message(self.aid.name, "------------------------")
-        display_message(self.aid.name, "Analise de Descoordenacao em {alim}".format(alim=dados_falta["alimentador"]))
+        # Exemplo de entrada {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], 'ctime': 'Fri Jul  3 18:20:58 2020'}
+        # Exemplo de saída {'chaves': ['CH13', 'CH14'], 'leitura_falta': ['CH13'], '50BF': ['CH14'], 'alimentador': 'S1_AL1', 'chave_falta': 'CH14', 'coordenado': False, 'correc_descoord': 'CH13'}
 
-        campo_busca = dict()
-        rnp_busca = self.topologia_subestacao.alimentadores[alim].rnp_dic()
+        # Assume que todas as chaves estão sob o mesmo Alimentador
+        nome_alimentador = self.buscar_alimentador(dados_falta["chaves"][0])
+        dados_falta["alimentador"] = nome_alimentador
+        display_message(self.aid.name, "------------------------")
+        display_message(self.aid.name, f"Analise de Descoordenacao em {nome_alimentador}")
+        print(dados_falta)
+
+        alimentador = self.topologia_subestacao.alimentadores[nome_alimentador]
+        rnp_alimentador = alimentador.rnp_dic()
+        chave_setor = {}
+
         for chave in dados_falta["leitura_falta"]:
-            campo_busca[chave] = self.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome
-        prof = 0
-        for chave in campo_busca:
-            i = int(rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome])
-            if i >= prof:
-                prof = i
+            chave_setor[chave] = alimentador.chaves[chave].n2.nome
+        
+        profundidade = 0
+        # Busca a chave de maior profundidade (antes do setor defeituoso)
+        for chave in chave_setor:
+            setor_jusante = alimentador.chaves[chave].n2.nome
+            i = int(rnp_alimentador[setor_jusante])
+            if i >= profundidade:
+                profundidade = i
                 chave_falta = chave
+        
+        dados_falta["chave_falta"] = chave_falta
+
+        # Verifica se no pacote só contém a chave em questão
         if dados_falta["chaves"] == [chave_falta]:
             # Coordenado
-            dados_falta["chave_falta"] = chave_falta
             dados_falta["coordenado"] = True
             display_message(self.aid.name, "Protecao Coordenada")
         else:
             # Descoordenado
-            dados_falta["chave_falta"] = chave_falta
-            try:
-                chave_50BF = dados_falta["50BF"][0]
-            except:
-                pass
             dados_falta["coordenado"] = False
             display_message(self.aid.name, "Protecao Descoordenada")
+
             # Verifica as chaves que nao podem ser operadas por 50BF
             if "50BF" in dados_falta:
+                setor_montante_falta = alimentador.chaves[chave_falta].n1.nome
+                setor_jusante_falta = alimentador.chaves[chave_falta].n2.nome
+                chave_50BF = dados_falta["50BF"][0]
+                setor_montante_50BF = alimentador.chaves[chave_50BF].n1.nome
+                setor_jusante_50BF = alimentador.chaves[chave_50BF].n2.nome
                 # Monta vetor de busca
                 ch_correc_descoord = dados_falta["leitura_falta"]
+
                 # Identifica profundidade da falta
-                if rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n1.nome] > rnp_busca[
-                    self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n2.nome]:
-                    prof_falta = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n1.nome]
+                if rnp_alimentador[setor_montante_falta] > rnp_alimentador[setor_jusante_falta]:
+                    prof_falta = rnp_alimentador[setor_montante_falta]
                 else:
-                    prof_falta = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_falta].n2.nome]
+                    prof_falta = rnp_alimentador[setor_jusante_falta]
+
                 # Identifica profundidade da 50BF
-                if rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n1.nome] > rnp_busca[
-                    self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n2.nome]:
-                    prof_50BF = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n1.nome]
+                if rnp_alimentador[setor_montante_50BF] > rnp_alimentador[setor_jusante_50BF]:
+                    prof_50BF = rnp_alimentador[setor_montante_50BF]
                 else:
-                    prof_50BF = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave_50BF].n2.nome]
+                    prof_50BF = rnp_alimentador[setor_jusante_50BF]
+                    
                 if prof_50BF < prof_falta:
                     # Se a 50BF ocorreu a montante -1  da falta
                     chave_correcao = chave_falta
@@ -323,8 +360,8 @@ class AgenteDC(AgenteSMAD):
                             ch_correc_descoord.remove(chave_falta)
                     prof_aux = 0
                     for chave in ch_correc_descoord:
-                        aux = rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome] + \
-                              rnp_busca[self.topologia_subestacao.alimentadores[alim].chaves[chave].n1.nome]
+                        aux = int(rnp_alimentador[alimentador.chaves[chave].n2.nome]) + \
+                              int(rnp_alimentador[alimentador.chaves[chave].n1.nome])
                         if aux > prof_aux:
                             prof_aux = aux
                             chave_correcao = chave
@@ -336,24 +373,24 @@ class AgenteDC(AgenteSMAD):
         display_message(self.aid.name, "------------------------")
         display_message(self.aid.name, "Iniciando Analise de Isolamento")
 
-        alim = self.localizar_chave(chave_falta)
-        rnp_alim = self.topologia_subestacao.alimentadores[alim].rnp_dic()
+        nome_alimentador = self.buscar_alimentador(chave_falta)
+        alimentador = self.topologia_subestacao.alimentadores[nome_alimentador]
+        rnp_alimentador = alimentador.rnp_dic()
 
         dados_falta = dict()
         dados_falta["chave_falta"] = chave_falta
-        dados_falta["alimentador"] = alim
-        dados_falta["setor"] = self.topologia_subestacao.alimentadores[alim].chaves[
-            dados_falta["chave_falta"]].n2.nome
+        dados_falta["alimentador"] = nome_alimentador
+        dados_falta["setor"] = alimentador.chaves[dados_falta["chave_falta"]].n2.nome
 
         display_message(self.aid.name, "Setor sob Falta: [Setor: {setor}]".format(setor=dados_falta["setor"]))
 
         # Verifica quem sao as chaves do alimentador
-        chaves_alim = list(self.topologia_subestacao.alimentadores[alim].chaves.keys())
+        chaves_alim = list(alimentador.chaves.keys())
 
         # Verifica quem sao as chaves NA
         chaves_NA = list()
         for chave in chaves_alim:
-            if self.topologia_subestacao.alimentadores[alim].chaves[chave].estado == 0:
+            if alimentador.chaves[chave].estado == 0:
                 chaves_NA.append(chave)
 
         # Verifica quem sao as chaves NF
@@ -362,7 +399,7 @@ class AgenteDC(AgenteSMAD):
             chaves_NF.remove(chave)
 
         # Verifica quem sao os vizinhos do setor faltoso
-        vizinhos_isolar = self.topologia_subestacao.alimentadores[alim].setores[dados_falta["setor"]].vizinhos
+        vizinhos_isolar = alimentador.setores[dados_falta["setor"]].vizinhos
 
         aux = list()
         aux2 = list()
@@ -370,10 +407,10 @@ class AgenteDC(AgenteSMAD):
         # Verifica quais setores sao do mesmo alimentador ou qual tem uma profundidade menor que o faltoso
         for setor in vizinhos_isolar:
 
-            if setor not in self.topologia_subestacao.alimentadores[alim].setores.keys():
+            if setor not in alimentador.setores:
                 aux2.append(setor)
 
-            elif rnp_alim[setor] > rnp_alim[dados_falta["setor"]]:
+            elif rnp_alimentador[setor] > rnp_alimentador[dados_falta["setor"]]:
                 aux.append(setor)
 
         for setor in aux2:
@@ -383,10 +420,10 @@ class AgenteDC(AgenteSMAD):
 
         # Realiza a poda dos setores a serem isolados
         for setor in vizinhos_isolar:
-            self.podas.append(self.topologia_subestacao.alimentadores[alim].podar(setor, True))
+            self.podas.append(alimentador.podar(setor, True))
 
         # Realiza a poda do setor faltoso a fim de atualizar a RNP
-        setor_faltoso = self.topologia_subestacao.alimentadores[alim].podar(dados_falta["setor"], True)
+        setor_faltoso = alimentador.podar(dados_falta["setor"], True)
         self.setores_faltosos.append(setor_faltoso)
 
         # Verifica quem sao os setores a serem isolados (meio fisico)
@@ -408,39 +445,48 @@ class AgenteDC(AgenteSMAD):
 
         dados_isolamento["setor_falta"] = dados_falta["setor"]
         dados_isolamento["chave_falta"] = dados_falta["chave_falta"]
-        dados_isolamento["alimentador"] = alim
+        dados_isolamento["alimentador"] = nome_alimentador
         dados_isolamento["chaves_NA_alim"] = chaves_NA
 
         if len(dados_isolamento["chaves"]) > 0:
 
-            display_message(self.aid.name,
-                            "Setores a serem isolados: {lista}".format(lista=dados_isolamento["setores_isolados"]))
+            display_message(self.aid.name, f"Setores a serem isolados: {dados_isolamento['setores_isolados']}")
             # Preparando Mensagem para Isolamento de trecho faltoso
             content = dict()
             content["dados"] = dados_isolamento
 
-            # ***Comandar chaves antigo R_03
-            print("Dentro da funcao analise isolamento: " + str(dados_isolamento))
-            display_message(self.aid.name, "Iniciando Isolamento de Trecho")
-            display_message(self.aid.name, "***R_03 = " + str(content))
+            lista_de_comandos = {}
             for chave in content["dados"]["chaves"]:
-                # Verifica se a chave faz parte da SE com conexo TCP-IP
-                if chave in self.enderecos_IEDs.keys():
-                    display_message(self.aid.name, str(
-                        "Isolando Trecho Defeituoso [CH:" + chave + "]"))
-                    content["isolamento_realizado"] = True
-                else:
-                    display_message(self.aid.name, str(
-                        "Chave " + chave + " nao possui IP cadastrado"))
-                    content["isolamento_realizado"] = False
+                lista_de_comandos[chave] = 'open'
 
-            return dados_isolamento
-
+            conversation_id = str(uuid4())
+            self.command_behaviour.register_state(
+                state_id=conversation_id, 
+                callback_inform=lambda: self.pos_isolamento((content, lista_de_comandos, 'success')), 
+                callback_failure=lambda: self.pos_isolamento((content, lista_de_comandos, 'failure')))
+            self.command_behaviour.enviar_comando_de_chave(
+                lista_de_comandos=lista_de_comandos, 
+                proposito='coordination', 
+                conversation_id=conversation_id)
         else:
             display_message(self.aid.name, "Nenhum setor precisa ser isolado")
             self.analise_recomposicao(dados_isolamento)
 
+    def pos_isolamento(self, state):
+        content, lista_de_comandos, result = state
+        if result == 'success':
+            display_message(self.aid.name, f"Trecho Defeituoso isolado [CH:{lista_de_comandos}]")
+            content["isolamento_realizado"] = True
+        else:
+            display_message(self.aid.name, f"Erro ao isolar trecho Defeituoso [CH:{lista_de_comandos}]")
+            content["isolamento_realizado"] = False
+        
+        pacote = content["dados"]
+        pacote["isolamento_realizado"] = content["isolamento_realizado"]
+        self.analise_recomposicao(pacote)
+        
     def analise_recomposicao(self, dados_isolamento=dict):
+        # TODO: Parei aqui
         display_message(self.aid.name, "------------------------")
         display_message(self.aid.name, "Iniciando Analise de Restauracao")
 
@@ -453,12 +499,11 @@ class AgenteDC(AgenteSMAD):
                 i = self.podas.index(poda)
                 setores_poda = poda[0].keys()
                 # Exibe Mensagem no Terminal do SMA
-                display_message(self.aid.name, "Analisando Ramo {i} de {tot}".format(i=i + 1, tot=len(self.podas)))
-                display_message(self.aid.name,
-                                "Setores do Ramo {i}: {setores}".format(i=i + 1, setores=setores_poda))
+                display_message(self.aid.name, f"Analisando Ramo {i+1} de {len(self.podas)}")
+                display_message(self.aid.name, f"Setores do Ramo {i}: {setores_poda}")
                 # Varre os alimentadores da propria subestacao verificando se há possibilidade de recompor
                 # pela mesma SE
-                for alimentador in self.topologia_subestacao.alimentadores.keys():
+                for alimentador in self.topologia_subestacao.alimentadores:
                     # Verifica se alguma das chaves da poda pertence a outro alimentador
                     # da mesma SE
                     if dados_isolamento["alimentador"] != alimentador:
@@ -466,9 +511,7 @@ class AgenteDC(AgenteSMAD):
                         # do laco for em questao (diferente do alimentador faltoso)
                         for chave in poda[6].keys():
                             if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():  # Pertence
-                                display_message(self.aid.name,
-                                                "Possivel Restauracao de Ramo {i} pela mesma SE atraves de [CH: {ch}]".format(
-                                                    i=i + 1, ch=chave))
+                                display_message(self.aid.name, f"Possivel Restauracao de Ramo {i} pela mesma SE atraves de [CH: {chave}]")
                                 podas_mesma_SE.append([poda, chave, alimentador])
                             elif chave in dados_isolamento[
                                 "chaves_NA_alim"]:  # Nao Pertence mas a poda tem chave NA
@@ -517,4 +560,11 @@ class AgenteDC(AgenteSMAD):
             display_message(self.aid.name, "Restauracao nao pode ser realizada [Falta nao isolada]")
         else:
             display_message(self.aid.name, "Falta em Final de Trecho")
-        # Final cod Tiago
+        #Final cod Tiago
+
+if __name__ == "__main__":
+    from pade.misc.utility import start_loop
+    from random import randint
+    adc_antigo = AgenteDC(AID(f'agentedc@localhost:{randint(10000, 60000)}'), 'S1')
+    adc_antigo.subscrever_a(AID('acom@localhost:20001'))
+    start_loop([adc_antigo])

@@ -32,12 +32,19 @@ def testar_recepcao_de_mensagem_2(monkeypatch):
     global queue
     queue = multiprocessing.Queue()
     def stash(original, queue):
+        """Executa função original, mas insere seus
+        argumentos antes na queue."""
         def wrapper(self, *args):
             queue.put(args)
             return original(self, *args)
         return wrapper
-
-    monkeypatch.setattr(EnviarComando, 'handle_inform', stash(EnviarComando.handle_inform, queue))
+    def do_nothing(queue):
+        """Somente insere na queue os argumentos"""
+        def wrapper(self, *args):
+            queue.put(args)
+            return
+        return wrapper
+    monkeypatch.setattr(EnviarComando, 'handle_inform', do_nothing(queue))
     monkeypatch.setattr(ReceberComando, 'handle_request', stash(ReceberComando.handle_request, queue))
     monkeypatch.setattr(IED, 'operate', stash(IED.operate, queue))
 
@@ -66,37 +73,18 @@ def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mens
     # Configurar endereço do AMS de teste
     acom.ams = sniffer.ams
     adc.ams = sniffer.ams
+    # Adicionar ACom às incrições de ADC
+    adc.subscrever_a(acom_aid)
+    # Antecede inscrição para mandar comando (não necessário em produção)
+    adc.assinaturas = [acom_aid]
     # Criar objeto a enviar
-    swt13 = swc.ProtectedSwitch(
-        mRID='CH13', name='Switch que protege minha casa')
-    swt14 = swc.ProtectedSwitch(
-        mRID='CH14', name='Switch do portão')
-    acao1 = swc.SwitchAction(
-        executedDateTime=datetime.datetime.now(),
-        isFreeSequence=False,
-        issuedDateTime=datetime.datetime.now(),
-        kind=swc.SwitchActionKind.CLOSE,
-        plannedDateTime=datetime.datetime.now(),
-        sequenceNumber=1,
-        OperatedSwitch=swt13)
-    acao0 = swc.SwitchAction(
-        executedDateTime=datetime.datetime.now(),
-        isFreeSequence=False,
-        issuedDateTime=datetime.datetime.now(),
-        kind=swc.SwitchActionKind.OPEN,
-        plannedDateTime=datetime.datetime.now(),
-        sequenceNumber=0,
-        OperatedSwitch=swt14)
-    plano = swc.SwitchingPlan(
-        mRID=str(uuid4()), 
-        createdDateTime=datetime.datetime.now(),
-        name='Plano de Teste', 
-        purpose=swc.Purpose.COORDINATION, 
-        SwitchAction=[acao1, acao0])
-    root = swc.SwitchingCommand(SwitchingPlan=plano)
+    lista_de_comandos = {'CH14': 'open', 'CH13': 'close'}
     # Enviar mensagem
-    adc.enviar_comando_de_chave(switching_command=root, acom_aid=acom_aid)
-    
+    adc.enviar_comando_de_chave(
+        lista_de_comandos=lista_de_comandos, 
+        proposito='isolation',
+        conversation_id = str(uuid4()))
+
     # Executa agentes em outro processo por 20 segundos
     start_loop([adc, acom])
 

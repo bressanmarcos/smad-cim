@@ -44,9 +44,9 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
             queue.put_nowait(message)
             # Modifica arquivos de IEDs para inserir valores de teste
             with open(Path(f'./core/ied/CH13.txt'), 'w') as file:
-                file.write('XCBR BRKF')
-            with open(Path(f'./core/ied/CH14.txt'), 'w') as file:
                 file.write('XCBR')
+            with open(Path(f'./core/ied/CH14.txt'), 'w') as file:
+                file.write('XCBR BRKF')
 
             return original(self, message)
         return wrapper
@@ -65,7 +65,8 @@ def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     adc_aid = AID(f'agentdc@localhost:{randint(10000, 60000)}')
     adc = AgenteDC(adc_aid, 'S1', debug=True)
     adc.ams = sniffer.ams
-    adc.subscribe_to(acom_aid)
+    
+    adc.subscrever_a(acom.aid)
 
     # Executa agentes em outro processo por 20 segundos
     start_loop([adc, acom])
