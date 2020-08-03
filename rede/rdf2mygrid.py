@@ -42,6 +42,8 @@ def _gerar_chaves(resources):
         # print 'Chave %s criada.' % chaves[chave['nome']].nome
 
     return chaves
+
+
 def _gerar_nos_de_carga(resources):
     # Busca e instanciamento dos objetos do tipo NoDeCarga
     # print 'Gerando Nos de Carga...'
@@ -52,7 +54,6 @@ def _gerar_nos_de_carga(resources):
         for root_terminal in no.ConductingEquipment_Terminals:
             visited_terminal = [root_terminal]
             root_cn = root_terminal.Terminal_ConnectivityNode
-
 
             for branch_terminal in root_cn.ConnectivityNode_Terminals:
                 if branch_terminal in visited_terminal:
@@ -113,6 +114,8 @@ def _gerar_nos_de_carga(resources):
                                                   chaves=chaves_do_no)
         # print 'NoDeCarga %s criado.' % nos[no_tag['nome']].nome
     return nos
+
+
 def _gerar_setores(resources, nos):
     # Busca e instanciamento dos objetos do tipo Setor
     # print 'Gerando Setores...'
@@ -120,10 +123,12 @@ def _gerar_setores(resources, nos):
     setores = dict()
 
     def chaves_e_nos(setor):
-        cn_equipments = [[terminal.Terminal_ConductingEquipment for terminal in cn.ConnectivityNode_Terminals] for cn in setor.TopologicalNode_ConnectivityNodes]
+        cn_equipments = [[terminal.Terminal_ConductingEquipment for terminal in cn.ConnectivityNode_Terminals]
+                         for cn in setor.TopologicalNode_ConnectivityNodes]
         equipments = set(item for sublist in cn_equipments for item in sublist)
         chaves = list(filter(lambda eq: isinstance(eq, Switch), equipments))
-        nos = list(filter(lambda eq: isinstance(eq, EnergyConsumer) or isinstance(eq, BusbarSection), equipments))
+        nos = list(filter(lambda eq: isinstance(eq, EnergyConsumer)
+                          or isinstance(eq, BusbarSection), equipments))
         return chaves, nos
 
     for setor in setores_rdf:
@@ -146,6 +151,8 @@ def _gerar_setores(resources, nos):
                                     nos_de_carga=mygrid_nos_do_setor)
 
     return setores
+
+
 def _associar_chaves_aos_setores(resources, chaves, setores):
     # Associação das chaves aos setores
     for chave in chaves.values():
@@ -157,6 +164,8 @@ def _associar_chaves_aos_setores(resources, chaves, setores):
                 chave.n1 = setores[nome_setor]
             elif terminal.Terminal_sequenceNumber == 2:
                 chave.n2 = setores[nome_setor]
+
+
 def _gerar_condutores(resources):
     # Busca e instanciamento dos objetos do tipo Condutor
     # print 'Gerando Condutores...'
@@ -193,6 +202,8 @@ def _gerar_condutores(resources):
                                                     ampacidade=ampacidade)
 
     return condutores
+
+
 def _gerar_trechos(resources, nos, chaves, condutores):
     # Busca e instanciamento dos objetos do tipo Alimentador
     # print 'Gerando Trechos...'
@@ -225,6 +236,8 @@ def _gerar_trechos(resources, nos, chaves, condutores):
                                              comprimento=comprimento)
 
     return trechos
+
+
 def _gerar_alimentadores(resources, setores, trechos, chaves, se):
     # Busca e instanciamento dos objetos do tipo Alimentador
     # print 'Gerando Alimentadores...'
@@ -232,8 +245,9 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
     alimentadores = dict()    
 
     def chaves_e_trechos(setor):
-        cn_equipments = [[terminal.Terminal_ConductingEquipment for terminal in cn.ConnectivityNode_Terminals] for cn in setor.TopologicalNode_ConnectivityNodes]
-        equipments = set(item for sublist in cn_equipments for item in sublist)
+        cn_equipments = [[terminal.Terminal_ConductingEquipment for terminal in cn.ConnectivityNode_Terminals]
+                         for cn in setor.TopologicalNode_ConnectivityNodes]
+        equipments = set(item for sublist in cn_equipments for item in sublist if not isinstance(item, BusbarSection))
         chaves = list(filter(lambda eq: isinstance(eq, Switch), equipments))
         trechos = list(filter(lambda eq: isinstance(eq, ACLineSegment), equipments))
         return chaves, trechos
@@ -251,6 +265,9 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
         nomes_das_chaves = set()
         nomes_dos_trechos = set()
         for setor in setores_rdf:
+            if setor.IdentifiedObject_mRID == subestacao:
+                # Não incluir os setores do barramento da subestação
+                continue
             chaves_do_setor, trechos_do_setor = chaves_e_trechos(setor)
             nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
             nomes_dos_trechos |= set(map(lambda line: line.IdentifiedObject_mRID, trechos_do_setor))
@@ -272,6 +289,8 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
         alimentadores[nome].gerar_arvore_nos_de_carga()
             # print 'Alimentador %s criado.' % alimentadores[alimen_tag['nome']].nome
     return alimentadores
+
+
 def _gerar_transformadores(resources, se):
     # Busca e instanciamento dos objetos do tipo Transformador
     # print 'Gerando Transformadores'
@@ -315,6 +334,8 @@ def _gerar_transformadores(resources, se):
                                             impedancia=Fasor(real=resistencia, imag=reatancia,
                                                             tipo=Fasor.Impedancia))
     return transformadores
+
+
 def _gerar_subestacaoes(resources, alimentadores, transformadores, se):
     # Busca e instanciamento dos objetos do tipo Subestacao
     # print 'Gerando Subestações...'
@@ -329,7 +350,8 @@ def _gerar_subestacaoes(resources, alimentadores, transformadores, se):
 
         alimentadores_da_subestacao = subestacao.Substation_SubstationFeeder
         alimentadores_da_subestacao = map(lambda ali: ali.IdentifiedObject_mRID, alimentadores_da_subestacao)
-        alimentadores_da_subestacao = [alimentadores[ali] for ali in alimentadores_da_subestacao]
+        alimentadores_da_subestacao = [alimentadores[ali]
+                                       for ali in alimentadores_da_subestacao]
 
         trafos_da_subestacao = filter(lambda trf: isinstance(trf, PowerTransformer), subestacao.EquipmentContainer_Equipments)
         trafos_da_subestacao = map(lambda trf: trf.IdentifiedObject_mRID, trafos_da_subestacao)
@@ -345,4 +367,4 @@ def _gerar_subestacaoes(resources, alimentadores, transformadores, se):
 
 
 if __name__ == '__main__':
-    top = carregar_topologia('./rede/rede-cim.xml')
+    top = carregar_topologia('./rede/rede-cim.xml', 'S1')

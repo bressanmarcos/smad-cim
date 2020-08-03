@@ -1,9 +1,10 @@
 import os
 
-from rede.IPs_IEDs import enderecos_IEDs
-
 os.sys.path.insert(0, os.getcwd())
 # Adiciona ao Path a pasta raiz do projeto
+
+from pprint import pprint
+import pickle
 
 import datetime
 from random import random
@@ -21,10 +22,8 @@ from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
 
+from mygrid.fluxo_de_carga.varred_dir_inv import calcular_fluxo_de_carga
 from rede import rdf2mygrid
-
-
-from rede.IPs_IEDs import enderecos_IEDs
 
 
 class SubscreverACom(FipaSubscribeProtocol):
@@ -79,7 +78,7 @@ class EnviarComando(FipaRequestProtocol):
 
     def handle_not_understood(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Mensagem não compreendida')
-        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
+        display_message(self.agent.aid.name, f'Not Understood: {message.content}')
 
     def register_state(self, state_id: str, callback_inform=None, callback_failure=None, awaits=1):
         # Registra o conversation_id da Mensagem, 
@@ -143,8 +142,7 @@ class EnviarComando(FipaRequestProtocol):
         self.agent.send_until(message)
 
     def handle_inform(self, message: ACLMessage):
-        display_message(self.agent.aid.name, 'Chaveamento realizado')
-        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
+        display_message(self.agent.aid.name, f'Chaveamento realizado: {message.content}')
         callback_inform, _, awaits = self.retrieve_state(message.conversation_id)
         if awaits == 0:
             # Se não houver mais nenhuma mensagem de retorno, chama a função
@@ -152,8 +150,7 @@ class EnviarComando(FipaRequestProtocol):
             callback_inform()
 
     def handle_failure(self, message: ACLMessage):
-        display_message(self.agent.aid.name, 'Falha em execução de comando')
-        display_message(self.agent.aid.name, f'Conteúdo da mensagem: {message.content}')
+        display_message(self.agent.aid.name, f'Falha em execução de comando: {message.content}')
         _, callback_failure, awaits = self.retrieve_state(message.conversation_id)
         if awaits == 0:
             # Se não houver mais nenhuma mensagem de retorno, chama a função
@@ -190,6 +187,14 @@ class AgenteDC(AgenteSMAD):
         """Subcribe to ``AgenteCom``"""
         self.subscribe_behaviour.subscrever(acom_aid)
 
+    def set_an(self, an_aid: AID):
+        self.an_aid = an_aid
+    
+    def get_an(self):
+        if hasattr(self, 'an_aid'):
+            return self.an_aid
+        raise AttributeError('Agente de Negociação não definido')
+
     def tratar_informe(self, lista_de_chaves):
         """Mensagem recebida pelo ACom, já convertida no formato
         dos métodos do Tiago
@@ -202,16 +207,21 @@ class AgenteDC(AgenteSMAD):
 
         if dados_falta["coordenado"] == False:
             #Corrigir descoordenacao
-            #ALE: antigo agente de controle
+            
             content = {"dados": dados_falta}
-
+            #ALE: antigo agente de controle
             content2 = dict()
             content2["chave_falta"] = content["dados"]["chave_falta"]
+
+            # Indica inicio da Correcao
+            display_message(self.aid.name, "Iniciando correcao de Descoordenacao")
+            
             # Verifica se o pacote de dados tem a tag
             # "correc_descoord" indicando que houve 50BF
             # dentre as funcoes de protecao obtidas
             if "correc_descoord" in content["dados"]:
                 if content["dados"]["correc_descoord"] in content["dados"]["chaves"]:
+                    # pass
                     self.pos_coordenacao((content, content2, 'success'))
                 else:
                     display_message(self.aid.name, f'Comando para isolar trecho sob Falta [CH:{content["dados"]["correc_descoord"]}]')
@@ -223,10 +233,17 @@ class AgenteDC(AgenteSMAD):
             # Se nao houver, a descoordenacao deve
             # ser corrigida normalmente
             else:
+                #BRESSAN: reforça a abertura da chave a montante do setor em falta...
                 display_message(self.aid.name, f"Comando para isolar trecho sob Falta [CH:{content['dados']['chave_falta']}]")
                 conversation_id = str(uuid4())
-                self.command_behaviour.register_state(conversation_id, lambda: self.pos_coordenacao((content, content2, 'success')), lambda: self.pos_coordenacao((content, content2, 'failure')))
-                self.command_behaviour.enviar_comando_de_chave(lista_de_comandos={content["dados"]["chave_falta"]: 'open'}, proposito='coordination', conversation_id=conversation_id)
+                self.command_behaviour.register_state(
+                    conversation_id, 
+                    lambda: self.pos_coordenacao((content, content2, 'success')), 
+                    lambda: self.pos_coordenacao((content, content2, 'failure')))
+                self.command_behaviour.enviar_comando_de_chave(
+                    lista_de_comandos={content["dados"]["chave_falta"]: 'open'}, 
+                    proposito='coordination', 
+                    conversation_id=conversation_id)
 
             # Opera as chaves para isolamento do setor
             # sob falta, com ou seu descoordenacao
@@ -235,64 +252,12 @@ class AgenteDC(AgenteSMAD):
         else:
             self.analise_isolamento(dados_falta["chave_falta"])
 
-    def pos_coordenacao(self, state):
-        content, content2, result = state
-
-        content2["correc_descoord_realizada"] = (result == 'success')
-        # Verifica quais as chaves que devem ser
-        # operadas a fim de reenergizar os trechos
-        # desenergizados por descoordenacao
-        if content2["correc_descoord_realizada"] is True:
-            # Conta o número de comandos que serao enviados antes
-            # para saber quantas mensagens devem ser esperadas
-            lista_de_comandos = {}
-            for chave in content["dados"]["chaves"]:
-                if "correc_descoord" in content["dados"]:
-                    if chave != content["dados"]["chave_falta"] and chave != content["dados"]["correc_descoord"]:
-                        lista_de_comandos[chave] = 'close'
-                else:
-                    if chave != content["dados"]["chave_falta"]:
-                        lista_de_comandos[chave] = 'close'
-            
-            if len(lista_de_comandos):
-                display_message(self.aid.name, "Comando para reestabelecer trechos descoordenados [CH: " + str(lista_de_comandos) + "]")
-                conversation_id = str(uuid4())
-                self.command_behaviour.register_state(
-                    state_id=conversation_id, 
-                    callback_inform=lambda: self.analise_isolamento(content2["chave_falta"]), 
-                    callback_failure=lambda: self.analise_isolamento(content2["chave_falta"]))
-                self.command_behaviour.enviar_comando_de_chave(
-                    lista_de_comandos=lista_de_comandos, 
-                    proposito='coordination', 
-                    conversation_id=conversation_id)
-                return
-        else:
-            display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
-        
-        if "correc_descoord" in content["dados"] and content["dados"]["chaves"] == [content["dados"]["correc_descoord"]]:
-            display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
-
-        self.analise_isolamento(content2["chave_falta"])
-    
-    def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id):
-        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.assinaturas} ({proposito})')
-        self.command_behaviour.enviar_comando_de_chave(lista_de_comandos, proposito, conversation_id)
-
-    #Inicio Cod Tiago
-    def buscar_alimentador(self, chave):
-        for alimentador in self.topologia_subestacao.alimentadores.keys():
-            if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
-                # Proucura em qual alimentador da SE "chave" está.
-                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave].estado == 1:
-                    # "chave" pertence ao "alimentador" e seu estado é fechado (provavelmente NF)
-                    return alimentador
-
     def analise_descoordenacao(self, dados_falta=dict):
         # Exemplo de entrada {'chaves': ['CH14', 'CH13'], 'leitura_falta': ['CH14', 'CH13'], 'ctime': 'Fri Jul  3 18:20:58 2020'}
         # Exemplo de saída {'chaves': ['CH13', 'CH14'], 'leitura_falta': ['CH13'], '50BF': ['CH14'], 'alimentador': 'S1_AL1', 'chave_falta': 'CH14', 'coordenado': False, 'correc_descoord': 'CH13'}
 
         # Assume que todas as chaves estão sob o mesmo Alimentador
-        nome_alimentador = self.buscar_alimentador(dados_falta["chaves"][0])
+        nome_alimentador = self.localizar_chave(dados_falta["chaves"][0])
         dados_falta["alimentador"] = nome_alimentador
         display_message(self.aid.name, "------------------------")
         display_message(self.aid.name, f"Analise de Descoordenacao em {nome_alimentador}")
@@ -308,7 +273,7 @@ class AgenteDC(AgenteSMAD):
         profundidade = 0
         # Busca a chave de maior profundidade (antes do setor defeituoso)
         for chave in chave_setor:
-            setor_jusante = alimentador.chaves[chave].n2.nome
+            setor_jusante = chave_setor[chave]
             i = int(rnp_alimentador[setor_jusante])
             if i >= profundidade:
                 profundidade = i
@@ -368,12 +333,74 @@ class AgenteDC(AgenteSMAD):
                     dados_falta["correc_descoord"] = chave_correcao
         return dados_falta
 
-    def analise_isolamento(self, chave_falta=list):
+    def pos_coordenacao(self, state):
+        content, content2, result = state
 
+        content2["correc_descoord_realizada"] = (result == 'success')
+        # Verifica quais as chaves que devem ser
+        # operadas a fim de reenergizar os trechos
+        # desenergizados por descoordenacao
+        if content2["correc_descoord_realizada"] is True:
+
+            # Conta o número de comandos que serao enviados antes
+            # para saber quantas mensagens devem ser esperadas
+            lista_de_comandos = {}
+            for chave in content["dados"]["chaves"]:
+                if "correc_descoord" in content["dados"]:
+                    if chave != content["dados"]["chave_falta"] and chave != content["dados"]["correc_descoord"]:
+                        lista_de_comandos[chave] = 'close'
+                else:
+                    if chave != content["dados"]["chave_falta"]:
+                        lista_de_comandos[chave] = 'close'
+            
+            if len(lista_de_comandos):
+                display_message(self.aid.name, "Comando para reestabelecer trechos descoordenados [CH: " + str(lista_de_comandos) + "]")
+                conversation_id = str(uuid4())
+                self.command_behaviour.register_state(
+                    state_id=conversation_id, 
+                    callback_inform=lambda: self.pos_pos_coordenacao((content, content2, result)), 
+                    callback_failure=lambda: self.pos_pos_coordenacao((content, content2, result)))
+                self.command_behaviour.enviar_comando_de_chave(
+                    lista_de_comandos=lista_de_comandos, 
+                    proposito='coordination', 
+                    conversation_id=conversation_id)
+                return
+        else:
+            display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
+
+        self.pos_pos_coordenacao(content2["chave_falta"])
+
+    def pos_pos_coordenacao(self, state):
+        content, content2, result = state
+
+        if "correc_descoord" in content["dados"] and content["dados"]["chaves"] == [content["dados"]["correc_descoord"]]:
+            display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
+
+        content2["correc_descoord_realizada"] = (result == 'sucess')
+
+        content = content2
+
+        self.analise_isolamento(content["chave_falta"])
+
+
+    def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id):
+        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.assinaturas} ({proposito})')
+        self.command_behaviour.enviar_comando_de_chave(lista_de_comandos, proposito, conversation_id)
+
+    #Inicio Cod Tiago
+    def localizar_chave(self, chave):
+        for alimentador in self.topologia_subestacao.alimentadores.keys():
+            if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
+                # Proucura em qual alimentador da SE "chave" está.
+                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave].estado == 1:
+                    # "chave" pertence ao "alimentador" e seu estado é fechado (provavelmente NF)
+                    return alimentador
+
+    def analise_isolamento(self, chave_falta=list):
         display_message(self.aid.name, "------------------------")
         display_message(self.aid.name, "Iniciando Analise de Isolamento")
 
-        nome_alimentador = self.buscar_alimentador(chave_falta)
+        nome_alimentador = self.localizar_chave(chave_falta)
         alimentador = self.topologia_subestacao.alimentadores[nome_alimentador]
         rnp_alimentador = alimentador.rnp_dic()
 
@@ -420,7 +447,7 @@ class AgenteDC(AgenteSMAD):
 
         # Realiza a poda dos setores a serem isolados
         for setor in vizinhos_isolar:
-            self.podas.append(alimentador.podar(setor, True))
+            self.podas.append(alimentador.podar(setor, True)) # TODO Ver o retorno de PODAR
 
         # Realiza a poda do setor faltoso a fim de atualizar a RNP
         setor_faltoso = alimentador.podar(dados_falta["setor"], True)
@@ -450,43 +477,52 @@ class AgenteDC(AgenteSMAD):
 
         if len(dados_isolamento["chaves"]) > 0:
 
-            display_message(self.aid.name, f"Setores a serem isolados: {dados_isolamento['setores_isolados']}")
+            display_message(self.aid.name, f"Setores desalimentados: {dados_isolamento['setores_isolados']}")
             # Preparando Mensagem para Isolamento de trecho faltoso
             content = dict()
             content["dados"] = dados_isolamento
 
             lista_de_comandos = {}
             for chave in content["dados"]["chaves"]:
+                display_message(self.aid.name, f"Comando para isolar Trecho Defeituoso [CH: {chave}]")
                 lista_de_comandos[chave] = 'open'
 
-            conversation_id = str(uuid4())
-            self.command_behaviour.register_state(
-                state_id=conversation_id, 
-                callback_inform=lambda: self.pos_isolamento((content, lista_de_comandos, 'success')), 
-                callback_failure=lambda: self.pos_isolamento((content, lista_de_comandos, 'failure')))
-            self.command_behaviour.enviar_comando_de_chave(
-                lista_de_comandos=lista_de_comandos, 
-                proposito='coordination', 
-                conversation_id=conversation_id)
+            if len(lista_de_comandos):
+                conversation_id = str(uuid4())
+                self.command_behaviour.register_state(
+                    state_id=conversation_id, 
+                    callback_inform=lambda: self.pos_isolamento((content, lista_de_comandos, 'success')), 
+                    callback_failure=lambda: self.pos_isolamento((content, lista_de_comandos, 'failure')),
+                    awaits=len(lista_de_comandos))
+                self.command_behaviour.enviar_comando_de_chave(
+                    lista_de_comandos=lista_de_comandos, 
+                    proposito='coordination', 
+                    conversation_id=conversation_id)
         else:
             display_message(self.aid.name, "Nenhum setor precisa ser isolado")
             self.analise_recomposicao(dados_isolamento)
 
     def pos_isolamento(self, state):
         content, lista_de_comandos, result = state
-        if result == 'success':
-            display_message(self.aid.name, f"Trecho Defeituoso isolado [CH:{lista_de_comandos}]")
-            content["isolamento_realizado"] = True
+
+        content["isolamento_realizado"] = (result == 'success')
+        if content["isolamento_realizado"]:
+            display_message(self.aid.name, f"Trecho Defeituoso isolado {lista_de_comandos}")
         else:
-            display_message(self.aid.name, f"Erro ao isolar trecho Defeituoso [CH:{lista_de_comandos}]")
-            content["isolamento_realizado"] = False
+            display_message(self.aid.name, f"Erro ao isolar trecho Defeituoso {lista_de_comandos}")
         
         pacote = content["dados"]
         pacote["isolamento_realizado"] = content["isolamento_realizado"]
         self.analise_recomposicao(pacote)
-        
+
+    def localizar_setor(self, setor = str):
+
+        for alim in self.topologia_subestacao.alimentadores.keys():
+            if setor in self.topologia_subestacao.alimentadores[alim].setores.keys():
+                return alim
+
     def analise_recomposicao(self, dados_isolamento=dict):
-        # TODO: Parei aqui
+
         display_message(self.aid.name, "------------------------")
         display_message(self.aid.name, "Iniciando Analise de Restauracao")
 
@@ -499,8 +535,8 @@ class AgenteDC(AgenteSMAD):
                 i = self.podas.index(poda)
                 setores_poda = poda[0].keys()
                 # Exibe Mensagem no Terminal do SMA
-                display_message(self.aid.name, f"Analisando Ramo {i+1} de {len(self.podas)}")
-                display_message(self.aid.name, f"Setores do Ramo {i}: {setores_poda}")
+                display_message(self.aid.name, f"Analisando Ramo ({i+1} de {len(self.podas)})")
+                display_message(self.aid.name, f"Setores do Ramo {i+1}: {list(setores_poda)}")
                 # Varre os alimentadores da propria subestacao verificando se há possibilidade de recompor
                 # pela mesma SE
                 for alimentador in self.topologia_subestacao.alimentadores:
@@ -509,17 +545,18 @@ class AgenteDC(AgenteSMAD):
                     if dados_isolamento["alimentador"] != alimentador:
                         # Faz uma varredura nas chaves da poda e verifica se a chave pertence ao alimentador
                         # do laco for em questao (diferente do alimentador faltoso)
-                        for chave in poda[6].keys():
+                        for chave in poda[6]:
                             if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():  # Pertence
-                                display_message(self.aid.name, f"Possivel Restauracao de Ramo {i} pela mesma SE atraves de [CH: {chave}]")
+                                display_message(self.aid.name, f"Possivel Restauracao de Ramo {i+1} pela mesma SE atraves de [CH: {chave}]")
                                 podas_mesma_SE.append([poda, chave, alimentador])
-                            elif chave in dados_isolamento[
-                                "chaves_NA_alim"]:  # Nao Pertence mas a poda tem chave NA
-                                display_message(self.aid.name,
-                                                "Possivel Restauracao de Ramo {i} por outra SE atraves de [CH: {ch}]".format(
-                                                    i=i + 1, ch=chave))
+                            elif chave in dados_isolamento["chaves_NA_alim"]:  # Nao Pertence mas a poda tem chave NA
+                                display_message(self.aid.name, f"Possivel Restauracao de Ramo {i+1} por outra SE atraves de [CH: {chave}]")
             # Tenta recompor os ramos possiveis pela mesma SE
+
             if len(podas_mesma_SE) > 0:
+
+                lista_de_comandos = {}
+
                 for poda in podas_mesma_SE:
                     if self.recompor_mesma_se(poda[0], poda[1], poda[2]):
                         content = dict()
@@ -527,44 +564,126 @@ class AgenteDC(AgenteSMAD):
                         content["alim_colab"] = self.localizar_setor(poda[0][0].keys()[0])
                         content["chaves"] = list()
                         content["nos_de_carga"] = dict()
+
                         for chave in poda[0][6].keys():
                             if self.topologia_subestacao.alimentadores[poda[2]].chaves[chave].estado == 1:
                                 content["chaves"].append(chave)
+
                         for no in poda[0][3].keys():
                             content["nos_de_carga"][no] = round(poda[0][3][no].potencia.mod / 1000, 0)
-                        # Elabora mensagem a ser enviada para o Acontrole correspondente
-                        # ***verificar proximas linhas R_04
-                        # Lanca Comportamento Request Iniciante
-                        # comp_mesma_se = CompRequest4(self, message)
-                        # self.behaviours.append(comp_mesma_se)
-                        # comp_mesma_se.on_start()
-                        # Atualiza a lista de podas do agente
+                        
+                        # Indica inicio da analise
+                        display_message(self.aid.name, "------------------------")
+                        display_message(self.aid.name, f"Iniciando Restauracao do Ramo: {content['ramo_recomp']} pela mesma SE")
+
+                        for chave in content["chaves"]:
+                            lista_de_comandos[chave] = 'close'
+                            #self.agent.operacao_chaves()
+
                         self.podas.remove(poda[0])
 
-            # Pega todos os dados de recomposicao que nao foram restaurados na mesma SE
-            # e envia ao Agente Negociacao para que ele comece os ciclos de negociacao
+                # Para cada chave indicada no pacote de dados
+                # opera fechamento de chave
+                if len(lista_de_comandos):
+                    display_message(self.aid.name, f"Comandos para operar chaves [CH: {lista_de_comandos}]")
+                    conversation_id = str(uuid4())
+                    self.command_behaviour.register_state(
+                        state_id=conversation_id, 
+                        callback_inform=lambda: self.pos_auto_recomposicao((content, 'success')), 
+                        callback_failure=lambda: self.pos_auto_recomposicao((content, 'failure')), 
+                        awaits=len(lista_de_comandos))
+                    self.command_behaviour.enviar_comando_de_chave(
+                        lista_de_comandos=lista_de_comandos, 
+                        proposito='restoration', 
+                        conversation_id=conversation_id)
 
-            # ***Refazer a comunicacao das proximas linhas
-            # content2 = dict()
-            # content2["ramos"] = self.podas
-            # message2 = ACLMessage(ACLMessage.REQUEST)
-            # message2.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-            # message2.set_content(pickle.dumps(content2))
-            # message2.set_ontology("R_05")
-            # message2.add_receiver(AID(str(self.subestacao + '_ANeg')))
-            # comp_ramos = CompRequest5(self, message2)
-            # self.behaviours.append(comp_ramos)
-            # comp_ramos.on_start()
+
+            # Solicitar recomposição ao AN
+            # TODO: mudar formato da poda
+            print('ENVIANDO MENSAGEM PARA AGENTE DE NEGOCIAÇÃO')
+            content2 = dict()
+            content2["ramos"] = self.podas
+            message2 = ACLMessage(ACLMessage.REQUEST)
+            message2.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+            message2.set_content(pickle.dumps(content2))
+            message2.set_ontology("R_05")
+            message2.add_receiver(self.get_an())
+            self.send(message2)
+
 
         elif len(dados_isolamento["setores_isolados"]) > 0:
             display_message(self.aid.name, "Restauracao nao pode ser realizada [Falta nao isolada]")
         else:
             display_message(self.aid.name, "Falta em Final de Trecho")
-        #Final cod Tiago
+
+
+    def pos_auto_recomposicao(self, state):
+        content, result = state
+
+        content["restaur_realiz"] = (result == 'success')
+        if content["restaur_realiz"]:
+            display_message(self.aid.name, 'Restauração Realizada')
+
+
+    def recompor_mesma_se(self, poda, chave, alimentador):
+
+        setor_isolado = poda[0].keys()[0]
+
+        # Verifica quais dos setores vizinhos a chave pertence ao possivel alimentador colaborador
+        if self.topologia_subestacao.alimentadores[alimentador].chaves[chave].n1.nome in self.topologia_subestacao.alimentadores[alimentador].setores.keys():
+            setor_colab = self.topologia_subestacao.alimentadores[alimentador].chaves[chave].n1.nome
+        elif self.topologia_subestacao.alimentadores[alimentador].chaves[chave].n2.nome in self.topologia_subestacao.alimentadores[alimentador].setores.keys():
+            setor_colab = self.topologia_subestacao.alimentadores[alimentador].chaves[chave].n2.nome
+
+        # Insere a poda atraves do setor colaborador achado
+        self.topologia_subestacao.alimentadores[alimentador].inserir_ramo(setor_colab, poda)
+
+        # Calcula Fluxo de Carga
+        calcular_fluxo_de_carga(self.topologia_subestacao)
+
+        # Verifica Condicoes
+        analise1 = self.verificar_carregamento_dos_condutores(self.topologia_subestacao)
+        analise2 = self.verificar_nivel_de_tensao(self.topologia_subestacao)
+
+        # Se todas as condicoes forem estabelecidas
+        if analise1 is None and analise2 is None:
+            return True
+
+        else: # Podar ramos finais e tentar mais uma vez
+            poda = self.topologia_subestacao.alimentadores[alimentador].podar(setor_isolado, True)
+            return False
+
+    def verificar_carregamento_dos_condutores(self, subestacao):
+
+        for alimentador in subestacao.alimentadores.values():
+            for trecho in alimentador.trechos.values():
+
+                if trecho.fluxo.mod > trecho.condutor.ampacidade:
+                    display_message(self.aid.name, 'Restrição de carregamento de condutores ' \
+                            'atingida no trecho {t}'.format(t=trecho.nome))
+                    return trecho.nome
+        else:
+            return None
+
+
+    def verificar_nivel_de_tensao(self, subestacao):
+
+        for alimentador in subestacao.alimentadores.values():
+                for no in alimentador.nos_de_carga.values():
+                    if no.tensao.mod < 0.8 * subestacao.tensao.mod or \
+                        no.tensao.mod > 1.05 * subestacao.tensao.mod:
+                        display_message(self.aid.name, 'Restrição de Tensão atingida ' \
+                                'no nó de carga {no}'.format(no=no.nome))
+                        return no.nome, round(no.tensao.mod/subestacao.tensao.mod,4)
+        else:
+            return None
+    #Final cod Tiago
 
 if __name__ == "__main__":
     from pade.misc.utility import start_loop
-    from random import randint
-    adc_antigo = AgenteDC(AID(f'agentedc@localhost:{randint(10000, 60000)}'), 'S1')
-    adc_antigo.subscrever_a(AID('acom@localhost:20001'))
-    start_loop([adc_antigo])
+
+    adc = AgenteDC(AID(f'agentedc@localhost:60002'), 'S1')
+    adc.ams['port'] = 60000
+    adc.subscrever_a(AID('agentecom@localhost:60003'))
+    
+    start_loop([adc])

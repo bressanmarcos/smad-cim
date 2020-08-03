@@ -14,7 +14,7 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
 from pade.misc.utility import display_message
 
 from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
-from core.ied import IED
+from core.ied import IED, SwitchAlreadyInPosition
 
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
@@ -93,6 +93,13 @@ class ReceberComando(FipaRequestProtocol):
         try:
             for sequenceNumber, switchId, actionKind in buffer_leitura_acoes:
                 self.agent.comandar_chave(switchId, actionKind)
+        except SwitchAlreadyInPosition as e:
+            # Retorna sucesso, mas nenhuma operação foi realizada
+            reply = message.create_reply()
+            reply.set_performative(ACLMessage.INFORM)
+            reply.set_content(str(e))
+            self.agent.send(reply)
+            return
         except KeyError as e:
             # Retorna falha ao não encontrar switchId
             reply = message.create_reply()
@@ -111,7 +118,7 @@ class ReceberComando(FipaRequestProtocol):
         # Retorna sucesso
         reply = message.create_reply()
         reply.set_performative(ACLMessage.INFORM)
-        reply.set_ontology('')
+        reply.set_content('Sucesso')
         self.agent.send(reply)
         return
 
@@ -226,6 +233,9 @@ class AgenteCom(AgenteSMAD):
         """Chama a instância do IED para operar chave.
         A ``id`` do switch coincide com a ``id`` do IED
         """
+        breaker_position = self.IEDs[switchId].get_breaker_position()
+        if action == breaker_position:
+            raise SwitchAlreadyInPosition(f'Chave já está na posição solicitada ({action})')
         self.IEDs[switchId].operate(action)
 
 if __name__ == "__main__":
@@ -245,6 +255,6 @@ if __name__ == "__main__":
                     "CH14": "192.168.0.114",
                     "CH15": "192.168.0.115",
                     "CH16": "192.168.0.116"}
-    acom = AgenteCom(AID('acom@localhost:20001'), 'S1', enderecos_S1, True)
+    acom = AgenteCom(AID('acom@localhost:20001'), 'S1', enderecos_S1)
     start_loop([acom])
     

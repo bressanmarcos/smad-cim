@@ -23,7 +23,6 @@ def start_loop(agents, seconds=20.0):
     p = multiprocessing.Process(target=st_loop, args=(agents,))
     p.start(), time.sleep(seconds), p.kill()
 
-
 @pytest.fixture(scope='function')
 def run_ams():
     """Inicializa o AMS do PADE e retorna a instância do ``sniffer``.
@@ -34,7 +33,7 @@ def run_ams():
     mesmo tempo, já que cada AMS é executado numa porta distinta."""
 
     # Define IP e porta do AMS
-    ams_dict = {'name': 'localhost', 'port': randint(10000, 60000)}
+    ams_dict = {'name': 'localhost', 'port': 60000}
 
     # Executa AMS num subprocesso com ``python new_ams.py user email pass {porta}``
     commands = ['python', new_ams.__file__, 'pade_user', 'email@', '12345', str(ams_dict['port'])]
