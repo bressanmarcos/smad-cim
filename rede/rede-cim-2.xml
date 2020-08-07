@@ -2856,8 +2856,8 @@
     </ns1:Terminal>
     <ns1:Switch rdf:about="#CH19">
         <ns1:IdentifiedObject.mRID>CH19</ns1:IdentifiedObject.mRID>
-        <ns1:ConductingEquipment.Terminals rdf:resource="#CH19-Node-1" />
-        <ns1:ConductingEquipment.Terminals rdf:resource="#59f34de5-5486-49b4-bc3b-e12f266f2e10" />
+        <ns1:ConductingEquipment.Terminals rdf:resource="#CH19-Terminal-1" />
+        <ns1:ConductingEquipment.Terminals rdf:resource="#CH19-Terminal-2" />
         <ns1:Switch.normalOpen>true</ns1:Switch.normalOpen>
         <ns1:Switch.open>true</ns1:Switch.open>
     </ns1:Switch>
