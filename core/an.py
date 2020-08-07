@@ -10,12 +10,11 @@ from core.common import AgenteSMAD
 import information_model as im
 from pade.misc.utility import display_message
 
+import pickle, json
 
-
-class CompRequest1(FipaRequestProtocol):
+class ReceberPoda(FipaRequestProtocol):
     def __init__(self, agent):
-        super(CompRequest1, self).__init__(
-            agent=agent, message=None, is_initiator=False)
+        super().__init__(agent=agent, message=None, is_initiator=False)
 
     def handle_request(self, message):
         if message.ontology == "R_05":
@@ -30,14 +29,13 @@ class CompRequest1(FipaRequestProtocol):
             self.agent.preparar_negociacao(content)
 
 
-class CompContractNet1(FipaContractNetProtocol):
-    def __init__(self, agent, message):
-        super(CompContractNet1, self).__init__(
-            agent=agent, message=message, is_initiator=True)
+class GerenciarNegociacao(FipaContractNetProtocol):
+    def __init__(self, agent, message=None):
+        super().__init__(agent=agent, message=message, is_initiator=True)
         self.cfp = message
 
     def handle_all_proposes(self, proposes):
-        super(CompContractNet1, self).handle_all_proposes(proposes)
+        super().handle_all_proposes(proposes)
 
         propostas_impossiveis = list()
         propostas_realizaveis = list()
@@ -52,9 +50,7 @@ class CompContractNet1(FipaContractNetProtocol):
                 if content["setores"] == []:
                     name = message.sender.name.split("@")[0]
                     ramo = pickle.loads(self.cfp.content)[0].keys()
-                    display_message(self.agent.aid.name,
-                                    "Agente {ag} possui chave de encontro, mas nao pode colaborar para o ramo {ram}.".format(
-                                        ag=name, ram=ramo))
+                    display_message(self.agent.aid.name, f"Agente {name} possui chave de encontro, mas nao pode colaborar para o ramo {ramo}.")
 
                     propostas_impossiveis.append(message)
                 else:
@@ -81,16 +77,14 @@ class CompContractNet1(FipaContractNetProtocol):
             # Varre todas as propostas recebidas
             for message in propostas_realizaveis:
                 display_message(self.agent.aid.name,
-                                "Analisando proposta {n} de {m}.".format(n=propostas_realizaveis.index(message) + 1,
-                                                                         m=len(propostas_realizaveis)))
+                                f"Analisando proposta {propostas_realizaveis.index(message) + 1} de {len(propostas_realizaveis)}")
 
                 # Carrega conteudo da mensagem analisada
                 content = json.loads(message.content)
                 name = message.sender.name.split("@")[0]
 
                 display_message(self.agent.aid.name,
-                                "Agente {ag} pode restaurar ramo {ram} com carregamento de {carreg}%  da sua SE".format(
-                                    ag=name, ram=content["setores"], carreg=content["carreg_SE"]))
+                                f"Agente {name} pode restaurar ramo {content['setores']} com carregamento de {content['carreg_SE']}%  da sua SE")
 
                 # Verifica se atual proposta atende maior numero de setores
                 if len(content["setores"]) > setores_atendidos:
@@ -140,23 +134,27 @@ class CompContractNet1(FipaContractNetProtocol):
             display_message(self.agent.aid.name, "Nenhuma proposta foi acatada.")
 
     def handle_refuse(self, message):
-        super(CompContractNet1, self).handle_refuse(message)
-
-        if message.ontology == "CN_02":
-            display_message(self.agent.aid.name, "Mensagem REFUSE recebida")
+        super().handle_refuse(message)
+        display_message(self.agent.aid.name, "Mensagem REFUSE recebida")
 
     def handle_propose(self, message):
-        super(CompContractNet1, self).handle_propose(message)
-
-        if message.ontology == "CN_03":
-            display_message(self.agent.aid.name, "Mensagem PROPOSE recebida")
+        super().handle_propose(message)
+        display_message(self.agent.aid.name, "Mensagem PROPOSE recebida")
 
     def handle_inform(self, message):
-        super(CompContractNet1, self).handle_inform(message)
+        super().handle_inform(message)
+        display_message(self.agent.aid.name, "Mensagem INFORM Recebida")
 
-        if message.ontology == "CN_06":
-            display_message(self.agent.aid.name, "Mensagem INFORM Recebida")
+    def solicitar_propostas(self, poda):
+        message = ACLMessage(ACLMessage.CFP)
+        message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
+        message.set_ontology("CN_01")
+        message.set_content(pickle.dumps(poda))
+        for aid in self.agent.adc_vizinhos:
+            message.add_receiver(aid)
 
+        self.message = message
+        self.on_start()
         # content = json.loads(message.content)
         # self.agent.organiza_ramos(content)
 
@@ -178,33 +176,36 @@ class AgenteN(AgenteSMAD):
 
         self.ramos_remanesc = list()
 
-        comp1 = CompRequest1(self)
-        self.behaviours.append(comp1)
+        # Determina os ADCs vizinhos para os quais as solicitações de recomposição
+        # serão enviadas
+        self.adc_vizinhos = list()
+
+        self.manage_negotiation_behaviour = GerenciarNegociacao(self)
+        self.behaviours.append(self.manage_negotiation_behaviour)
+
+        self.receive_prune_behaviour = ReceberPoda(self)
+        self.behaviours.append(self.receive_prune_behaviour)
+
+    def add_adc_vizinho(self, adc_aid):
+        self.adc_vizinhos.append(adc_aid)
 
         # inicio ontologia
-        self.call_later(7.0, self.registrar_ontologia)
+    #     self.call_later(7.0, self.registrar_ontologia)
 
-    # inicio ontologia
-    def registrar_ontologia(self):
-        conteudo = '{"nome":"Agente_Negociacao", "Class":"AgenteNegociacao"}'
-        message = ACLMessage(ACLMessage.INFORM)
-        # display_message(self.aid.localname, 'Registrando na ontologia')
-        message.add_receiver(AID('S1_agerente'))
-        message.set_content(conteudo)
-        message.set_ontology('ontogrid')
-        message.set_language('json')
-        self.send(message)
+    # # inicio ontologia
+    # def registrar_ontologia(self):
+    #     conteudo = '{"nome":"Agente_Negociacao", "Class":"AgenteNegociacao"}'
+    #     message = ACLMessage(ACLMessage.INFORM)
+    #     # display_message(self.aid.localname, 'Registrando na ontologia')
+    #     message.add_receiver(AID('S1_agerente'))
+    #     message.set_content(conteudo)
+    #     message.set_ontology('ontogrid')
+    #     message.set_language('json')
+    #     self.send(message)
 
     # final registro na ontologia
 
     def preparar_negociacao(self, dados):
-        lista_adiag = list()
-
-        # Busca os agentes aos quais os ramos serao enviados
-        for agente in self.agentInstance.table.keys():
-            aux = agente.split("@")[0]
-            if aux != 'ams' and aux.split("_")[0] != self.subestacao and aux.split("_")[1] == "ADiag":
-                lista_adiag.append(agente)
 
         for poda in dados["ramos"]:
 
@@ -216,21 +217,10 @@ class AgenteN(AgenteSMAD):
                 i = dados["ramos"].index(poda)
                 self.ramos_remanesc.append(poda)
 
-                display_message(self.aid.name,
-                                "Tratando Ramo {ram}: {i} de {tot}".format(ram=poda[0].keys(), i=i + 1,
-                                                                           tot=len(dados["ramos"])))
+                display_message(self.aid.name, f"Tratando Ramo {poda[0].keys()}: {i+1} de {len(dados['ramos'])}")
 
-                message = ACLMessage(ACLMessage.CFP)
-                message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
-                message.set_ontology("CN_01")
-                message.set_content(pickle.dumps(poda))
+                self.manage_negotiation_behaviour.solicitar_propostas(poda)
 
-                for agente in lista_adiag:
-                    message.add_receiver(AID(agente))
-
-                comp_contnet_ini = CompContractNet1(self, message)
-                self.behaviours.append(comp_contnet_ini)
-                comp_contnet_ini.on_start()
 
     def organiza_ramos(self, recomp_realiz):
 
@@ -280,5 +270,12 @@ class AgenteN(AgenteSMAD):
 
         # print dic1, dic2, dic3, dic4, dic5, dic6
 
+if __name__ == "__main__":
+    from pade.misc.utility import start_loop
 
+    an = AgenteN(AID('agenten@localhost:60005'), 'S1')
+    an.add_adc_vizinho(AID('agentedc-2@localhost:60010'))
+    an.ams['port'] = 60000
+
+    start_loop([an])
 

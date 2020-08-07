@@ -17,6 +17,7 @@ from pade.core.agent import Agent_
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
+from core.an import AgenteN, ReceberPoda, GerenciarNegociacao
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
@@ -94,4 +95,94 @@ def test_UC_Comando_de_Chaves_Cenario_Principal(run_ams, testar_recepcao_de_mens
     assert queue.get_nowait()[0] == 'close'
     assert queue.get_nowait()[0].performative == 'inform'
 
+
+
+
+@pytest.fixture(scope='function')
+def adicionar_eventos_a_IEDs(monkeypatch):
+    """ Adiciona eventos XCBR a chaves 13 e 14 para testar restauração do sistema
+    logo após o ADC se registrar com o ACom"""
+    def stash(original_function):
+        def wrapper(self, *args):
+            # Executa função original do ADC (handle agree)
+            return_value = original_function(self, *args)
+            # Modifica eventos dos IEDs
+            with open('core/ied/CH13.txt', 'w') as file:
+                file.write('XCBR')
+            with open('core/ied/CH14.txt', 'w') as file:
+                file.write('XCBR')
+            return return_value
+        return wrapper
+    monkeypatch.setattr(SubscreverACom, 'handle_agree', stash(SubscreverACom.handle_agree))
+
+def test_dev(run_ams, adicionar_eventos_a_IEDs):
+    sniffer = run_ams
+    ams = sniffer.ams
+
+    # S1
+    enderecos_S1 = {"CH1": "192.168.0.101",
+                    "CH2": "192.168.0.102",
+                    "CH3": "192.168.0.103",
+                    "CH6": "192.168.0.106",
+                    "CH7": "192.168.0.107",
+                    "CH8": "192.168.0.108",
+                    "CH9": "192.168.0.109",
+                    "CH10": "192.168.0.110",
+                    "CH11": "192.168.0.111",
+                    "CH13": "192.168.0.113",
+                    "CH14": "192.168.0.114",
+                    "CH15": "192.168.0.115",
+                    "CH16": "192.168.0.116"}
+    acom = AgenteCom(AID('agentecom@localhost:60010'), 'S1', enderecos_S1)
+    acom.ams = ams
+
+    adc = AgenteDC(AID('agentedc@localhost:60011'), 'S1')
+    adc.subscrever_a(AID('agentecom@localhost:60010'))
+    adc.set_an(AID('agenten@localhost:60012'))
+    adc.ams = ams
+
+    an = AgenteN(AID('agenten@localhost:60012'), 'S1')
+    an.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
+    an.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
+    an.ams = ams
+
+    # S2
+    enderecos_S2 = {"CH4": "192.168.0.104",
+                    "CH5": "192.168.0.105",
+                    "CH3": "192.168.0.103",
+                    "CH8": "192.168.0.108",
+                    "CH11": "192.168.0.111",
+                    "CH12": "192.168.0.112",
+                    "CH16": "192.168.0.116"}
+    acom2 = AgenteCom(AID('agentecom-2@localhost:60020'), 'S2', enderecos_S2)
+    acom2.ams = ams
+
+    adc2 = AgenteDC(AID('agentedc-2@localhost:60021'), 'S2')
+    adc2.subscrever_a(AID('agentecom-2@localhost:60020'))
+    adc2.set_an(AID('agenten-2@localhost:60022'))
+    adc2.ams = ams
+
+    an2 = AgenteN(AID('agenten-2@localhost:60022'), 'S2')
+    an2.add_adc_vizinho(AID('agentedc@localhost:60011'))
+    an2.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
+    an2.ams = ams
     
+    # S3
+    enderecos_S3 = {"CH17": "192.168.0.117",
+                    "CH18": "192.168.0.118",
+                    "CH16": "192.168.0.116"}
+    acom3 = AgenteCom(AID('agentecom-3@localhost:60030'), 'S3', enderecos_S3)
+    acom3.ams = ams
+
+    # adc3 = AgenteDC(AID('agentedc-3@localhost:60031'), 'S3')
+    # adc3.subscrever_a(AID('agentecom-3@localhost:60030'))
+    # adc3.set_an(AID('agenten-3@localhost:60032'))
+    # adc3.ams = ams
+
+    an3 = AgenteN(AID('agenten-3@localhost:60032'), 'S3')
+    an3.add_adc_vizinho(AID('agentedc@localhost:60011'))
+    an3.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
+    an3.ams = ams
+
+
+    start_loop([acom, adc, an, acom2, adc2, an2, acom3, an3, sniffer], 10000.0)

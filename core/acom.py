@@ -139,7 +139,7 @@ class AgenteCom(AgenteSMAD):
         self.behaviours_recebercomando = ReceberComando(self) # Permite receber comandos do ADC
         self.behaviours.append(self.behaviours_recebercomando)
 
-        self.deadtime = 7.0 # Tempo em segundos do deadtime
+        self.deadtime = 3.0 # Tempo em segundos do deadtime
         self.in_hold = False # Mantém o ACom à escuta durante um certo tempo de deadtime antes de notificar eventos
         self.document_to_send = None # Armazena temporariamente o documento enquanto ele está sendo construído
 

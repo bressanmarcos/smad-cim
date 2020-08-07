@@ -25,6 +25,7 @@ from information_model import OutageEvent as out
 from mygrid.fluxo_de_carga.varred_dir_inv import calcular_fluxo_de_carga
 from rede import rdf2mygrid
 
+import pickle, json
 
 class SubscreverACom(FipaSubscribeProtocol):
     def __init__(self, agent: 'AgenteDC', message=None, is_initiator=True):
@@ -70,11 +71,11 @@ class SubscreverACom(FipaSubscribeProtocol):
 
         self.agent.tratar_informe(lista_de_chaves)
 
-
 class EnviarComando(FipaRequestProtocol):
     def __init__(self, agent):
         super().__init__(agent, message=None, is_initiator=True)
-        self.state_lock = threading.RLock()
+        # Variável para armazenar sessões
+        self.states = {}
 
     def handle_not_understood(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Mensagem não compreendida')
@@ -83,19 +84,16 @@ class EnviarComando(FipaRequestProtocol):
     def register_state(self, state_id: str, callback_inform=None, callback_failure=None, awaits=1):
         # Registra o conversation_id da Mensagem, 
         # para manter estado
-        with self.state_lock:
-            if not hasattr(self, 'states'):
-                self.states = {}
-            self.states[state_id] = (callback_inform, callback_failure, awaits)
+        self.states[state_id] = (callback_inform, callback_failure, awaits)
 
     def retrieve_state(self, state_id):
         # Recupera o estado a partir do conversation_id
-        with self.state_lock:
-            callback_inform, callback_failure, awaits = self.states[state_id]
-            awaits -= 1
-            if awaits == 0:
-                del self.states[state_id]
-            return callback_inform, callback_failure, awaits
+        callback_inform, callback_failure, awaits = self.states[state_id]
+        awaits -= 1
+        # Só apaga estado quando a última mensagem for recebida
+        if awaits == 0:
+            del self.states[state_id]
+        return callback_inform, callback_failure, awaits
 
     def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id=str(uuid4())):
         """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
@@ -142,6 +140,8 @@ class EnviarComando(FipaRequestProtocol):
         self.agent.send_until(message)
 
     def handle_inform(self, message: ACLMessage):
+        if message.ontology == "R_05":  # TODO: outra forma de filtrar mensagens recebidas
+            return
         display_message(self.agent.aid.name, f'Chaveamento realizado: {message.content}')
         callback_inform, _, awaits = self.retrieve_state(message.conversation_id)
         if awaits == 0:
@@ -157,6 +157,188 @@ class EnviarComando(FipaRequestProtocol):
             # de callback
             callback_failure()
 
+class EnviarPoda(FipaRequestProtocol):
+    def handle_inform(self, message):
+        super().handle_inform(message)
+        if message.ontology == "R_05":
+            display_message(self.agent.aid.name, 'Recebido AGREE do AN')
+
+class ResponderNegociacao(FipaContractNetProtocol):
+    def __init__(self, agent):
+        super().__init__(agent = agent, message = None, is_initiator = False)
+
+    def handle_cfp(self, message):
+        super().handle_cfp(message)
+        self.message_cfp = message
+        
+        if message.ontology == "CN_01":
+            display_message(self.agent.aid.name, "Mensagem CFP recebida")
+
+            setores_colab = dict()
+
+            # Carrega conteudo da mensagem
+            content = pickle.loads(message.content)
+
+            # Busca o possivel alimentador e setor de recomposicao do ramo
+            for alim in self.agent.topologia_subestacao.alimentadores:
+                for chave in content[6]:
+                    if chave in self.agent.topologia_subestacao.alimentadores[alim].chaves:
+
+                        if self.agent.topologia_subestacao.alimentadores[alim].chaves[chave].n1.nome in self.agent.topologia_subestacao.alimentadores[alim].setores.keys():
+                            setor_colab = self.agent.topologia_subestacao.alimentadores[alim].chaves[chave].n1.nome
+                            setores_colab[setor_colab] = chave
+
+                        elif self.agent.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome in self.agent.topologia_subestacao.alimentadores[alim].setores.keys():
+                            setor_colab = self.agent.topologia_subestacao.alimentadores[alim].chaves[chave].n2.nome
+                            setores_colab[setor_colab] = chave
+
+
+            if len(setores_colab) == 1: # Se houver apenas um possivel caminho de restauracao para este ramo
+
+                # Inicia variaveis auxiliares
+                poda = content
+
+                # Envia poda e possiveis setores de restauracao neste alimentador
+                # para que a poda seja inserida e testada retornando  qual foi 
+                # a possivel colaboracao do alimentador
+                dados = self.agent.inserir_poda_testar(poda, list(setores_colab.keys())[0])
+
+                # print dados
+
+                if len(dados["setores"]) != 0:
+                    display_message(self.agent.aid.name, 
+                        "Possivel restauracao do ramo {ram} por {se}".format(ram = dados["setores"],se=self.agent.subestacao))
+
+                    print("DEBUG CN03 Agree: ")
+                    print(dados)
+                    # Preparar proposta indicando que todos os setores do ramos podem ser atendidos
+                    resposta = self.message.create_reply()
+                    resposta.set_performative(ACLMessage.PROPOSE)
+                    resposta.set_ontology("CN_03")
+                    resposta.set_content(json.dumps(dados))
+                    self.agent.send(resposta)
+
+                else:
+                    display_message(self.agent.aid.name, 
+                        "Nao foi possível restaurar o ramo pela {se}".format(se=self.agent.subestacao))
+
+                    print("DEBUG CN03 Agree: ")
+                    print(dados)
+                    # Elabora Mensagem de Refuse para o agente iniciante
+                    resposta = self.message.create_reply()
+                    resposta.set_performative(ACLMessage.PROPOSE)
+                    resposta.set_ontology("CN_03")
+                    resposta.set_content(json.dumps(dados))
+                    self.agent.send(resposta)
+
+
+            elif len(setores_colab) > 1: # Se houver mais de um possivel caminho de restauracao para este ramo
+
+                # Inicia variaveis auxiliares
+                aux = 0 
+                setor_colab = None
+
+                # Para cada um dos possiveis setores colaboradores
+                # busca aquele mais profundo a fim de tentar recompor a poda
+                for setor in setores_colab.keys():
+                    alim = self.agent.localizar_setor(setor)
+                    rnp_alim = self.agent.topologia_subestacao.alimentadores[alim].rnp_dic()
+
+                    if rnp_alim[setor] > aux:
+                        aux = rnp_alim[setor]
+                        setor_colab = setor
+
+                poda = content
+
+                # Envia poda e possiveis setores de restauracao neste alimentador
+                # para que a poda seja inserida e testada retornando  qual foi 
+                # a possivel colaboracao do alimentador
+                dados = self.agent.inserir_poda_testar(poda, setor_colab)
+                # ???
+
+                if len(dados["setores"]) != 0:
+                    display_message(self.agent.aid.name, 
+                        "Possivel restauracao do ramo {ram} por {se}".format(ram = dados["setores"],se=self.agent.subestacao))
+
+                    print("DEBUG CN03 Agree: ")
+                    print(dados)
+                    # Preparar proposta indicando que todos os setores do ramos podem ser atendidos
+                    resposta = self.message.create_reply()
+                    resposta.set_performative(ACLMessage.PROPOSE)
+                    resposta.set_ontology("CN_03")
+                    resposta.set_content(json.dumps(dados))
+                    self.agent.send(resposta)
+
+                else:
+                    print("testar proxima alternativa")
+                    display_message(self.agent.aid.name, 
+                        "Nao foi possível restaurar o ramo pela {se}".format(se=self.agent.subestacao))
+
+                    print("DEBUG CN03 Agree: ")
+                    print(dados)
+                    # Elabora Mensagem de Refuse para o agente iniciante
+                    resposta = self.message.create_reply()
+                    resposta.set_performative(ACLMessage.PROPOSE)
+                    resposta.set_ontology("CN_03")
+                    resposta.set_content(json.dumps(dados))
+                    self.agent.send(resposta)
+
+
+            else: # Se nao houver setores para possivel colaboracao
+                display_message(self.agent.aid.name, 
+                    "SE [{se}] nao possui chave de encontro com o ramo {ram}".format(se=self.agent.subestacao, ram=content[0].keys()))
+
+                # Elabora Mensagem de Refuse para o agente iniciante
+                resposta = self.message.create_reply()
+                resposta.set_performative(ACLMessage.REFUSE)
+                resposta.set_ontology("CN_02")
+                resposta.set_content(None)
+                self.agent.send(resposta)
+
+    def handle_accept_propose(self, message):
+        super(ResponderNegociacao, self).handle_accept_propose(message)
+
+        self.proposta_aceita = message
+
+        if message.ontology == "CN_04":
+            display_message(self.agent.aid.name, "Mensagem ACCEPT PROPOSE Recebida.")
+
+            proposta = json.loads(message.content)
+            
+            # Recompoe a poda da proposta
+            dados = self.agent.recompor_ramo(proposta)
+
+            # Prepara mensagem para enviar ao respectivo Agente
+            # Controle da SE para operar a restauracao da poda
+            message_rest = ACLMessage(ACLMessage.REQUEST)
+            message_rest.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+            message_rest.set_content(json.dumps(dados))
+            message_rest.set_ontology("R_06")
+            message_rest.add_receiver(AID(str(self.agent.subestacao + '_ACont')))
+            message_rest.add_receiver(AID(str(self.agent.subestacao + '_ADFalta')))
+
+
+            #  Lancando Comportamento Request Iniciante
+            comp = CompRequest6(self.agent, message_rest)
+            self.agent.behaviours.append(comp)
+            comp.on_start()
+
+    def anunciar_restauracao(self, dados):
+
+        # Prepara mensagem inform a fim de anunciar restauracao do ramo
+        resposta = self.proposta_aceita.create_reply()
+        resposta.set_performative(ACLMessage.INFORM)
+        resposta.set_ontology("CN_06")
+        resposta.set_content(json.dumps(dados))
+        self.agent.send(resposta)
+
+    def handle_reject_propose(self, message):
+        super(ResponderNegociacao, self).handle_reject_propose(message)
+
+        if message.ontology == "CN_05":
+            display_message(self.agent.aid.name,
+                "Mensagem REJECT PROPOSE Recebida.")
+
 
 
 class AgenteDC(AgenteSMAD):
@@ -164,6 +346,7 @@ class AgenteDC(AgenteSMAD):
         super().__init__(aid, subestacao, debug)
         self.command_behaviour = EnviarComando(self)
         self.subscribe_behaviour = SubscreverACom(self)
+        self.send_prone_behaviour = EnviarPoda(self)
         self.assinaturas = []
         self.behaviours.append(self.command_behaviour)
         self.behaviours.append(self.subscribe_behaviour)
@@ -179,8 +362,8 @@ class AgenteDC(AgenteSMAD):
         self.setores_faltosos = list()
         # comportamento_requisicao = CompRequest1(self)
         # self.behaviours.append(comportamento_requisicao)
-        # comp_contractnet_participante = CompContractNet1(self)
-        # self.behaviours.append(comp_contractnet_participante)
+        self.respond_negotiation_behaviour = ResponderNegociacao(self)
+        self.behaviours.append(self.respond_negotiation_behaviour)
         # Final cod Tiago para o agente diagnostico
 
     def subscrever_a(self, acom_aid: AID):
@@ -191,9 +374,10 @@ class AgenteDC(AgenteSMAD):
         self.an_aid = an_aid
     
     def get_an(self):
-        if hasattr(self, 'an_aid'):
+        try:
             return self.an_aid
-        raise AttributeError('Agente de Negociação não definido')
+        except:
+            raise AttributeError('Agente de Negociação não definido')
 
     def tratar_informe(self, lista_de_chaves):
         """Mensagem recebida pelo ACom, já convertida no formato
@@ -597,10 +781,9 @@ class AgenteDC(AgenteSMAD):
                         proposito='restoration', 
                         conversation_id=conversation_id)
 
-
             # Solicitar recomposição ao AN
             # TODO: mudar formato da poda
-            print('ENVIANDO MENSAGEM PARA AGENTE DE NEGOCIAÇÃO')
+            display_message(self.aid.name, 'Enviando mensagem ao AN')
             content2 = dict()
             content2["ramos"] = self.podas
             message2 = ACLMessage(ACLMessage.REQUEST)
@@ -677,13 +860,158 @@ class AgenteDC(AgenteSMAD):
                         return no.nome, round(no.tensao.mod/subestacao.tensao.mod,4)
         else:
             return None
+
+
+    def inserir_poda_testar(self, poda, setor_colab):
+        dados = dict()
+        dados["setor_colab"] = setor_colab
+
+        # Procura qual alimentador da subestacao pode receber a poda
+        alim = self.localizar_setor(setor_colab)
+
+        # Verifica qual o setor raiz de insercao da poda
+        for setor in self.topologia_subestacao.alimentadores[alim].setores:
+            for set_vizinho in self.topologia_subestacao.alimentadores[alim].setores[setor].vizinhos:
+                if set_vizinho in poda[0]:
+                    raiz = set_vizinho
+
+        dados["setor_raiz"] = raiz
+                    
+        # Insere a poda no alimentador previamente encontrado
+        self.topologia_subestacao.alimentadores[alim].inserir_ramo(setor_colab, poda, raiz)
+
+        # Calcula fluxo de carga para SE com a poda inserida
+        calcular_fluxo_de_carga(self.topologia_subestacao)
+
+        # Verifica Condicoes
+        analise1 = self.verificar_carregamento_dos_condutores(self.topologia_subestacao)
+        analise2 = self.verificar_nivel_de_tensao(self.topologia_subestacao)
+        
+        # Calcula-se o carregamento dos trafos da SE
+        carreg_SE = self.calcular_carregamento_da_se(self.topologia_subestacao)
+
+        #print "============================"
+        #print analise1, analise2, carreg_SE, poda[0].keys()
+
+        # Re-poda o ramo previamente inserido
+        poda = self.topologia_subestacao.alimentadores[alim].podar(raiz, True)
+
+        # Inicia estrutura de dados para relatorio de recomposicao
+        relat_recomp = {str(poda[0].keys()):{"alimentador":str(alim),
+                                        "setor_colab":str(setor_colab),
+                                        "setor_raiz":str(raiz),
+                                        "tentativas":{
+                                        str(poda[0].keys()):{"carreg_SE":carreg_SE,
+                                                             "carreg_cond":analise1,
+                                                             "nivel_tensao":analise2}}}}
+
+        if analise1 is None and analise2 is None and carreg_SE <= 100:
+            dados["carreg_SE"] = carreg_SE
+            dados["setores"] = poda[0].keys()
+            self.podas_possiveis.append(poda)
+
+        else:    
+
+            # Reinsere a poda previamente testada
+            self.topologia_subestacao.alimentadores[alim].inserir_ramo(setor_colab, poda, raiz)
+
+            # Verifica setor mais profundo daquela poda para o alimentador
+            prof = 0
+            rnp_alim = self.topologia_subestacao.alimentadores[alim].rnp_dic()
+
+            for setor in poda[0].keys():
+                if rnp_alim[setor] > prof:
+                    prof = rnp_alim[setor]
+                    setor_poda = setor
+
+            # Quantidade de setores na poda
+
+            aux = len(poda[0].keys())
+            dados["setores"] = poda[0].keys()
+
+
+
+            # Para o numero de setores da poda faz os testes de ramos recursivos
+            while aux != 0:
+                aux -= 1
+
+                # Poda ramo/setor mais profundo, do ramo desenergizado e faz os 
+                # testes mais uma vez
+                ramo = self.topologia_subestacao.alimentadores[alim].podar(setor_poda, True)
+                dados["setores"].remove(setor_poda)
+
+                # Verifica Condicoes
+                analise1 = self.verificar_carregamento_dos_condutores(self.topologia_subestacao)
+
+                analise2 = self.verificar_nivel_de_tensao(self.topologia_subestacao)
+            
+                # Calcula-se o carregamento dos trafos da SE
+                carreg_SE = self.calcular_carregamento_da_se(self.topologia_subestacao)
+
+                # print "================="
+                # print analise1, analise2, carreg_SE, dados["setores"], ramo[0].keys()
+
+                # Atualiza estrutura de dados para relatorio de recomposicao
+                relat_recomp[str(poda[0].keys())]["tentativas"][str(dados["setores"])] = {"carreg_SE":carreg_SE,
+                                                                                          "carreg_cond":analise1,
+                                                                                          "nivel_tensao":analise2}
+
+                if analise1 is None and analise2 is None and carreg_SE <= 100:
+                    dados["carreg_SE"] = carreg_SE
+
+                    # Retira o ramo mantendo a RNP em sua forma original
+                    poda_final = self.topologia_subestacao.alimentadores[alim].podar(raiz, True)
+                    self.podas_possiveis.append(poda_final)
+                    break
+
+                else:
+                    # Proucura novo setor mais profundo
+                    setores_aux = poda[0].keys()
+
+                    for setor in ramo[0].keys():
+                        setores_aux.remove(setor)
+
+                    # Verifica setor mais profundo desta nova poda para o alimentador
+                    prof = 0
+                    rnp_alim = self.topologia_subestacao.alimentadores[alim].rnp_dic()
+
+                    # Determina novo setor_poda e prof para o laco while
+                    for setor in setores_aux:
+                        if setor in rnp_alim and rnp_alim[setor] > prof:
+                            prof = rnp_alim[setor]
+                            setor_poda = setor
+        
+        # Atualiza a pilha de relatorios
+        self.relatorios_restauracao.append(relat_recomp)
+
+        return dados
+
+
+    def calcular_carregamento_da_se(self, subestacao):
+
+        pot_se = 0.0
+        pot_utilizada = 0.0
+
+        for trafo in subestacao.transformadores.keys():
+            pot_se = pot_se + subestacao.transformadores[trafo].potencia.mod
+
+        for alim in subestacao.alimentadores.keys():
+            aux = subestacao.alimentadores[alim].calcular_potencia()
+            pot_utilizada = pot_utilizada + aux.mod
+
+        carreg = (pot_utilizada/pot_se)*100
+
+        return round(carreg,3)
+
     #Final cod Tiago
 
 if __name__ == "__main__":
     from pade.misc.utility import start_loop
 
-    adc = AgenteDC(AID(f'agentedc@localhost:60002'), 'S1')
-    adc.ams['port'] = 60000
-    adc.subscrever_a(AID('agentecom@localhost:60003'))
+    adc3 = AgenteDC(AID('agentedc-3@localhost:60031'), 'S3')
+    adc3.subscrever_a(AID('agentecom-3@localhost:60030'))
+    adc3.set_an(AID('agenten-3@localhost:60032'))
+    adc3.ams['port'] = 60000
+
     
-    start_loop([adc])
+    start_loop([adc3])

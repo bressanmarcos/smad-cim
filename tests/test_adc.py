@@ -74,25 +74,5 @@ def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):
     assert queue.get_nowait().performative == 'subscribe'
     assert queue.get_nowait().performative == 'agree'
 
-def test_dev(run_ams):
-    sniffer = run_ams
-    # Testando passo a passo do ADCa até recomposição
-    enderecos_S1 = {"CH1": "192.168.0.101",
-                    "CH2": "192.168.0.102",
-                    "CH3": "192.168.0.103",
-                    "CH6": "192.168.0.106",
-                    "CH7": "192.168.0.107",
-                    "CH8": "192.168.0.108",
-                    "CH9": "192.168.0.109",
-                    "CH10": "192.168.0.110",
-                    "CH11": "192.168.0.111",
-                    "CH13": "192.168.0.113",
-                    "CH14": "192.168.0.114",
-                    "CH15": "192.168.0.115",
-                    "CH16": "192.168.0.116"}
-    acom = AgenteCom(AID('agentecom@localhost:60003'), 'S1', enderecos_S1)
-    acom.ams = sniffer.ams
-
-    start_loop([acom, sniffer], 100000.0)
     
     
