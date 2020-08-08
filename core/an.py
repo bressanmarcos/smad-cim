@@ -161,7 +161,6 @@ class GerenciarNegociacao(FipaContractNetProtocol):
 class AgenteN(AgenteSMAD):
     def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, subestacao, debug=False)
-        display_message(self.aid.name, "Agente instanciado")
 
         # Criterios para Agente Negociacao da aplicacao
         criterios = {"chaveamentos": False,

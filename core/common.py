@@ -12,6 +12,7 @@ from xml.dom.minidom import parseString
 from pade.core.agent import Agent
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
+from pade.misc.utility import display_message
 
 from information_model import SwitchingCommand as swc
 
@@ -51,6 +52,7 @@ class AgenteSMAD(Agent):
     def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, debug)
         self.subestacao = subestacao
+        display_message(self.aid.name, "Agente instanciado")
 
     def send_until(self, message, tries=10, interval=2.0):
         def later(tries, interval):
