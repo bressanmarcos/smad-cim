@@ -132,7 +132,8 @@ def test_dev(run_ams, adicionar_eventos_a_IEDs):
                     "CH13": "192.168.0.113",
                     "CH14": "192.168.0.114",
                     "CH15": "192.168.0.115",
-                    "CH16": "192.168.0.116"}
+                    "CH16": "192.168.0.116",
+                    "CH19": "192.168.0.119"}
     acom = AgenteCom(AID('agentecom@localhost:60010'), 'S1', enderecos_S1)
     acom.ams = ams
 

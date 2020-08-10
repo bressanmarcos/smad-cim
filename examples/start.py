@@ -2,77 +2,82 @@ import os
 os.sys.path.insert(0, os.getcwd()) 
 # Adiciona ao Path a pasta raiz do projeto
 
-from pade.core.agent import Agent
-from pade.acl.aid import AID
-from pade.misc.utility import start_loop, display_message
-
-from pade.acl.messages import ACLMessage
-from pade.behaviours.protocols import FipaRequestProtocol
-
+import pytest
+import datetime
+import time
+import multiprocessing
 from random import randint
+from uuid import uuid4
 
-class ComportamentoMandarMensagem(FipaRequestProtocol):
-    def __init__(self, agent, message=None, is_initiator=True):
-        super().__init__(agent, message, is_initiator)
-        self.agent: Agent
-        print('ComportamentoMandarMensagem::__init__')
-        def keep_trying():
-            # Se o ACom já estiver na tabela
-            if hasattr(self.agent, 'agentInstance') and all(receiver.name in self.agent.agentInstance.table for receiver in message.receivers):
-                # Envia mensagem
-                print('Enviar mensagem agora...')
-                self.on_start()
-            else:
-                # Reenvia mensagem 5 segundos mais tarde
-                print('Reenviar mensagem mais tarde...')
-                self.agent.call_later(3.0, keep_trying)
+from pade.acl.aid import AID
+from pade.acl.messages import ACLMessage
+from pade.misc.utility import display_message, start_loop
+from pade.core.agent import Agent_
 
-        keep_trying()
-
-    def on_start(self):
-        print('ComportamentoMandarMensagem::on_start')
-        super().on_start()
-
-
-    def handle_inform(self, message: ACLMessage):
-        display_message(self.agent.aid.name, f'Recebida Inform. Conteúdo: {message.content}')
-
-
-class ComportamentoReceberMensagem(FipaRequestProtocol):
-    def __init__(self, agent, message=None, is_initiator=False):
-        super().__init__(agent, message, is_initiator)
-
-    def handle_request(self, message: ACLMessage):
-        display_message(self.agent.aid.name, f'Recebido Request. Conteúdo: {message.content}')
-        # Mensagem de resposta
-        message_reply = message.create_reply()
-        message_reply.set_performative(ACLMessage.INFORM)
-        message_reply.set_content('Tudo bem?')
-        self.agent.send(message_reply)
-
-
-class AgenteA(Agent):
-    def __init__(self, aid, debug=False):
-        super().__init__(aid, debug)
-        message = ACLMessage(ACLMessage.REQUEST)
-        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-        message.add_receiver(AID('agente_b@127.0.0.1:20001'))
-        message.set_content('Oi')
-
-        envio_beh = ComportamentoMandarMensagem(self, message)
-        self.behaviours.append(envio_beh)
-
-
-class AgenteB(Agent):
-    def __init__(self, aid, debug=False):
-        super().__init__(aid, debug)
-        receber_beh = ComportamentoReceberMensagem(self)
-        self.behaviours.append(receber_beh)
+from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
+from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
+from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
+from core.an import AgenteN, ReceberPoda, GerenciarNegociacao
+from core.ied import IED  # pylint: disable=import-error,no-name-in-module
+from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
 
 if __name__ == "__main__":
+    # S1
+    enderecos_S1 = {"CH1": "192.168.0.101",
+                    "CH2": "192.168.0.102",
+                    "CH3": "192.168.0.103",
+                    "CH6": "192.168.0.106",
+                    "CH7": "192.168.0.107",
+                    "CH8": "192.168.0.108",
+                    "CH9": "192.168.0.109",
+                    "CH10": "192.168.0.110",
+                    "CH11": "192.168.0.111",
+                    "CH13": "192.168.0.113",
+                    "CH14": "192.168.0.114",
+                    "CH15": "192.168.0.115",
+                    "CH16": "192.168.0.116", 
+                    "CH19": "192.168.0.119"}
+    acom = AgenteCom(AID('agentecom@localhost:60010'), 'S1', enderecos_S1)
 
-    agente_a = AgenteA(AID('agente_a@127.0.0.1:20004'), True)
-    agente_b = AgenteB(AID('agente_b@127.0.0.1:20001'), True)
+    adc = AgenteDC(AID('agentedc@localhost:60011'), 'S1')
+    adc.subscrever_a(AID('agentecom@localhost:60010'))
+    adc.set_an(AID('agenten@localhost:60012'))
 
-    start_loop([agente_a, agente_b])
+    an = AgenteN(AID('agenten@localhost:60012'), 'S1')
+    an.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
+    an.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
+
+    # S2
+    enderecos_S2 = {"CH4": "192.168.0.104",
+                    "CH5": "192.168.0.105",
+                    "CH3": "192.168.0.103",
+                    "CH8": "192.168.0.108",
+                    "CH11": "192.168.0.111",
+                    "CH12": "192.168.0.112"}
+    acom2 = AgenteCom(AID('agentecom-2@localhost:60020'), 'S2', enderecos_S2)
+
+    adc2 = AgenteDC(AID('agentedc-2@localhost:60021'), 'S2')
+    adc2.subscrever_a(AID('agentecom-2@localhost:60020'))
+    adc2.set_an(AID('agenten-2@localhost:60022'))
+
+    an2 = AgenteN(AID('agenten-2@localhost:60022'), 'S2')
+    an2.add_adc_vizinho(AID('agentedc@localhost:60011'))
+    an2.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
+    
+    # S3
+    enderecos_S3 = {"CH17": "192.168.0.117",
+                    "CH18": "192.168.0.118",
+                    "CH16": "192.168.0.116"}
+    acom3 = AgenteCom(AID('agentecom-3@localhost:60030'), 'S3', enderecos_S3)
+
+    adc3 = AgenteDC(AID('agentedc-3@localhost:60031'), 'S3')
+    adc3.subscrever_a(AID('agentecom-3@localhost:60030'))
+    adc3.set_an(AID('agenten-3@localhost:60032'))
+
+    an3 = AgenteN(AID('agenten-3@localhost:60032'), 'S3')
+    an3.add_adc_vizinho(AID('agentedc@localhost:60011'))
+    an3.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
+
+
+    start_loop([acom, adc, an, acom2, adc2, an2, acom3, adc3, an3])
