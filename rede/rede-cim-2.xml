@@ -2826,7 +2826,7 @@
         <!-- G1 -->
         <ns1:Terminal.ConnectivityNode rdf:resource="#4d493628-21ab-462f-97d8-db03a892d93a" />
     </ns1:Terminal>
-    <ns1:ACLineSegment rdf:about="G1CH19-Segment">
+    <ns1:ACLineSegment rdf:about="#G1CH19-Segment">
         <ns1:IdentifiedObject.mRID>G1CH19</ns1:IdentifiedObject.mRID>
         <ns1:ConductingEquipment.Terminals rdf:resource="#G1CH19-Terminal-1" />
         <ns1:ConductingEquipment.Terminals rdf:resource="#G1CH19-Terminal-2" />
