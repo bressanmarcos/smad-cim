@@ -42,7 +42,7 @@ class IED():
     def get_breaker_position(self) -> str:
         """Retorna posição do breaker"""
         display_message(f'{self.id}@{self.ip}', \
-            f'Posição: {self.breaker_position} ({IED.REVERSE_STATES[self.breaker_position]})')
+            f'Posição atual: {self.breaker_position} ({IED.REVERSE_STATES[self.breaker_position]})')
         return IED.REVERSE_STATES[self.breaker_position] 
 
 
