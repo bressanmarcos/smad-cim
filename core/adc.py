@@ -354,7 +354,7 @@ class AgenteDC(AgenteSMAD):
         # Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
         self.relatorios_restauracao = list()
-        self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/rede-cim.xml'), subestacao)
+        self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/rede-cim-2.xml'), subestacao)
 
         display_message(self.aid.name, f"Subestacao {subestacao} carregada com sucesso")
         self.podas = list()
@@ -371,11 +371,11 @@ class AgenteDC(AgenteSMAD):
         self.subscribe_behaviour.subscrever(acom_aid)
 
     def set_an(self, an_aid: AID):
-        self.an_aid = an_aid
+        self.__an_aid = an_aid
     
     def get_an(self):
         try:
-            return self.an_aid
+            return self.__an_aid
         except:
             raise AttributeError('Agente de Negociação não definido')
 
