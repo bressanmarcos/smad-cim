@@ -17,7 +17,7 @@ from pade.core.agent import Agent_
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
-from core.an import AgenteN, ReceberPoda, GerenciarNegociacao
+from core.an import AgenteN, ReceberPoda, GerenciarNegociacao # pylint: disable=import-error,no-name-in-module
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
