@@ -51,42 +51,36 @@ def _gerar_nos_de_carga(resources):
         chaves_do_no = []
         vizinhos = []
 
-        for root_terminal in no.ConductingEquipment_Terminals:
-            visited_terminal = [root_terminal]
-            root_cn = root_terminal.Terminal_ConnectivityNode
+        # Loop para o caso de barramentos com muitos terminais
+        for terminal_do_no in no.ConductingEquipment_Terminals:
+            cn_do_no = terminal_do_no.Terminal_ConnectivityNode
 
-            for branch_terminal in root_cn.ConnectivityNode_Terminals:
-                if branch_terminal in visited_terminal:
+            # Segue por cada um dos trechos a partir do nó
+            for terminal_inicial in cn_do_no.ConnectivityNode_Terminals:
+                if terminal_inicial is terminal_do_no:
+                    # Ignora o próprio nó de carga
                     continue
-                visited_terminal.append(branch_terminal)
+                # Terminais a serem visitados até que se encontre um outro nó
+                terminais_a_visitar = [terminal_inicial]
 
-                chave_encontrada = False
-                vizinho_encontrado = False
+                ordem_de_elementos = [EnergyConsumer, BusbarSection, PowerTransformer, ACLineSegment, Switch]
 
-                starting_terminal = branch_terminal
-                while not chave_encontrada or not vizinho_encontrado:
-                    equipment = starting_terminal.Terminal_ConductingEquipment
-                    if isinstance(equipment, PowerTransformer):
+                # Caminha ao longo da linha, até encontrar 
+                while len(terminais_a_visitar):
+                    terminais_a_visitar.sort(key=lambda t: ordem_de_elementos.index(t.Terminal_ConductingEquipment.__class__))
+                    terminal_1 = terminais_a_visitar.pop(0)
+                    equipamento = terminal_1.Terminal_ConductingEquipment
+                    if isinstance(equipamento, Switch):
+                        chaves_do_no.append(equipamento.IdentifiedObject_mRID)
+                    if isinstance(equipamento, Switch) or isinstance(equipamento, ACLineSegment):
+                        terminal_2 = [t for t in equipamento.ConductingEquipment_Terminals if t is not terminal_1][0]
+                        cn_2 = terminal_2.Terminal_ConnectivityNode
+                        terminais_cn_2 = cn_2.ConnectivityNode_Terminals
+                        terminais_a_visitar.extend([t for t in terminais_cn_2 if t is not terminal_2])
+                        continue
+                    if isinstance(equipamento, BusbarSection) or isinstance(equipamento, EnergyConsumer):
+                        vizinhos.append(equipamento.IdentifiedObject_mRID)
                         break
-                    ending_terminal = next(filter(lambda term: id(term) != id(
-                        starting_terminal), equipment.ConductingEquipment_Terminals))
-                    # visited_terminal.append(ending_terminal)
-                    next_cn = ending_terminal.Terminal_ConnectivityNode
-                    for terminal in next_cn.ConnectivityNode_Terminals:
-                        if id(terminal) == id(ending_terminal):
-                            continue
-                        next_equipment = terminal.Terminal_ConductingEquipment
-                        if isinstance(next_equipment, EnergyConsumer) or \
-                                isinstance(next_equipment, BusbarSection):
-                            vizinhos.append(next_equipment.IdentifiedObject_mRID)
-                            vizinho_encontrado = True
-                        elif isinstance(next_equipment, Switch):
-                            chaves_do_no.append(
-                                next_equipment.IdentifiedObject_mRID)
-                            chave_encontrada = True
-                            starting_terminal = terminal
-                        elif isinstance(next_equipment, ACLineSegment):
-                            starting_terminal = terminal
 
         return chaves_do_no, vizinhos
 
@@ -265,12 +259,11 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
         nomes_das_chaves = set()
         nomes_dos_trechos = set()
         for setor in setores_rdf:
-            if setor.IdentifiedObject_mRID == subestacao:
-                # Não incluir os setores do barramento da subestação
-                continue
             chaves_do_setor, trechos_do_setor = chaves_e_trechos(setor)
-            nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
             nomes_dos_trechos |= set(map(lambda line: line.IdentifiedObject_mRID, trechos_do_setor))
+            if setor.IdentifiedObject_mRID != subestacao:
+                # Não incluir os setores do barramento da subestação
+            nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
        
         trechos_do_alimentador = [
             trecho for trecho in trechos.values() if trecho.nome in nomes_dos_trechos]
