@@ -118,11 +118,12 @@ class EnviarComando(FipaRequestProtocol):
             purpose = swc.Purpose.ISOLATION
         elif proposito == 'coordination':
             purpose = swc.Purpose.COORDINATION
+        elif proposito == 'restoration':
+            purpose = swc.Purpose.RESTORATION
 
         plano = swc.SwitchingPlan(
             mRID=str(uuid4()), 
             createdDateTime=datetime.datetime.now(),
-            name='Plano de Teste', 
             purpose=purpose, 
             SwitchAction=switch_actions)
         root = swc.SwitchingCommand(SwitchingPlan=plano)
@@ -205,7 +206,7 @@ class ResponderNegociacao(FipaContractNetProtocol):
 
                 # print dados
 
-                if len(dados["setores"]) != 0:
+                if len(dados["setores"]):
                     display_message(self.agent.aid.name, 
                         "Possivel restauracao do ramo {ram} por {se}".format(ram = dados["setores"],se=self.agent.subestacao))
 
@@ -307,21 +308,19 @@ class ResponderNegociacao(FipaContractNetProtocol):
             
             # Recompoe a poda da proposta
             dados = self.agent.recompor_ramo(proposta)
-
+            lista_de_comandos = {chave: 'close' for chave in dados['chaves']}
             # Prepara mensagem para enviar ao respectivo Agente
             # Controle da SE para operar a restauracao da poda
-            message_rest = ACLMessage(ACLMessage.REQUEST)
-            message_rest.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-            message_rest.set_content(json.dumps(dados))
-            message_rest.set_ontology("R_06")
-            message_rest.add_receiver(AID(str(self.agent.subestacao + '_ACont')))
-            message_rest.add_receiver(AID(str(self.agent.subestacao + '_ADFalta')))
+            conversation_id = str(uuid4())
+            self.agent.command_behaviour.register_state(
+                state_id=conversation_id, 
+                callback_inform=lambda: self.agent.pos_auto_recomposicao((dados, 'success')), 
+                callback_failure=lambda: self.agent.pos_auto_recomposicao((dados, 'failure')))
+            self.agent.command_behaviour.enviar_comando_de_chave(
+                lista_de_comandos=lista_de_comandos, 
+                proposito='restoration', 
+                conversation_id=conversation_id)
 
-
-            #  Lancando Comportamento Request Iniciante
-            comp = CompRequest6(self.agent, message_rest)
-            self.agent.behaviours.append(comp)
-            comp.on_start()
 
     def anunciar_restauracao(self, dados):
 
@@ -573,12 +572,13 @@ class AgenteDC(AgenteSMAD):
 
     #Inicio Cod Tiago
     def localizar_chave(self, chave):
-        for alimentador in self.topologia_subestacao.alimentadores.keys():
-            if chave in self.topologia_subestacao.alimentadores[alimentador].chaves.keys():
-                # Proucura em qual alimentador da SE "chave" está.
-                if self.topologia_subestacao.alimentadores[alimentador].chaves[chave].estado == 1:
-                    # "chave" pertence ao "alimentador" e seu estado é fechado (provavelmente NF)
-                    return alimentador
+        for alimentador in self.topologia_subestacao.alimentadores:
+            if not chave in self.topologia_subestacao.alimentadores[alimentador].chaves:
+                continue
+            chave_element = self.topologia_subestacao.alimentadores[alimentador].chaves[chave]
+            setor = chave_element.n2
+            if alimentador == self.localizar_setor(setor.nome):
+                return alimentador
 
     def analise_isolamento(self, chave_falta=list):
         display_message(self.aid.name, "------------------------")
@@ -843,7 +843,7 @@ class AgenteDC(AgenteSMAD):
 
                 if trecho.fluxo.mod > trecho.condutor.ampacidade:
                     display_message(self.aid.name, 'Restrição de carregamento de condutores ' \
-                            'atingida no trecho {t}'.format(t=trecho.nome))
+                            f'atingida no trecho {trecho.nome}')
                     return trecho.nome
         else:
             return None
@@ -907,7 +907,7 @@ class AgenteDC(AgenteSMAD):
 
         if analise1 is None and analise2 is None and carreg_SE <= 100:
             dados["carreg_SE"] = carreg_SE
-            dados["setores"] = poda[0].keys()
+            dados["setores"] = list(poda[0].keys())
             self.podas_possiveis.append(poda)
 
         else:    
@@ -920,14 +920,14 @@ class AgenteDC(AgenteSMAD):
             rnp_alim = self.topologia_subestacao.alimentadores[alim].rnp_dic()
 
             for setor in poda[0].keys():
-                if rnp_alim[setor] > prof:
-                    prof = rnp_alim[setor]
+                if int(rnp_alim[setor]) > prof:
+                    prof = int(rnp_alim[setor])
                     setor_poda = setor
 
             # Quantidade de setores na poda
 
             aux = len(poda[0].keys())
-            dados["setores"] = poda[0].keys()
+            dados["setores"] = list(poda[0].keys())
 
 
 
@@ -966,7 +966,7 @@ class AgenteDC(AgenteSMAD):
 
                 else:
                     # Proucura novo setor mais profundo
-                    setores_aux = poda[0].keys()
+                    setores_aux = list(poda[0].keys())
 
                     for setor in ramo[0].keys():
                         setores_aux.remove(setor)
@@ -1002,6 +1002,44 @@ class AgenteDC(AgenteSMAD):
         carreg = (pot_utilizada/pot_se)*100
 
         return round(carreg,3)
+
+
+    def recompor_ramo(self, proposta):
+        alim = self.localizar_setor(proposta["setor_colab"])
+        chaves_operar = list()
+
+        # Verifica quais das podas previamentes testadas corresponde 
+        # a poda em ocasiao
+        for poda in self.podas_possiveis:
+
+            if list(poda[0].keys()) == proposta["setores"]:
+
+                # self.topologia_subestacao.alimentadores[alim].inserir_ramo(
+                #     proposta["setor_colab"], poda, proposta["setor_raiz"])
+
+                # Verifica quais chaves devem ser operadas a fim de reestabelecer
+                # a poda
+                for chave in poda[6].values():
+                    if chave.estado == 1: # Adiciona todas as chaves da poda
+                        chaves_operar.append(chave.nome)
+
+                    elif proposta["setor_colab"] in (chave.n1.nome, chave.n2.nome):
+                        # Adiciona chave de fronteira
+                        chaves_operar.append(chave.nome)
+
+                # Retira da poda recomposta da lista
+                self.podas_possiveis.remove(poda)
+
+                dados = {"chaves": chaves_operar,
+                        "ramo": list(poda[0].keys()),
+                        "nos_de_carga": dict()}
+
+                for no in poda[3]:
+                    dados["nos_de_carga"][no] = round(poda[3][no].potencia.mod/1000,0)
+
+                return dados
+
+
 
     #Final cod Tiago
 

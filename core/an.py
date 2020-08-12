@@ -39,7 +39,7 @@ class GerenciarNegociacao(FipaContractNetProtocol):
 
         propostas_impossiveis = list()
         propostas_realizaveis = list()
-        display_message(self.agent.aid.name, "------------------------")
+        display_message(self.agent.aid.name, "Analisando propostas")
 
         # Elimina propositores que tem chaves de encontro
         # mas que nao puderam contribuir na restauracao
@@ -48,8 +48,8 @@ class GerenciarNegociacao(FipaContractNetProtocol):
                 content = json.loads(message.content)
 
                 if content["setores"] == []:
-                    name = message.sender.name.split("@")[0]
-                    ramo = pickle.loads(self.cfp.content)[0].keys()
+                    name = message.sender.localname
+                    ramo = list(pickle.loads(self.cfp.content)[0].keys())
                     display_message(self.agent.aid.name, f"Agente {name} possui chave de encontro, mas nao pode colaborar para o ramo {ramo}.")
 
                     propostas_impossiveis.append(message)
@@ -135,11 +135,11 @@ class GerenciarNegociacao(FipaContractNetProtocol):
 
     def handle_refuse(self, message):
         super().handle_refuse(message)
-        display_message(self.agent.aid.name, "Mensagem REFUSE recebida")
+        display_message(self.agent.aid.name, f"Mensagem REFUSE recebida de {message.sender.name}")
 
     def handle_propose(self, message):
         super().handle_propose(message)
-        display_message(self.agent.aid.name, "Mensagem PROPOSE recebida")
+        display_message(self.agent.aid.name, f"Mensagem PROPOSE recebida de {message.sender.name}")
 
     def handle_inform(self, message):
         super().handle_inform(message)
@@ -154,6 +154,7 @@ class GerenciarNegociacao(FipaContractNetProtocol):
             message.add_receiver(aid)
 
         self.message = message
+        self.cfp = message
         self.on_start()
         # content = json.loads(message.content)
         # self.agent.organiza_ramos(content)
@@ -174,6 +175,11 @@ class AgenteN(AgenteSMAD):
         self.criterios_rest = criterios
 
         self.ramos_remanesc = list()
+
+        self.criterios = {"chaveamentos": False,
+                 "carreg_SE": True,
+                 "perdas": False,
+                 "carga_prior": False}
 
         # Determina os ADCs vizinhos para os quais as solicitações de recomposição
         # serão enviadas
@@ -272,9 +278,12 @@ class AgenteN(AgenteSMAD):
 if __name__ == "__main__":
     from pade.misc.utility import start_loop
 
-    an = AgenteN(AID('agenten@localhost:60005'), 'S1')
-    an.add_adc_vizinho(AID('agentedc-2@localhost:60010'))
+    an = AgenteN(AID('agenten@localhost:60012'), 'S1')
+    an.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
+    an.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
     an.ams['port'] = 60000
 
+
     start_loop([an])
+
 

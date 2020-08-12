@@ -54,7 +54,7 @@ def _gerar_nos_de_carga(resources):
         # Loop para o caso de barramentos com muitos terminais
         for terminal_do_no in no.ConductingEquipment_Terminals:
             cn_do_no = terminal_do_no.Terminal_ConnectivityNode
-
+            
             # Segue por cada um dos trechos a partir do nó
             for terminal_inicial in cn_do_no.ConnectivityNode_Terminals:
                 if terminal_inicial is terminal_do_no:
@@ -64,7 +64,7 @@ def _gerar_nos_de_carga(resources):
                 terminais_a_visitar = [terminal_inicial]
 
                 ordem_de_elementos = [EnergyConsumer, BusbarSection, PowerTransformer, ACLineSegment, Switch]
-
+                
                 # Caminha ao longo da linha, até encontrar 
                 while len(terminais_a_visitar):
                     terminais_a_visitar.sort(key=lambda t: ordem_de_elementos.index(t.Terminal_ConductingEquipment.__class__))
@@ -80,7 +80,7 @@ def _gerar_nos_de_carga(resources):
                         continue
                     if isinstance(equipamento, BusbarSection) or isinstance(equipamento, EnergyConsumer):
                         vizinhos.append(equipamento.IdentifiedObject_mRID)
-                        break
+                    break
 
         return chaves_do_no, vizinhos
 
@@ -263,7 +263,7 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
             nomes_dos_trechos |= set(map(lambda line: line.IdentifiedObject_mRID, trechos_do_setor))
             if setor.IdentifiedObject_mRID != subestacao:
                 # Não incluir os setores do barramento da subestação
-            nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
+                nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
        
         trechos_do_alimentador = [
             trecho for trecho in trechos.values() if trecho.nome in nomes_dos_trechos]
@@ -360,4 +360,4 @@ def _gerar_subestacaoes(resources, alimentadores, transformadores, se):
 
 
 if __name__ == '__main__':
-    top = carregar_topologia('./rede/rede-cim.xml', 'S1')
+    top = carregar_topologia('./rede/rede-cim-2.xml', 'S2')
