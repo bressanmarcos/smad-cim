@@ -37,29 +37,29 @@ def debug_comandar_chave(monkeypatch):
 
 def test_handle_request(deactivate_send_message, debug_comandar_chave):
     """Testa (sem Rede) o ReceberComando::handle_request do ACom"""
-    enderecos_S1 = {"CH1": "192.168.0.101",
-                    "CH2": "192.168.0.102",
-                    "CH3": "192.168.0.103",
-                    "CH6": "192.168.0.106",
-                    "CH7": "192.168.0.107",
-                    "CH8": "192.168.0.108",
-                    "CH9": "192.168.0.109",
-                    "CH10": "192.168.0.110",
-                    "CH11": "192.168.0.111",
-                    "CH13": "192.168.0.113",
-                    "CH14": "192.168.0.114",
-                    "CH15": "192.168.0.115",
-                    "CH16": "192.168.0.116"}
-    enderecos_S2 = {"CH4": "192.168.0.104",
-                    "CH5": "192.168.0.105",
-                    "CH3": "192.168.0.103",
-                    "CH8": "192.168.0.108",
-                    "CH11": "192.168.0.111",
-                    "CH12": "192.168.0.112",
-                    "CH16": "192.168.0.116"}
-    enderecos_S3 = {"CH17": "192.168.0.117",
-                    "CH18": "192.168.0.118",
-                    "CH16": "192.168.0.116"}
+    enderecos_S1 = {"CH1": ("localhost", 50000+1),
+                    "CH2": ("localhost", 50000+2),
+                    "CH3": ("localhost", 50000+3),
+                    "CH6": ("localhost", 50000+6),
+                    "CH7": ("localhost", 50000+7),
+                    "CH8": ("localhost", 50000+8),
+                    "CH9": ("localhost", 50000+9),
+                    "CH10": ("localhost", 50000+10),
+                    "CH11": ("localhost", 50000+11),
+                    "CH13": ("localhost", 50000+13),
+                    "CH14": ("localhost", 50000+14),
+                    "CH15": ("localhost", 50000+15),
+                    "CH16": ("localhost", 50000+16)}
+    enderecos_S2 = {"CH4": ("localhost", 50000+4),
+                    "CH5": ("localhost", 50000+5),
+                    "CH3": ("localhost", 50000+3),
+                    "CH8": ("localhost", 50000+8),
+                    "CH11": ("localhost", 50000+11),
+                    "CH12": ("localhost", 50000+12),
+                    "CH16": ("localhost", 50000+16)}
+    enderecos_S3 = {"CH17": ("localhost", 50000+17),
+                    "CH18": ("localhost", 50000+18),
+                    "CH16": ("localhost", 50000+16)}
 
     acom = AgenteCom(AID(f'acom1@localhost:{randint(10000, 60000)}'), 'S1', enderecos_S1)
 

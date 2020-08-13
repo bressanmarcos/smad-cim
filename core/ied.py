@@ -1,3 +1,4 @@
+import socket
 import os
 os.sys.path.insert(0, os.getcwd()) 
 # Adiciona ao Path a pasta raiz do projeto
@@ -14,19 +15,34 @@ class IED():
     VALID_STATES = ['open', 'close']
 
 
-    def __init__(self, _id, ip, call_on_event, initial_breaker_position='close'):
-        self.id = _id
+    def __init__(self, id, ip, port, call_on_event):
+        self.id = id
         self.ip = ip
-        self.breaker_position = IED.STATES[initial_breaker_position]
+        self.port = port
         self.callback = call_on_event
 
+    def connect(self):
+        """Conecta-se ao IED"""
+        raise NotImplementedError()
+
+    def operate(self, action):
+        """Envia comando ao IED através de protocol específico"""
+        raise NotImplementedError()
+ 
+    def get_breaker_position(self) -> str:
+        """Retorna posição do breaker"""
+        raise NotImplementedError()
+
+class FileIED(IED):
+    def __init__(self, id, ip, port, call_on_event, initial_breaker_position='close'):
+        super().__init__(id, ip, port, call_on_event)
+        self.breaker_position = IED.STATES[initial_breaker_position]
 
     def connect(self):
         """Conecta-se ao IED (stub)"""
-        display_message(f'{self.id}@{self.ip}', 'Conectado')
+        display_message(f'{self.id}@{self.ip}:{self.port}', 'Conectado')
         self.run()
         # TODO: Inicializar atributos da classe IED com dados do IED
-
 
     def operate(self, action):
         """Envia comando ao IED através de protocol específico"""
@@ -36,27 +52,23 @@ class IED():
         value_to_write = IED.STATES[action]
         # Envia dado
         self.breaker_position = value_to_write
-        display_message(f'{self.id}@{self.ip}', f'Comando {value_to_write} ({action}) enviado')
-      
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Comando {value_to_write} ({action}) enviado')
 
     def get_breaker_position(self) -> str:
         """Retorna posição do breaker"""
-        display_message(f'{self.id}@{self.ip}', \
+        display_message(f'{self.id}@{self.ip}:{self.port}', \
             f'Posição atual: {self.breaker_position} ({IED.REVERSE_STATES[self.breaker_position]})')
         return IED.REVERSE_STATES[self.breaker_position] 
-
 
     def handle_receive(self, *args):
         """Função automaticamente chamada quando
         mensagem do IED é recebida. Chama a função
         do agente de comunicação"""
-        display_message(f'{self.id}@{self.ip}', f'Evento: {args}')
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Evento: {args}')
         # Assume que a presença de XCBR é para a abertura da chave
         if 'XCBR' in args and 'BRKF' not in args:
             self.breaker_position = IED.STATES['open']
         call_in_thread(self.callback, self, *args)
-        # self.callback(self, *args)
-    
 
     def run(self):
         """Lê arquivos com o mesmo nome da ID do switch
@@ -92,3 +104,53 @@ class IED():
 
         # Chama função pela primeira vez depois de 3 segundos
         call_later(3.0, loop)
+
+class SimulatedIED(IED):
+    def __init__(self, id, ip, port, call_on_event):
+        super().__init__(id, ip, port, call_on_event)
+        
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def connect(self):
+        self.socket.connect((self.ip, self.port))
+        
+    def operate(self, action):
+        """Envia comando ao IED através de protocol específico"""
+        assert action in IED.VALID_STATES
+        
+        # Envia dado
+        self.socket.sendall(bytes(f'operate:{action}', "utf-8"))
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Comando {action} enviado')
+        
+        # Resposta
+        response = str(self.socket.recv(1024), "utf-8")
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Recebido {response}')
+        
+        # Salva posição enviada se ok
+        if response == 'ok':
+            # Obtém código do comando (IEC 61850)
+            value_to_write = IED.STATES[action]
+            self.breaker_position = value_to_write
+
+    def get_breaker_position(self) -> str:
+        """Retorna posição do breaker"""
+        # Envia dado
+        self.socket.sendall(bytes('read', "utf-8"))
+
+        # Resposta
+        response = str(self.socket.recv(1024), "utf-8")
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Posição atual: {response}')
+        self.breaker_position = IED.STATES[response]
+
+        return response
+
+if __name__ == "__main__":
+    # Create a socket (SOCK_STREAM means a TCP socket)
+    ied = SimulatedIED('CH13', 'localhost', 50013, print)
+    ied.connect()
+    pos = ied.get_breaker_position()
+
+    print(f'Posição é a seguinte: {pos}')
+
+    ied.operate('close')
+    ied.operate('open')

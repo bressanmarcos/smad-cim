@@ -8,7 +8,7 @@ from mygrid.util import Fasor
 from rede.network import *
 from si_prefix import si_parse
 
-def carregar_topologia(filename, subestacao):
+def carregar_topologia(filename, subestacao=''):
     doc = DocumentCIMRDF()
     doc.fromfile(filename)
     resources = doc.resources
@@ -23,7 +23,10 @@ def carregar_topologia(filename, subestacao):
     transformadores = _gerar_transformadores(resources, subestacao)
     subestacoes = _gerar_subestacaoes(resources, alimentadores, transformadores, subestacao)
 
-    return subestacoes[subestacao]
+    if subestacao != '':
+        return subestacoes[subestacao]
+    else:   
+        return subestacoes
 
 
 def _gerar_chaves(resources):
@@ -249,7 +252,7 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
     for alimentador in alimentadores_rdf:
         alimentador: Feeder
         subestacao = alimentador.Feeder_FeedingSubstation.IdentifiedObject_mRID
-        if subestacao != se:
+        if subestacao != se and se != '':
             continue
         nome = alimentador.IdentifiedObject_mRID
 
@@ -294,7 +297,7 @@ def _gerar_transformadores(resources, se):
     for transformador in transformadores_rdf:
         transformador: PowerTransformer
         subestacao = transformador.Equipment_EquipmentContainer.IdentifiedObject_mRID
-        if subestacao != se:
+        if subestacao != se and se != '':
             continue
         nome = transformador.IdentifiedObject_mRID
 
@@ -338,7 +341,7 @@ def _gerar_subestacaoes(resources, alimentadores, transformadores, se):
     for subestacao in subestacoes_rdf:
         subestacao: Substation
         nome = subestacao.IdentifiedObject_mRID
-        if nome != se:
+        if nome != se and se != '':
             continue
 
         alimentadores_da_subestacao = subestacao.Substation_SubstationFeeder
@@ -360,4 +363,7 @@ def _gerar_subestacaoes(resources, alimentadores, transformadores, se):
 
 
 if __name__ == '__main__':
-    top = carregar_topologia('./rede/rede-cim-2.xml', 'S2')
+    from pprint import pprint
+    
+    top = carregar_topologia('./rede/rede-cim-2.xml')
+    pprint(top)

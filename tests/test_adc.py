@@ -16,7 +16,7 @@ from pade.misc.utility import display_message
 from pade.core.agent import Agent_
 
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
-from core.adc import AgenteDC, SubscreverACom, EnviarComando # pylint: disable=import-error,no-name-in-module
+from core.adc import AgenteDC, SubscreverAEventos, EnviarComandoDeChaves # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
@@ -27,7 +27,7 @@ queue = None
 def testar_recepcao_de_mensagem_1(monkeypatch):
     """Injeta um retorno das mensagens recebidas pelos
     comandos EnvioDeDados::handle_subscribe do ACom e 
-    SubscreverACom::handle_agree do ADC.
+    SubscreverAEventos::handle_agree do ADC.
     Valores podem ser recuperados pela Fila ``queue``"""
     global queue
     queue = multiprocessing.Queue()
@@ -50,8 +50,8 @@ def testar_recepcao_de_mensagem_1(monkeypatch):
 
             return original(self, message)
         return wrapper
-    monkeypatch.setattr(SubscreverACom, 'handle_agree', stash_2(SubscreverACom.handle_agree, queue))
-    #monkeypatch.setattr(SubscreverACom, 'handle_inform', lambda self, message: dump(message.content))
+    monkeypatch.setattr(SubscreverAEventos, 'handle_agree', stash_2(SubscreverAEventos.handle_agree, queue))
+    #monkeypatch.setattr(SubscreverAEventos, 'handle_inform', lambda self, message: dump(message.content))
 
 
 def test_subscribe_to_ACom(run_ams, testar_recepcao_de_mensagem_1):

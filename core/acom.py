@@ -14,7 +14,7 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
 from pade.misc.utility import display_message
 
 from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
-from core.ied import IED, SwitchAlreadyInPosition
+from core.ied import FileIED, SwitchAlreadyInPosition
 
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
@@ -130,8 +130,8 @@ class AgenteCom(AgenteSMAD):
 
         # Instancia IEDs
         self.IEDs = {}
-        for (_id, ip) in enderecos_IEDs.items():
-            self.IEDs[_id] = IED(_id, ip, call_on_event=self.receber_evento, initial_breaker_position='close')
+        for (_id, ip_port) in enderecos_IEDs.items():
+            self.IEDs[_id] = FileIED(_id, *ip_port, call_on_event=self.receber_evento, initial_breaker_position='close')
 
         # Adiciona behaviours
         self.behaviours_enviodedados = EnvioDeDados(self) # Permite enviar dados ao ADC
@@ -242,19 +242,19 @@ if __name__ == "__main__":
     from pade.misc.utility import start_loop
     from random import randint
 
-    enderecos_S1 = {"CH1": "192.168.0.101",
-                    "CH2": "192.168.0.102",
-                    "CH3": "192.168.0.103",
-                    "CH6": "192.168.0.106",
-                    "CH7": "192.168.0.107",
-                    "CH8": "192.168.0.108",
-                    "CH9": "192.168.0.109",
-                    "CH10": "192.168.0.110",
-                    "CH11": "192.168.0.111",
-                    "CH13": "192.168.0.113",
-                    "CH14": "192.168.0.114",
-                    "CH15": "192.168.0.115",
-                    "CH16": "192.168.0.116"}
+    enderecos_S1 = {"CH1": ("localhost", 50001),
+                    "CH2": ("localhost", 50002),
+                    "CH3": ("localhost", 50003),
+                    "CH6": ("localhost", 50006),
+                    "CH7": ("localhost", 50007),
+                    "CH8": ("localhost", 50008),
+                    "CH9": ("localhost", 50009),
+                    "CH10": ("localhost", 50010),
+                    "CH11": ("localhost", 50011),
+                    "CH13": ("localhost", 50013),
+                    "CH14": ("localhost", 50014),
+                    "CH15": ("localhost", 50015),
+                    "CH16": ("localhost", 50016)}
     acom = AgenteCom(AID('acom@localhost:20001'), 'S1', enderecos_S1)
     start_loop([acom])
     

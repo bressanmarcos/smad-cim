@@ -57,3 +57,5 @@ docs/_build/
 *.pyc
 *cache*
 core/ied/*
+rede/rdf2mygridcopy.py
+.gitignore

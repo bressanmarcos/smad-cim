@@ -14,6 +14,7 @@ import threading
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
+from pade.acl.filters import Filter
 from pade.behaviours.protocols import (FipaRequestProtocol, FipaSubscribeProtocol, FipaContractNetProtocol)
 from pade.misc.utility import display_message
 
@@ -27,11 +28,11 @@ from rede import rdf2mygrid
 
 import pickle, json
 
-class SubscreverACom(FipaSubscribeProtocol):
+class SubscreverAEventos(FipaSubscribeProtocol):
     def __init__(self, agent: 'AgenteDC', message=None, is_initiator=True):
         super().__init__(agent, message=message, is_initiator=is_initiator)
+        self.assinaturas = []
 
-        
     def subscrever(self, acom_aid):
         message = ACLMessage(ACLMessage.SUBSCRIBE)
         message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
@@ -40,7 +41,7 @@ class SubscreverACom(FipaSubscribeProtocol):
 
     def handle_agree(self, message: ACLMessage):
         display_message(self.agent.aid.name, f'Inscrito em {message.sender.name}')
-        self.agent.assinaturas.append(message.sender)
+        self.assinaturas.append(message.sender)
 
     def handle_inform(self, message: ACLMessage):    
         """Recebe notificação de evento do ACom. \\
@@ -71,92 +72,21 @@ class SubscreverACom(FipaSubscribeProtocol):
 
         self.agent.tratar_informe(lista_de_chaves)
 
-class EnviarComando(FipaRequestProtocol):
-    def __init__(self, agent):
+class EnviarComandoDeChaves(FipaRequestProtocol):
+    def __init__(self, agent: 'AgenteDC'):
         super().__init__(agent, message=None, is_initiator=True)
-        # Variável para armazenar sessões
-        self.states = {}
 
     def handle_not_understood(self, message: ACLMessage):
         display_message(self.agent.aid.name, 'Mensagem não compreendida')
         display_message(self.agent.aid.name, f'Not Understood: {message.content}')
 
-    def register_state(self, state_id: str, callback_inform=None, callback_failure=None, awaits=1):
-        # Registra o conversation_id da Mensagem, 
-        # para manter estado
-        self.states[state_id] = (callback_inform, callback_failure, awaits)
-
-    def retrieve_state(self, state_id):
-        # Recupera o estado a partir do conversation_id
-        callback_inform, callback_failure, awaits = self.states[state_id]
-        awaits -= 1
-        # Só apaga estado quando a última mensagem for recebida
-        if awaits == 0:
-            del self.states[state_id]
-        return callback_inform, callback_failure, awaits
-
-    def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id=str(uuid4())):
-        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
-        switch_actions = []
-        sequenceNumber = 0
-        for chave, comando in lista_de_comandos.items():
-            switch = swc.ProtectedSwitch(mRID=chave)
-            sequenceNumber += 1
-            if comando == 'open':
-                action_kind = swc.SwitchActionKind.OPEN
-            elif comando == 'close':
-                action_kind = swc.SwitchActionKind.CLOSE
-            action = swc.SwitchAction(
-                isFreeSequence=False,
-                issuedDateTime=datetime.datetime.now(),
-                kind=action_kind,
-                sequenceNumber=sequenceNumber,
-                OperatedSwitch=switch)
-            switch_actions.append(action)
-
-        if proposito == 'isolation':
-            purpose = swc.Purpose.ISOLATION
-        elif proposito == 'coordination':
-            purpose = swc.Purpose.COORDINATION
-        elif proposito == 'restoration':
-            purpose = swc.Purpose.RESTORATION
-
-        plano = swc.SwitchingPlan(
-            mRID=str(uuid4()), 
-            createdDateTime=datetime.datetime.now(),
-            purpose=purpose, 
-            SwitchAction=switch_actions)
-        root = swc.SwitchingCommand(SwitchingPlan=plano)
-        validate(root)
-        
-        # Monta envelope de mensagem ACL
-        message = ACLMessage(ACLMessage.REQUEST)
-        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-        message.set_ontology('SwitchingCommand')
-        message.set_content(to_elementtree(root))
-        message.set_conversation_id(conversation_id)
-        for acom_aid in self.agent.assinaturas:
-            message.add_receiver(acom_aid)
-
-        self.agent.send_until(message)
-
     def handle_inform(self, message: ACLMessage):
-        if message.ontology == "R_05":  # TODO: outra forma de filtrar mensagens recebidas
-            return
         display_message(self.agent.aid.name, f'Chaveamento realizado: {message.content}')
-        callback_inform, _, awaits = self.retrieve_state(message.conversation_id)
-        if awaits == 0:
-            # Se não houver mais nenhuma mensagem de retorno, chama a função
-            # de callback
-            callback_inform()
+        self.agent.continue_flow(message)
 
     def handle_failure(self, message: ACLMessage):
         display_message(self.agent.aid.name, f'Falha em execução de comando: {message.content}')
-        _, callback_failure, awaits = self.retrieve_state(message.conversation_id)
-        if awaits == 0:
-            # Se não houver mais nenhuma mensagem de retorno, chama a função
-            # de callback
-            callback_failure()
+        self.agent.continue_flow(message)
 
 class EnviarPoda(FipaRequestProtocol):
     def handle_inform(self, message):
@@ -210,8 +140,6 @@ class ResponderNegociacao(FipaContractNetProtocol):
                     display_message(self.agent.aid.name, 
                         "Possivel restauracao do ramo {ram} por {se}".format(ram = dados["setores"],se=self.agent.subestacao))
 
-                    print("DEBUG CN03 Agree: ")
-                    print(dados)
                     # Preparar proposta indicando que todos os setores do ramos podem ser atendidos
                     resposta = self.message.create_reply()
                     resposta.set_performative(ACLMessage.PROPOSE)
@@ -311,16 +239,14 @@ class ResponderNegociacao(FipaContractNetProtocol):
             lista_de_comandos = {chave: 'close' for chave in dados['chaves']}
             # Prepara mensagem para enviar ao respectivo Agente
             # Controle da SE para operar a restauracao da poda
-            conversation_id = str(uuid4())
-            self.agent.command_behaviour.register_state(
-                state_id=conversation_id, 
-                callback_inform=lambda: self.agent.pos_auto_recomposicao((dados, 'success')), 
-                callback_failure=lambda: self.agent.pos_auto_recomposicao((dados, 'failure')))
-            self.agent.command_behaviour.enviar_comando_de_chave(
-                lista_de_comandos=lista_de_comandos, 
-                proposito='restoration', 
-                conversation_id=conversation_id)
-
+            self.agent.enviar_comando_de_chave(
+                lista_de_comandos=lista_de_comandos,
+                proposito='restoration',
+                callbacks={
+                    ACLMessage.INFORM: (lambda: self.agent.pos_auto_recomposicao((dados, 'success'))),
+                    ACLMessage.FAILURE: (lambda: self.agent.pos_auto_recomposicao((dados, 'failure')))
+                }
+            )
 
     def anunciar_restauracao(self, dados):
 
@@ -343,12 +269,14 @@ class ResponderNegociacao(FipaContractNetProtocol):
 class AgenteDC(AgenteSMAD):
     def __init__(self, aid: AID, subestacao: str, debug=False):
         super().__init__(aid, subestacao, debug)
-        self.command_behaviour = EnviarComando(self)
-        self.subscribe_behaviour = SubscreverACom(self)
+
+        self.command_behaviour = EnviarComandoDeChaves(self)
+        self.subscribe_behaviour = SubscreverAEventos(self)
         self.send_prone_behaviour = EnviarPoda(self)
-        self.assinaturas = []
+
         self.behaviours.append(self.command_behaviour)
         self.behaviours.append(self.subscribe_behaviour)
+        self.behaviours.append(self.send_prone_behaviour)
 
         # Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
@@ -408,9 +336,14 @@ class AgenteDC(AgenteSMAD):
                     self.pos_coordenacao((content, content2, 'success'))
                 else:
                     display_message(self.aid.name, f'Comando para isolar trecho sob Falta [CH:{content["dados"]["correc_descoord"]}]')
-                    conversation_id = str(uuid4())
-                    self.command_behaviour.register_state(conversation_id, lambda: self.pos_coordenacao((content, content2, 'success')), lambda: self.pos_coordenacao((content, content2, 'failure')))
-                    self.command_behaviour.enviar_comando_de_chave(lista_de_comandos={content["dados"]["correc_descoord"]: 'open'}, proposito='coordination', conversation_id=conversation_id)
+                    self.enviar_comando_de_chave(
+                        lista_de_comandos={content["dados"]["correc_descoord"]: 'open'},
+                        proposito='coordination',
+                        callbacks={
+                            ACLMessage.INFORM: (lambda: self.pos_coordenacao((content, content2, 'success'))),
+                            ACLMessage.FAILURE: (lambda: self.pos_coordenacao((content, content2, 'failure')))
+                        }
+                    )
                     # Código deste nível continua em ''handle_inform'' ou ''handle_failure''
 
             # Se nao houver, a descoordenacao deve
@@ -418,16 +351,14 @@ class AgenteDC(AgenteSMAD):
             else:
                 #BRESSAN: reforça a abertura da chave a montante do setor em falta...
                 display_message(self.aid.name, f"Comando para isolar trecho sob Falta [CH:{content['dados']['chave_falta']}]")
-                conversation_id = str(uuid4())
-                self.command_behaviour.register_state(
-                    conversation_id, 
-                    lambda: self.pos_coordenacao((content, content2, 'success')), 
-                    lambda: self.pos_coordenacao((content, content2, 'failure')))
-                self.command_behaviour.enviar_comando_de_chave(
-                    lista_de_comandos={content["dados"]["chave_falta"]: 'open'}, 
-                    proposito='coordination', 
-                    conversation_id=conversation_id)
-
+                self.enviar_comando_de_chave(
+                    lista_de_comandos={content["dados"]["chave_falta"]: 'open'},
+                    proposito='coordination',
+                    callbacks={
+                        ACLMessage.INFORM: (lambda: self.pos_coordenacao((content, content2, 'success'))),
+                        ACLMessage.FAILURE: (lambda: self.pos_coordenacao((content, content2, 'failure')))
+                    }
+                )
             # Opera as chaves para isolamento do setor
             # sob falta, com ou seu descoordenacao
             # self.agent.operacao_chaves()
@@ -538,20 +469,19 @@ class AgenteDC(AgenteSMAD):
             
             if len(lista_de_comandos):
                 display_message(self.aid.name, "Comando para reestabelecer trechos descoordenados [CH: " + str(lista_de_comandos) + "]")
-                conversation_id = str(uuid4())
-                self.command_behaviour.register_state(
-                    state_id=conversation_id, 
-                    callback_inform=lambda: self.pos_pos_coordenacao((content, content2, result)), 
-                    callback_failure=lambda: self.pos_pos_coordenacao((content, content2, result)))
-                self.command_behaviour.enviar_comando_de_chave(
-                    lista_de_comandos=lista_de_comandos, 
-                    proposito='coordination', 
-                    conversation_id=conversation_id)
+                self.enviar_comando_de_chave(
+                    lista_de_comandos=lista_de_comandos,
+                    proposito='coordination',
+                    callbacks={
+                        ACLMessage.INFORM: (lambda: self.pos_pos_coordenacao((content, content2, result))),
+                        ACLMessage.FAILURE: (lambda: self.pos_pos_coordenacao((content, content2, result)))
+                    }
+                )
                 return
         else:
             display_message(self.aid.name, "Impossivel corrigir descoordenacao.")
 
-        self.pos_pos_coordenacao(content2["chave_falta"])
+        self.pos_pos_coordenacao((content, content2, result))
 
     def pos_pos_coordenacao(self, state):
         content, content2, result = state
@@ -565,10 +495,50 @@ class AgenteDC(AgenteSMAD):
 
         self.analise_isolamento(content["chave_falta"])
 
+    def enviar_comando_de_chave(self, lista_de_comandos: dict, proposito: str, callbacks: dict):
+        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.subscribe_behaviour.assinaturas} ({proposito})')
+        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
+        switch_actions = []
+        sequenceNumber = 0
+        for chave, comando in lista_de_comandos.items():
+            switch = swc.ProtectedSwitch(mRID=chave)
+            sequenceNumber += 1
+            if comando == 'open':
+                action_kind = swc.SwitchActionKind.OPEN
+            elif comando == 'close':
+                action_kind = swc.SwitchActionKind.CLOSE
+            action = swc.SwitchAction(
+                isFreeSequence=False,
+                issuedDateTime=datetime.datetime.now(),
+                kind=action_kind,
+                sequenceNumber=sequenceNumber,
+                OperatedSwitch=switch)
+            switch_actions.append(action)
 
-    def enviar_comando_de_chave(self, lista_de_comandos, proposito, conversation_id):
-        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.assinaturas} ({proposito})')
-        self.command_behaviour.enviar_comando_de_chave(lista_de_comandos, proposito, conversation_id)
+        if proposito == 'isolation':
+            purpose = swc.Purpose.ISOLATION
+        elif proposito == 'coordination':
+            purpose = swc.Purpose.COORDINATION
+        elif proposito == 'restoration':
+            purpose = swc.Purpose.RESTORATION
+
+        plano = swc.SwitchingPlan(
+            mRID=str(uuid4()), 
+            createdDateTime=datetime.datetime.now(),
+            purpose=purpose, 
+            SwitchAction=switch_actions)
+        root = swc.SwitchingCommand(SwitchingPlan=plano)
+        validate(root)
+        
+        # Monta envelope de mensagem ACL
+        message = ACLMessage(ACLMessage.REQUEST)
+        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+        message.set_ontology('SwitchingCommand')
+        message.set_content(to_elementtree(root))
+        for acom_aid in self.subscribe_behaviour.assinaturas:
+            message.add_receiver(acom_aid)
+
+        self.async_send(message, callbacks, len(lista_de_comandos))
 
     #Inicio Cod Tiago
     def localizar_chave(self, chave):
@@ -672,16 +642,15 @@ class AgenteDC(AgenteSMAD):
                 lista_de_comandos[chave] = 'open'
 
             if len(lista_de_comandos):
-                conversation_id = str(uuid4())
-                self.command_behaviour.register_state(
-                    state_id=conversation_id, 
-                    callback_inform=lambda: self.pos_isolamento((content, lista_de_comandos, 'success')), 
-                    callback_failure=lambda: self.pos_isolamento((content, lista_de_comandos, 'failure')),
-                    awaits=len(lista_de_comandos))
-                self.command_behaviour.enviar_comando_de_chave(
-                    lista_de_comandos=lista_de_comandos, 
-                    proposito='coordination', 
-                    conversation_id=conversation_id)
+                self.enviar_comando_de_chave(
+                    lista_de_comandos=lista_de_comandos,
+                    proposito='coordination',
+                    callbacks={
+                        ACLMessage.INFORM: (lambda: self.pos_isolamento((content, lista_de_comandos, 'success'))),
+                        ACLMessage.FAILURE: (lambda: self.pos_isolamento((content, lista_de_comandos, 'failure')))
+                    }
+                )
+
         else:
             display_message(self.aid.name, "Nenhum setor precisa ser isolado")
             self.analise_recomposicao(dados_isolamento)
@@ -770,16 +739,14 @@ class AgenteDC(AgenteSMAD):
                 # opera fechamento de chave
                 if len(lista_de_comandos):
                     display_message(self.aid.name, f"Comandos para operar chaves [CH: {lista_de_comandos}]")
-                    conversation_id = str(uuid4())
-                    self.command_behaviour.register_state(
-                        state_id=conversation_id, 
-                        callback_inform=lambda: self.pos_auto_recomposicao((content, 'success')), 
-                        callback_failure=lambda: self.pos_auto_recomposicao((content, 'failure')), 
-                        awaits=len(lista_de_comandos))
-                    self.command_behaviour.enviar_comando_de_chave(
-                        lista_de_comandos=lista_de_comandos, 
-                        proposito='restoration', 
-                        conversation_id=conversation_id)
+                    self.enviar_comando_de_chave(
+                        lista_de_comandos=lista_de_comandos,
+                        proposito='restoration',
+                        callbacks={
+                            ACLMessage.INFORM: (lambda: self.pos_auto_recomposicao((content, 'success'))),
+                            ACLMessage.FAILURE: (lambda: self.pos_auto_recomposicao((content, 'failure')))
+                        }
+                    )
 
             # Solicitar recomposição ao AN
             # TODO: mudar formato da poda
