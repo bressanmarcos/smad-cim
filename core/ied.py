@@ -113,6 +113,8 @@ class SimulatedIED(IED):
 
     def connect(self):
         self.socket.connect((self.ip, self.port))
+        self.get_breaker_position()
+        self.run()
         
     def operate(self, action):
         """Envia comando ao IED através de protocol específico"""
@@ -144,13 +146,26 @@ class SimulatedIED(IED):
 
         return response
 
+    def breaker_tripped(self) -> bool:
+        """Verifica se breaker mudou de posição"""
+        old_state = IED.REVERSE_STATES[self.breaker_position]
+        new_state = self.get_breaker_position()
+
+        return old_state == 'close' and new_state == 'open'
+
+    def run(self):
+        from time import sleep
+        def loop():
+            if self.breaker_tripped():
+                args = ('XCBR',)
+                call_in_thread(self.callback, self, *args)
+            # Chama função novamente em 1 segundo
+            call_later(1.0, loop)
+
+        # Chama função pela primeira vez depois de 3 segundos
+        call_later(3.0, loop)
+
 if __name__ == "__main__":
     # Create a socket (SOCK_STREAM means a TCP socket)
     ied = SimulatedIED('CH13', 'localhost', 50013, print)
     ied.connect()
-    pos = ied.get_breaker_position()
-
-    print(f'Posição é a seguinte: {pos}')
-
-    ied.operate('close')
-    ied.operate('open')

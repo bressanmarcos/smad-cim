@@ -17,74 +17,103 @@ class Network():
         self.subestacoes = carregar_topologia(Path(os.path.dirname(__file__) + '/rede-cim-3.xml'))
         chaves = {key: value for subs in self.subestacoes.values() for alim in subs.alimentadores.values() for key, value in alim.chaves.items()}
         
-        self.chaves = {nome: (obj, socket.socket()) for nome, obj in chaves.items()}
-
-        for nome, data in self.chaves.items():
-            _, sock = data
+        # Chaves e instâncias
+        self.chaves = chaves
+        
+        # Abre conexões com os sockets das chaves
+        socket_chaves = []
+        for nome, data in chaves.items():
             port = 50000 + int(nome.split('CH')[1])
+            sock = socket.socket()
             sock.bind(('localhost', port))
             sock.listen()
             sock.setblocking(0)
+            socket_chaves.append(sock)
 
-        self.sockets = [data[1] for data in self.chaves.values()]
+        # Abre um socket para manipular eventos
+        socket_evento = socket.socket()
+        socket_evento.bind(('localhost', 50000))
+        socket_evento.listen()
+        socket_evento.setblocking(0)
+
+        self.socket_evento = socket_evento
+        self.sockets_chaves = socket_chaves
  
     def run(self):
-        select_inputs = self.sockets[:]
-        select_outputs = []
+        inputs = [self.socket_evento] + self.sockets_chaves
+        outputs = []
         message_queues = {}
         
-        while select_inputs:
-            readable, writable, exceptional = select.select(select_inputs, select_outputs, select_inputs)
+        while inputs:
+            readable, writable, exceptional = select.select(inputs, outputs, inputs)
 
             for server in readable:
-                if server in self.sockets:
+                if server in self.sockets_chaves or server is self.socket_evento:
                     connection, client_address = server.accept()
+                    print(f'Connection from {client_address}')
                     connection.setblocking(0)
-                    select_inputs.append(connection)
+                    inputs.append(connection)
                     message_queues[connection] = queue.Queue()
                 else:
                     data = server.recv(1024)
                     if data:
                         message_queues[server].put(data)
-                        if server not in select_outputs:
-                            select_outputs.append(server)
+                        if server not in outputs:
+                            outputs.append(server)
                     else:
-                        if server in select_outputs:
-                            select_outputs.remove(server)
-                        select_inputs.remove(server)
+                        if server in outputs:
+                            outputs.remove(server)
+                        inputs.remove(server)
                         server.close()
                         del message_queues[server]
             
             for server in writable:
                 try:
-                    message = str(message_queues[server].get_nowait().strip(), 'utf-8')
-                    message = message.split(':')
-
                     port = server.getsockname()[1]
-                    switch = 'CH' + str(port - 50000)
 
+                    message = str(message_queues[server].get_nowait().strip(), 'utf-8').split(':')
                     command = message.pop(0)
-                    next_msg = getattr(self, command)(switch, *message)
+
+                    # Simulação de eventos
+                    if port == 50000:
+                        switch = message.pop(0)
+                    # Comando para IEDs
+                    elif port > 50000:
+                        switch = f'CH{port-50000}'
+
+                    if command in ('read', 'operate'):
+                        next_msg = getattr(self, command)(switch, *message)
+                    else:
+                        next_msg = b'erro'
+
                 except queue.Empty:
-                    select_outputs.remove(server)
+                    outputs.remove(server)
+                except:
+                    pass
                 else:
                     server.send(next_msg)
 
             for server in exceptional:
-                select_inputs.remove(server)
-                if server in select_outputs:
-                    select_outputs.remove(server)
+                inputs.remove(server)
+                if server in outputs:
+                    outputs.remove(server)
                 server.close()
                 del message_queues[server]
 
     def operate(self, switch, action):
+        """Change the state of a switch remotely"""
+        print(f'Operate, {switch}, {action}')
         estados = {'open': 0, 'close': 1}
-        self.chaves[switch][0].estado = estados[action]
+        self.chaves[switch].estado = estados[action]
         return b'ok'
 
     def read(self, switch):
+        """Read the current state of a switch remotely"""
         estados = {0: 'open', 1: 'close'}
-        return bytes(estados[self.chaves[switch][0].estado], 'utf-8')
+        state = bytes(estados[self.chaves[switch].estado], 'utf-8')
+        print(f'Read, {switch}')
+        return state
+
 
 if __name__ == "__main__":
     Network().run()
