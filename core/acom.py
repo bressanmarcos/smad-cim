@@ -14,7 +14,7 @@ from pade.behaviours.protocols import (FipaRequestProtocol,
 from pade.misc.utility import display_message
 
 from core.common import AgenteSMAD, to_elementtree, to_string, dump, validate
-from core.ied import FileIED, SwitchAlreadyInPosition
+from core.ied import FileIED, SimulatedIED, SwitchAlreadyInPosition
 
 from information_model import SwitchingCommand as swc
 from information_model import OutageEvent as out
@@ -131,7 +131,7 @@ class AgenteCom(AgenteSMAD):
         # Instancia IEDs
         self.IEDs = {}
         for (_id, ip_port) in enderecos_IEDs.items():
-            self.IEDs[_id] = FileIED(_id, *ip_port, call_on_event=self.receber_evento, initial_breaker_position='close')
+            self.IEDs[_id] = SimulatedIED(_id, *ip_port, call_on_event=self.receber_evento)
 
         # Adiciona behaviours
         self.behaviours_enviodedados = EnvioDeDados(self) # Permite enviar dados ao ADC
@@ -147,12 +147,12 @@ class AgenteCom(AgenteSMAD):
     def on_start(self):
         super().on_start()
         # Inicia conexão com todos os IEDs
-        for ied_id, handle in self.IEDs.items():
+        for handle in self.IEDs.values():
             handle.connect()
 
-    def receber_evento(self, *args):
+    def receber_evento(self, switch, *args):
         """Função invocada quando ACom recebe mensagem do IED. Formato de entrada: \\
-        ``args = (<IED instance>, 'PTOC', 'XCBR', 'BRKF')`` \\
+        ``switch = <IED instance>`` e ``args = ('PTOC', 'XCBR', 'BRKF')`` \\
         Mensagens dos recebidas pelo ACom são reunidas durante um ``deadtime``
         antes de serem todas encaminhadas (no formato adequado) ao ADC."""
         display_message(self.aid.name, f'Evento recebido do IED: {args[0].id} {args[1:]}')
@@ -179,11 +179,11 @@ class AgenteCom(AgenteSMAD):
             self.call_later(self.deadtime, send_document)
 
         # Converte informações recebidas em formato CIM XML
-        switchId = args[0].id
+        switchId = switch.id
         switch = out.ProtectedSwitch(
             mRID=switchId, 
             normalOpen=False)
-        for function in args[1:]:
+        for function in args:
             if function == 'XCBR':
                 # Código do retorno
                 value = out.Breaker_DiscreteValue_Integer('1')

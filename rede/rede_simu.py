@@ -1,28 +1,23 @@
 import socket
 import select
-import os
 import queue
+import os
 os.sys.path.insert(0, os.getcwd())
 
 import json
 from pathlib import Path
 from pprint import pprint 
 
-from rdf2mygrid import carregar_topologia
+from rede.rdf2mygrid import carregar_topologia
 
 class Network():
 
     def __init__(self):
-        # Carregar topologia
-        self.subestacoes = carregar_topologia(Path(os.path.dirname(__file__) + '/rede-cim-3.xml'))
-        chaves = {key: value for subs in self.subestacoes.values() for alim in subs.alimentadores.values() for key, value in alim.chaves.items()}
-        
-        # Chaves e instâncias
-        self.chaves = chaves
+        self.reset_switches()
         
         # Abre conexões com os sockets das chaves
         socket_chaves = []
-        for nome, data in chaves.items():
+        for nome, _ in self.chaves.items():
             port = 50000 + int(nome.split('CH')[1])
             sock = socket.socket()
             sock.bind(('localhost', port))
@@ -39,6 +34,13 @@ class Network():
         self.socket_evento = socket_evento
         self.sockets_chaves = socket_chaves
  
+    def reset_switches(self):
+        # Carregar topologia
+        self.subestacoes = carregar_topologia(Path(os.path.dirname(__file__) + '/rede-cim-3.xml'))
+        
+        # Chaves e instâncias
+        self.chaves = {key: value for subs in self.subestacoes.values() for alim in subs.alimentadores.values() for key, value in alim.chaves.items()}
+
     def run(self):
         inputs = [self.socket_evento] + self.sockets_chaves
         outputs = []
@@ -74,22 +76,27 @@ class Network():
                     message = str(message_queues[server].get_nowait().strip(), 'utf-8').split(':')
                     command = message.pop(0)
 
-                    # Simulação de eventos
                     if port == 50000:
+                        # Simulação de eventos
                         switch = message.pop(0)
-                    # Comando para IEDs
                     elif port > 50000:
+                        # Comando para IEDs
                         switch = f'CH{port-50000}'
 
                     if command in ('read', 'operate'):
+                        # Aciona comando se for Read ou Operate
                         next_msg = getattr(self, command)(switch, *message)
-                    else:
-                        next_msg = b'erro'
+                    
+                    elif command == 'reset' and port == 50000:
+                        # Reseta estados dos switches
+                        self.reset_switches()
+                        next_msg = b'ok'
 
                 except queue.Empty:
                     outputs.remove(server)
                 except:
-                    pass
+                    next_msg = b'erro'
+                    server.send(next_msg)
                 else:
                     server.send(next_msg)
 
@@ -102,7 +109,6 @@ class Network():
 
     def operate(self, switch, action):
         """Change the state of a switch remotely"""
-        print(f'Operate, {switch}, {action}')
         estados = {'open': 0, 'close': 1}
         self.chaves[switch].estado = estados[action]
         return b'ok'
@@ -111,7 +117,6 @@ class Network():
         """Read the current state of a switch remotely"""
         estados = {0: 'open', 1: 'close'}
         state = bytes(estados[self.chaves[switch].estado], 'utf-8')
-        print(f'Read, {switch}')
         return state
 
 

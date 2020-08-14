@@ -21,9 +21,13 @@ from core.an import AgenteN, ReceberPoda, GerenciarNegociacao # pylint: disable=
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc # pylint: disable=import-error
 
+from rede.rede_simu import Network
 
 if __name__ == "__main__":
 
+    ## Executar IEDs
+    # Instancia classe
+    network = Network()
     # S1
     enderecos_S1 = {"CH1": ("localhost", 50001),
                     "CH2": ("localhost", 50002),

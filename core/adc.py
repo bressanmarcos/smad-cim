@@ -4,13 +4,11 @@ os.sys.path.insert(0, os.getcwd())
 # Adiciona ao Path a pasta raiz do projeto
 
 from pprint import pprint
-import pickle
 
 import datetime
 from random import random
 from uuid import uuid4
 from pathlib import Path
-import threading
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage

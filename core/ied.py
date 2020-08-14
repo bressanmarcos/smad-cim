@@ -42,7 +42,6 @@ class FileIED(IED):
         """Conecta-se ao IED (stub)"""
         display_message(f'{self.id}@{self.ip}:{self.port}', 'Conectado')
         self.run()
-        # TODO: Inicializar atributos da classe IED com dados do IED
 
     def operate(self, action):
         """Envia comando ao IED através de protocol específico"""
@@ -106,6 +105,7 @@ class FileIED(IED):
         call_later(3.0, loop)
 
 class SimulatedIED(IED):
+    """Conecta-se a um IED simulado em outro IP:PORT"""
     def __init__(self, id, ip, port, call_on_event):
         super().__init__(id, ip, port, call_on_event)
         
@@ -113,7 +113,9 @@ class SimulatedIED(IED):
 
     def connect(self):
         self.socket.connect((self.ip, self.port))
-        self.get_breaker_position()
+        # Atualiza a posição da chave
+        self.get_breaker_position() 
+        display_message(f'{self.id}@{self.ip}:{self.port}', 'Conectado')
         self.run()
         
     def operate(self, action):
@@ -122,11 +124,9 @@ class SimulatedIED(IED):
         
         # Envia dado
         self.socket.sendall(bytes(f'operate:{action}', "utf-8"))
-        display_message(f'{self.id}@{self.ip}:{self.port}', f'Comando {action} enviado')
         
         # Resposta
         response = str(self.socket.recv(1024), "utf-8")
-        display_message(f'{self.id}@{self.ip}:{self.port}', f'Recebido {response}')
         
         # Salva posição enviada se ok
         if response == 'ok':
@@ -141,7 +141,6 @@ class SimulatedIED(IED):
 
         # Resposta
         response = str(self.socket.recv(1024), "utf-8")
-        display_message(f'{self.id}@{self.ip}:{self.port}', f'Posição atual: {response}')
         self.breaker_position = IED.STATES[response]
 
         return response
@@ -154,9 +153,9 @@ class SimulatedIED(IED):
         return old_state == 'close' and new_state == 'open'
 
     def run(self):
-        from time import sleep
         def loop():
             if self.breaker_tripped():
+                display_message(f'{self.id}@{self.ip}:{self.port}', 'Abertura de chave detectada')
                 args = ('XCBR',)
                 call_in_thread(self.callback, self, *args)
             # Chama função novamente em 1 segundo

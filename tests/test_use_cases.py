@@ -15,7 +15,7 @@ from pade.misc.utility import display_message
 from pade.core.agent import Agent_
 
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
-from core.adc import AgenteDC, SubscreverAEventos, EnviarComando # pylint: disable=import-error,no-name-in-module
+from core.adc import AgenteDC, SubscreverAEventos, EnviarComandoDeChaves # pylint: disable=import-error,no-name-in-module
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from core.an import AgenteN, ReceberPoda, GerenciarNegociacao
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
@@ -116,7 +116,7 @@ def adicionar_eventos_a_IEDs(monkeypatch):
         return wrapper
     monkeypatch.setattr(SubscreverAEventos, 'handle_agree', stash(SubscreverAEventos.handle_agree))
 
-def test_dev(run_ams, adicionar_eventos_a_IEDs):
+def test_dev(simular_IEDs, run_ams, adicionar_eventos_a_IEDs):
     sniffer = run_ams
     ams = sniffer.ams
 

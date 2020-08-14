@@ -15,6 +15,8 @@ from pade.core.agent import Agent_
 
 from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
 
+from rede.rede_simu import Network
+
 def start_loop(agents, seconds=20.0):
     """Encapsula o start_loop de modo que quando chamado
     ele seja executado em outro processo por 20 segundos. \\
@@ -52,6 +54,24 @@ def run_ams():
     # Finaliza AMS após execução de teste
     print('\nKilling AMS')
     p.kill()
+
+@pytest.fixture(scope='module')
+def simular_IEDs():
+    """Executa o simulador para IEDs em outra thread"""
+    # Instancia classe
+    network = Network()
+    
+    # Executa loop em novo processo
+    p = multiprocessing.Process(target=network.run)
+    p.start()
+    
+    # Inicializa testes
+    yield
+
+    # Finaliza execução dos IEDs
+    print('\nKilling IEDs')
+    p.kill()
+    
 
 @pytest.fixture(scope='function')
 def deactivate_send_message(monkeypatch):
