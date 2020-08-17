@@ -22,9 +22,9 @@ from core.adc import AgenteDC, SubscreverAEventos, EnviarComandoDeChaves # pylin
 from core.acom import AgenteCom, EnvioDeDados, ReceberComando # pylint: disable=import-error,no-name-in-module
 from core.an import AgenteN, ReceberPoda, GerenciarNegociacao # pylint: disable=import-error,no-name-in-module
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
-from information_model import SwitchingCommand as swc # pylint: disable=import-error
+from information_model import SwitchingCommand as swc  # pylint: disable=import-error
 
-from rede.rede_simu import Network
+from rede.rede_simu import Network # pylint: disable=import-error
 
 if __name__ == "__main__":
 
@@ -67,9 +67,9 @@ if __name__ == "__main__":
                     "CH19": ("localhost", 50019)}
     acom = AgenteCom(AID('agentecom@localhost:60010'), 'S1', enderecos_S1)
     acom.ams = ams_dict
-
+    
     adc = AgenteDC(AID('agentedc@localhost:60011'), 'S1')
-    adc.subscrever_a(AID('agentecom@localhost:60010'))
+    adc.add_acom(AID('agentecom@localhost:60010'))
     adc.set_an(AID('agenten@localhost:60012'))
     adc.ams = ams_dict
 
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     acom2.ams = ams_dict
 
     adc2 = AgenteDC(AID('agentedc-2@localhost:60021'), 'S2')
-    adc2.subscrever_a(AID('agentecom-2@localhost:60020'))
+    adc2.add_acom(AID('agentecom-2@localhost:60020'))
     adc2.set_an(AID('agenten-2@localhost:60022'))
     adc2.ams = ams_dict
 
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     acom3.ams = ams_dict
 
     adc3 = AgenteDC(AID('agentedc-3@localhost:60031'), 'S3')
-    adc3.subscrever_a(AID('agentecom-3@localhost:60030'))
+    adc3.add_acom(AID('agentecom-3@localhost:60030'))
     adc3.set_an(AID('agenten-3@localhost:60032'))
     adc3.ams = ams_dict
 

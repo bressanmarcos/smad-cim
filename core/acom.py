@@ -43,7 +43,6 @@ class ReceberComando(FipaRequestProtocol):
     para manobra de chaves
     *SwitchingCommand*
     """
-    obj = 'SwitchingCommand'
 
     def __init__(self, agent: AgenteSMAD):
         super().__init__(agent, is_initiator=False)
@@ -55,7 +54,7 @@ class ReceberComando(FipaRequestProtocol):
         com agree / refuse / not_understood"""
 
         # Esperado SwitchingCommand
-        if message.ontology != ReceberComando.obj:
+        if message.ontology != swc.__name__:
             reply = message.create_reply()
             reply.set_performative(ACLMessage.NOT_UNDERSTOOD)
             reply.set_ontology('')
@@ -155,7 +154,8 @@ class AgenteCom(AgenteSMAD):
         ``switch = <IED instance>`` e ``args = ('PTOC', 'XCBR', 'BRKF')`` \\
         Mensagens dos recebidas pelo ACom são reunidas durante um ``deadtime``
         antes de serem todas encaminhadas (no formato adequado) ao ADC."""
-        display_message(self.aid.name, f'Evento recebido do IED: {args[0].id} {args[1:]}')
+        switchId = switch.id
+        display_message(self.aid.name, f'Evento recebido do IED: {switch.id} {args}')
 
         # Verifica se ACom já está à escuta de um conjunto de mensagens
         # (se já recebeu alguma mensagem durante o deadtime ou não)
@@ -165,7 +165,7 @@ class AgenteCom(AgenteSMAD):
             # Cria pacote de mensagem e envia ao ADC
             message = ACLMessage(performative=ACLMessage.INFORM)
             message.set_protocol(ACLMessage.FIPA_SUBSCRIBE_PROTOCOL)
-            message.set_ontology('OutageEvent')
+            message.set_ontology(out.__name__)
             message.set_content(to_elementtree(self.document_to_send))
             self.behaviours_enviodedados.notify(message)
 
@@ -179,7 +179,6 @@ class AgenteCom(AgenteSMAD):
             self.call_later(self.deadtime, send_document)
 
         # Converte informações recebidas em formato CIM XML
-        switchId = switch.id
         switch = out.ProtectedSwitch(
             mRID=switchId, 
             normalOpen=False)

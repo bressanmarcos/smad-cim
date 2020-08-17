@@ -20,6 +20,7 @@ class Network():
         for nome, _ in self.chaves.items():
             port = 50000 + int(nome.split('CH')[1])
             sock = socket.socket()
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('localhost', port))
             sock.listen()
             sock.setblocking(0)

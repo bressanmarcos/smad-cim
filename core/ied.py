@@ -36,7 +36,7 @@ class IED():
 class FileIED(IED):
     def __init__(self, id, ip, port, call_on_event, initial_breaker_position='close'):
         super().__init__(id, ip, port, call_on_event)
-        self.breaker_position = IED.STATES[initial_breaker_position]
+        self.breaker_position = initial_breaker_position
 
     def connect(self):
         """Conecta-se ao IED (stub)"""
@@ -47,17 +47,15 @@ class FileIED(IED):
         """Envia comando ao IED através de protocol específico"""
         if action not in IED.VALID_STATES:
             raise ValueError(f'Invalid action: {action}') 
-        # Obtém código do comando (IEC 61850)
-        value_to_write = IED.STATES[action]
         # Envia dado
-        self.breaker_position = value_to_write
-        display_message(f'{self.id}@{self.ip}:{self.port}', f'Comando {value_to_write} ({action}) enviado')
+        self.breaker_position = action
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Comando {action} enviado')
 
     def get_breaker_position(self) -> str:
         """Retorna posição do breaker"""
         display_message(f'{self.id}@{self.ip}:{self.port}', \
-            f'Posição atual: {self.breaker_position} ({IED.REVERSE_STATES[self.breaker_position]})')
-        return IED.REVERSE_STATES[self.breaker_position] 
+            f'Posição atual: [{self.breaker_position}]')
+        return self.breaker_position
 
     def handle_receive(self, *args):
         """Função automaticamente chamada quando
@@ -66,7 +64,8 @@ class FileIED(IED):
         display_message(f'{self.id}@{self.ip}:{self.port}', f'Evento: {args}')
         # Assume que a presença de XCBR é para a abertura da chave
         if 'XCBR' in args and 'BRKF' not in args:
-            self.breaker_position = IED.STATES['open']
+            self.breaker_position = 'open'
+
         call_in_thread(self.callback, self, *args)
 
     def run(self):
@@ -131,23 +130,34 @@ class SimulatedIED(IED):
         # Salva posição enviada se ok
         if response == 'ok':
             # Obtém código do comando (IEC 61850)
+<<<<<<< Updated upstream
             value_to_write = IED.STATES[action]
             self.breaker_position = value_to_write
-
-    def get_breaker_position(self) -> str:
-        """Retorna posição do breaker"""
+=======
+            self.breaker_position = action
         # Envia dado
-        self.socket.sendall(bytes('read', "utf-8"))
 
         # Resposta
         response = str(self.socket.recv(1024), "utf-8")
+<<<<<<< Updated upstream
         self.breaker_position = IED.STATES[response]
 
+=======
+
+        if response not in IED.STATES:
+            display_message(f'{self.id}@{self.ip}:{self.port}', f'Unexpected return value: "{response}"')
+
+        self.breaker_position = response
+>>>>>>> Stashed changes
         return response
 
     def breaker_tripped(self) -> bool:
         """Verifica se breaker mudou de posição"""
+<<<<<<< Updated upstream
         old_state = IED.REVERSE_STATES[self.breaker_position]
+=======
+        old_state = self.breaker_position
+>>>>>>> Stashed changes
         new_state = self.get_breaker_position()
 
         return old_state == 'close' and new_state == 'open'

@@ -11,5 +11,6 @@ def send(message):
 
 if __name__ == "__main__":
     # send('operate:CH18:close')
-    send('operate:CH18:open')
+    # send('operate:CH13:open')
+    send('operate:CH4:open')
     # send('reset')
