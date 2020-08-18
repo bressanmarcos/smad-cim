@@ -2014,7 +2014,7 @@
     <ns1:Length rdf:about="#655e09e9-1485-446d-8d65-2961dddb14e2">
         <ns1:Length.multiplier>k</ns1:Length.multiplier>
         <ns1:Length.unit>m</ns1:Length.unit>
-        <ns1:Length.value>999.5</ns1:Length.value>
+        <ns1:Length.value>0.9995</ns1:Length.value>
     </ns1:Length>
     <ns1:Length rdf:about="#e7b113e3-8e4e-47f2-a4f8-8467858eb72a">
         <ns1:Length.multiplier>k</ns1:Length.multiplier>
