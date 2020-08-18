@@ -60,12 +60,15 @@ def _gerar_nos_de_carga(resources):
             
             # Segue por cada um dos trechos a partir do nó
             for terminal_inicial in cn_do_no.ConnectivityNode_Terminals:
+                # Loop nos terminais de trechos
                 if terminal_inicial is terminal_do_no:
-                    # Ignora o próprio nó de carga
+                    # Ignora o terminal do próprio nó de carga
                     continue
+
                 # Terminais a serem visitados até que se encontre um outro nó
                 terminais_a_visitar = [terminal_inicial]
 
+                # Ordenação de terminais
                 ordem_de_elementos = [EnergyConsumer, BusbarSection, PowerTransformer, ACLineSegment, Switch]
                 
                 # Caminha ao longo da linha, até encontrar 
@@ -78,6 +81,8 @@ def _gerar_nos_de_carga(resources):
                     if isinstance(equipamento, Switch) or isinstance(equipamento, ACLineSegment):
                         terminal_2 = [t for t in equipamento.ConductingEquipment_Terminals if t is not terminal_1][0]
                         cn_2 = terminal_2.Terminal_ConnectivityNode
+                        if not cn_2:
+                            continue
                         terminais_cn_2 = cn_2.ConnectivityNode_Terminals
                         terminais_a_visitar.extend([t for t in terminais_cn_2 if t is not terminal_2])
                         continue
@@ -96,7 +101,9 @@ def _gerar_nos_de_carga(resources):
 
         if isinstance(no, EnergyConsumer):
             active_value, active_multiplier = no.EnergyConsumer_p.ActivePower_value, no.EnergyConsumer_p.ActivePower_multiplier.value
+            active_multiplier = '' if active_multiplier == 'none' else active_multiplier
             reactive_value, reactive_multiplier = no.EnergyConsumer_q.ReactivePower_value, no.EnergyConsumer_q.ReactivePower_multiplier.value
+            reactive_multiplier = '' if reactive_multiplier == 'none' else reactive_multiplier
             potencia_ativa = si_parse(str(active_value)+active_multiplier)
             potencia_reativa = si_parse(str(reactive_value)+reactive_multiplier)
         elif isinstance(no, BusbarSection):
@@ -156,7 +163,11 @@ def _associar_chaves_aos_setores(resources, chaves, setores):
         chave_resource: Switch
         chave_resource = next(filter(lambda switch: isinstance(switch, Switch) and switch.IdentifiedObject_mRID == chave.nome, resources))
         for terminal in chave_resource.ConductingEquipment_Terminals:
-            nome_setor = terminal.Terminal_ConnectivityNode.ConnectivityNode_TopologicalNode.IdentifiedObject_mRID
+            # Cada terminal da chave
+            cn_terminal = terminal.Terminal_ConnectivityNode
+            if not cn_terminal:
+                continue
+            nome_setor = cn_terminal.ConnectivityNode_TopologicalNode.IdentifiedObject_mRID
             if terminal.Terminal_sequenceNumber == 1:
                 chave.n1 = setores[nome_setor]
             elif terminal.Terminal_sequenceNumber == 2:
@@ -211,7 +222,9 @@ def _gerar_trechos(resources, nos, chaves, condutores):
         trecho: ACLineSegment
         nome = trecho.IdentifiedObject_mRID
         condutor = condutores[trecho.ACLineSegment_PerLengthImpedance.IdentifiedObject_mRID]
-        comprimento = si_parse(str(trecho.Conductor_length.Length_value)+trecho.Conductor_length.Length_multiplier.value)
+        multiplicador = trecho.Conductor_length.Length_multiplier.value
+        multiplicador = '' if multiplicador == 'none' else multiplicador
+        comprimento = si_parse(str(trecho.Conductor_length.Length_value)+multiplicador)
         for terminal in trecho.ConductingEquipment_Terminals:
             cn = terminal.Terminal_ConnectivityNode
             next_cn_terminals = filter(lambda term: id(term) != id(terminal), cn.ConnectivityNode_Terminals)
@@ -268,19 +281,15 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
                 # Não incluir os setores do barramento da subestação
                 nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
        
-        trechos_do_alimentador = [
-            trecho for trecho in trechos.values() if trecho.nome in nomes_dos_trechos]
-        setores_do_alimentador = [
-            setor for setor in setores.values() if setor.nome in nomes_dos_setores]
-        chaves_do_alimentador = [
-            chave for chave in chaves.values() if chave.nome in nomes_das_chaves]
+        trechos_do_alimentador = [trecho for trecho in trechos.values() if trecho.nome in nomes_dos_trechos]
+        setores_do_alimentador = [setor for setor in setores.values() if setor.nome in nomes_dos_setores]
+        chaves_do_alimentador = [chave for chave in chaves.values() if chave.nome in nomes_das_chaves]
 
         alimentadores[nome] = Alimentador(nome=nome,
                                             setores=setores_do_alimentador,
                                             trechos=trechos_do_alimentador,
                                             chaves=chaves_do_alimentador)
-        alimentadores[nome].ordenar(
-            raiz=nome.split('_')[0])
+        alimentadores[nome].ordenar(raiz=nome.split('_')[0])
 
         alimentadores[nome].gerar_arvore_nos_de_carga()
             # print 'Alimentador %s criado.' % alimentadores[alimen_tag['nome']].nome
