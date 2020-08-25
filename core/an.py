@@ -2,6 +2,8 @@ import os
 os.sys.path.insert(0, os.getcwd()) 
 # Adiciona ao Path a pasta raiz do projeto
 
+import xml.etree.ElementTree as ET
+
 from pade.core.agent import Agent
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
@@ -9,6 +11,8 @@ from pade.behaviours.protocols import FipaRequestProtocol, TimedBehaviour, FipaC
 from core.common import AgenteSMAD
 import information_model as im
 from pade.misc.utility import display_message
+
+from rede import rdf2mygrid
 
 import pickle, json
 
@@ -18,7 +22,11 @@ class ReceberPoda(FipaRequestProtocol):
 
     def handle_request(self, message):
         if message.ontology == "R_05":
-            content = pickle.loads(message.content)
+            # Será recebida uma poda por vez
+            poda_cim = message.content
+            poda = rdf2mygrid.cim_poda(poda_cim)
+            # poda = pickle.loads(poda_cim)
+
             display_message(self.agent.aid.name, "Mensagem REQUEST Recebida")
 
             resposta = message.create_reply()
@@ -26,7 +34,7 @@ class ReceberPoda(FipaRequestProtocol):
             resposta.set_ontology("R_05")
             self.agent.send(resposta)
 
-            self.agent.preparar_negociacao(content, message)
+            self.agent.preparar_negociacao(poda, message)
 
 
 class GerenciarNegociacao(FipaContractNetProtocol):
@@ -58,12 +66,14 @@ class GerenciarNegociacao(FipaContractNetProtocol):
 
     def solicitar_propostas(self, poda, callback, handle_all_proposes):
         """Define função que será chamada após cada resposta""" 
-
+        poda_cim = rdf2mygrid.poda_cim(poda)
+        # poda_cim = pickle.dumps(poda)
+        
         # Elabora mensagem
         message = ACLMessage(ACLMessage.CFP)
         message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
         message.set_ontology("CN_01")
-        message.set_content(pickle.dumps(poda))
+        message.set_content(poda_cim)
         for aid in self.agent.adc_vizinhos:
             message.add_receiver(aid)
         
@@ -143,7 +153,8 @@ class AgenteN(AgenteSMAD):
 
     # final registro na ontologia
 
-    def preparar_negociacao(self, dados, message_adc_solicitante):
+    def preparar_negociacao(self, poda, message_adc_solicitante):
+        dados = {'ramos': [poda]}
 
         def enviar_solicitacoes():
             for poda in dados["ramos"]:
@@ -182,7 +193,8 @@ class AgenteN(AgenteSMAD):
                 else:
                     # Rejeita proposta
                     name = message.sender.localname
-                    ramo = list(pickle.loads(self.manage_negotiation_behaviour.message.content)[0].keys())
+
+                    ramo = self.manage_negotiation_behaviour.message.content
                     display_message(self.aid.name, f"Agente {name} possui chave de encontro, mas nao pode colaborar para o ramo {ramo}.")
 
                     reject_message = message.create_reply()
@@ -195,7 +207,7 @@ class AgenteN(AgenteSMAD):
             """Função chamada após todos os envios de propostas.
             A variávei `propostas_realizaveis` é persistente e armazena
             as propostas que podem ser realizadas, a serem avaliadas 
-            mais tarde."""
+            aqui."""
 
             # Dados da melhor proposta
             melhor_proposta = None
@@ -259,7 +271,7 @@ class AgenteN(AgenteSMAD):
                 resposta.set_content(melhor_proposta.content)
                 self.send(
                     resposta, 
-                    callback=informe_ganhador
+                    callback=lambda response: informe_ganhador(response)
                 )
 
             else:

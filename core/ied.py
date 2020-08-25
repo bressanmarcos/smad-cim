@@ -53,8 +53,7 @@ class FileIED(IED):
 
     def get_breaker_position(self) -> str:
         """Retorna posição do breaker"""
-        display_message(f'{self.id}@{self.ip}:{self.port}', \
-            f'Posição atual: [{self.breaker_position}]')
+        display_message(f'{self.id}@{self.ip}:{self.port}', f'Posição atual: [{self.breaker_position}]')
         return self.breaker_position
 
     def handle_receive(self, *args):
@@ -130,34 +129,25 @@ class SimulatedIED(IED):
         # Salva posição enviada se ok
         if response == 'ok':
             # Obtém código do comando (IEC 61850)
-<<<<<<< Updated upstream
-            value_to_write = IED.STATES[action]
-            self.breaker_position = value_to_write
-=======
             self.breaker_position = action
+
+    def get_breaker_position(self) -> str:
+        """Retorna posição do breaker"""
         # Envia dado
+        self.socket.sendall(bytes('read', "utf-8"))
 
         # Resposta
         response = str(self.socket.recv(1024), "utf-8")
-<<<<<<< Updated upstream
-        self.breaker_position = IED.STATES[response]
-
-=======
 
         if response not in IED.STATES:
             display_message(f'{self.id}@{self.ip}:{self.port}', f'Unexpected return value: "{response}"')
 
         self.breaker_position = response
->>>>>>> Stashed changes
         return response
 
     def breaker_tripped(self) -> bool:
         """Verifica se breaker mudou de posição"""
-<<<<<<< Updated upstream
-        old_state = IED.REVERSE_STATES[self.breaker_position]
-=======
         old_state = self.breaker_position
->>>>>>> Stashed changes
         new_state = self.get_breaker_position()
 
         return old_state == 'close' and new_state == 'open'

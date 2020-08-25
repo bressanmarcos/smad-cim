@@ -198,9 +198,9 @@ class Alimentador(Arvore):
             # print 'Setor: ', setor.nome
             setores_vizinhos = list()
             for chave in self.chaves.values():
-                if chave.n1 is setor:
+                if chave.n2 and chave.n1 is setor:
                     setores_vizinhos.append(chave.n2)
-                elif chave.n2 is setor:
+                elif chave.n1 and chave.n2 is setor:
                     setores_vizinhos.append(chave.n1)
 
             for setor_vizinho in setores_vizinhos:
@@ -235,9 +235,9 @@ class Alimentador(Arvore):
         arvore_da_rede = {i: list() for i in self.setores.keys()}
 
         for chave in self.chaves.values():
-            if chave.n1.nome in self.setores.keys() and chave.estado == 1:
+            if chave.estado == 1 and chave.n1.nome in self.setores.keys():
                 arvore_da_rede[chave.n1.nome].append(chave.n2.nome)
-            if chave.n2.nome in self.setores.keys() and chave.estado == 1:
+            if chave.estado == 1 and chave.n2.nome in self.setores.keys():
                 arvore_da_rede[chave.n2.nome].append(chave.n1.nome)
 
         return arvore_da_rede
@@ -278,12 +278,12 @@ class Alimentador(Arvore):
             # caso isto seja constatado o laço for é interrompido.
             if i not in visitados and i in self.setores.keys():
                 for c in self.chaves.values():
-                    if c.n1.nome == setor.nome and c.n2.nome == i:
+                    if (c.n1 and c.n2) and c.n1.nome == setor.nome and c.n2.nome == i:
                         if c.estado == 1:
                             break
                         else:
                             pass
-                    elif c.n2.nome == setor.nome and c.n1.nome == i:
+                    elif (c.n1 and c.n2) and c.n2.nome == setor.nome and c.n1.nome == i:
                         if c.estado == 1:
                             break
                         else:
@@ -427,15 +427,15 @@ class Alimentador(Arvore):
             chaves = dict()
             chaves_a_remover = list()
             for chave in self.chaves.values():
-                if chave.n1.nome in setores.keys():
-                    if not chave.n2.nome in self.setores.keys():
+                if chave.n1 and chave.n1.nome in setores.keys():
+                    if not chave.n2 or not chave.n2.nome in self.setores.keys():
                         chaves[chave.nome] = self.chaves[chave.nome]
                         chaves_a_remover.append(chave.nome)
                     else:
                         chave.estado = 0
                         chaves[chave.nome] = chave
-                elif chave.n2.nome in setores.keys():
-                    if not chave.n1.nome in self.setores.keys():
+                elif chave.n2 and chave.n2.nome in setores.keys():
+                    if not chave.n1 or not chave.n1.nome in self.setores.keys():
                         chaves[chave.nome] = self.chaves[chave.nome]
                         chaves_a_remover.append(chave.nome)
                     else:
@@ -457,9 +457,16 @@ class Alimentador(Arvore):
             for trecho in trechos_a_remover:
                 self.trechos.pop(trecho) # BRESSAN END
 
-            return (setores, arvore_setores, rnp_setores,
-                    nos_de_carga, arvore_nos_de_carga, rnp_nos_de_carga,
-                    chaves, trechos)
+            return (
+                setores, 
+                arvore_setores, 
+                rnp_setores,
+                nos_de_carga, 
+                arvore_nos_de_carga, 
+                rnp_nos_de_carga,
+                chaves, 
+                trechos
+            )
         else:
             return rnp_setores
 
@@ -510,7 +517,7 @@ class Alimentador(Arvore):
 
         self.chaves[list(chaves_de_lig.keys())[i]].estado = 1
 
-        if setor_inserir.nome == setores[rnp_setores[1, 0]].nome:
+        if not no_raiz and setor_inserir.nome == setores[rnp_setores[1, 0]].nome:
             super(Alimentador, self).inserir_ramo(no, (rnp_setores, arvore_setores))
         else:
             super(Alimentador, self).inserir_ramo(no, (rnp_setores, arvore_setores), no_raiz)

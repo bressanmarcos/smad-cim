@@ -8,7 +8,6 @@ import time
 import subprocess
 import multiprocessing
 from random import randint
-from uuid import uuid4
 
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
@@ -49,8 +48,6 @@ if __name__ == "__main__":
     # Pausa para iniciar AMS
     time.sleep(4)
 
-    #############
-    # S1
     enderecos_S1 = {"CH1": ("localhost", 50001),
                     "CH2": ("localhost", 50002),
                     "CH3": ("localhost", 50003),
@@ -65,54 +62,45 @@ if __name__ == "__main__":
                     "CH15": ("localhost", 50015),
                     "CH16": ("localhost", 50016), 
                     "CH19": ("localhost", 50019)}
-    acom = AgenteCom(AID('agentecom@localhost:60010'), 'S1', enderecos_S1)
-    acom.ams = ams_dict
-    
-    adc = AgenteDC(AID('agentedc@localhost:60011'), 'S1')
-    adc.add_acom(AID('agentecom@localhost:60010'))
-    adc.set_an(AID('agenten@localhost:60012'))
-    adc.ams = ams_dict
-
-    an = AgenteN(AID('agenten@localhost:60012'), 'S1')
-    an.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
-    an.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
-    an.ams = ams_dict
-
-    # S2
     enderecos_S2 = {"CH4": ("localhost", 50004),
                     "CH5": ("localhost", 50005),
                     "CH3": ("localhost", 50003),
                     "CH8": ("localhost", 50008),
                     "CH11": ("localhost", 50011),
                     "CH12": ("localhost", 50012)}
-    acom2 = AgenteCom(AID('agentecom-2@localhost:60020'), 'S2', enderecos_S2)
-    acom2.ams = ams_dict
-
-    adc2 = AgenteDC(AID('agentedc-2@localhost:60021'), 'S2')
-    adc2.add_acom(AID('agentecom-2@localhost:60020'))
-    adc2.set_an(AID('agenten-2@localhost:60022'))
-    adc2.ams = ams_dict
-
-    an2 = AgenteN(AID('agenten-2@localhost:60022'), 'S2')
-    an2.add_adc_vizinho(AID('agentedc@localhost:60011'))
-    an2.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
-    an2.ams = ams_dict
-
-    # S3
     enderecos_S3 = {"CH17": ("localhost", 50017),
                     "CH18": ("localhost", 50018),
                     "CH16": ("localhost", 50016)}
-    acom3 = AgenteCom(AID('agentecom-3@localhost:60030'), 'S3', enderecos_S3)
-    acom3.ams = ams_dict
+    
+    acom1 = AgenteCom(AID('AgenteComunicação-1@localhost:60010'), 'S1', enderecos_S1)
+    adc1 = AgenteDC(AID('AgenteDiagnósticoConfiguração-1@localhost:60011'), 'S1')
+    an1 = AgenteN(AID('AgenteNegociação-1@localhost:60012'), 'S1')
+    
+    acom2 = AgenteCom(AID('AgenteComunicação-2@localhost:60020'), 'S2', enderecos_S2)
+    adc2 = AgenteDC(AID('AgenteDiagnósticoConfiguração-2@localhost:60021'), 'S2')
+    an2 = AgenteN(AID('AgenteNegociação-2@localhost:60022'), 'S2')
+    
+    acom3 = AgenteCom(AID('AgenteComunicação-3@localhost:60030'), 'S3', enderecos_S3)
+    adc3 = AgenteDC(AID('AgenteDiagnósticoConfiguração-3@localhost:60031'), 'S3')
+    an3 = AgenteN(AID('AgenteNegociação-3@localhost:60032'), 'S3')
+    
+    acom1.ams, an1.ams, adc1.ams = 3 * [ams_dict] 
+    acom2.ams, an2.ams, adc2.ams = 3 * [ams_dict] 
+    acom3.ams, an3.ams, adc3.ams = 3 * [ams_dict] 
 
-    adc3 = AgenteDC(AID('agentedc-3@localhost:60031'), 'S3')
-    adc3.add_acom(AID('agentecom-3@localhost:60030'))
-    adc3.set_an(AID('agenten-3@localhost:60032'))
-    adc3.ams = ams_dict
+    adc1.add_acom(acom1.aid)
+    adc2.add_acom(acom2.aid)
+    adc3.add_acom(acom3.aid)
 
-    an3 = AgenteN(AID('agenten-3@localhost:60032'), 'S3')
-    an3.add_adc_vizinho(AID('agentedc@localhost:60011'))
-    an3.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
-    an3.ams = ams_dict
+    adc1.set_an(an1.aid)
+    adc2.set_an(an2.aid)
+    adc3.set_an(an3.aid)
 
-    start_loop([acom, adc, an, acom2, adc2, an2, acom3, adc3, an3, sniffer])
+    an1.add_adc_vizinho(adc2.aid)
+    an1.add_adc_vizinho(adc3.aid)
+    an2.add_adc_vizinho(adc1.aid)
+    an2.add_adc_vizinho(adc3.aid)
+    an3.add_adc_vizinho(adc1.aid)
+    an3.add_adc_vizinho(adc2.aid)
+    
+    start_loop([sniffer, acom1, acom2, acom3, adc1, adc2, adc3, an1, an2, an3])
