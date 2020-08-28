@@ -91,6 +91,51 @@ class EnviarComandoDeChaves(FipaRequestProtocol):
     def handle_failure(self, message: ACLMessage):
         display_message(self.agent.aid.name, f'Falha em execução de comando: {message.content}')
 
+    def enviar_comando_de_chave(self, lista_de_comandos: dict, proposito: str, callback: callable):
+        display_message(self.agent.aid.name, f'Enviando comando: {lista_de_comandos} para {self.agent.subscribe_behaviour.subscribers} ({proposito})')
+        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
+        switch_actions = []
+        sequenceNumber = 0
+        for chave, comando in lista_de_comandos.items():
+            switch = swc.ProtectedSwitch(mRID=chave)
+            sequenceNumber += 1
+            if comando == 'open':
+                action_kind = swc.SwitchActionKind.OPEN
+            elif comando == 'close':
+                action_kind = swc.SwitchActionKind.CLOSE
+            action = swc.SwitchAction(
+                isFreeSequence=False,
+                issuedDateTime=datetime.datetime.now(),
+                kind=action_kind,
+                sequenceNumber=sequenceNumber,
+                OperatedSwitch=switch)
+            switch_actions.append(action)
+
+        if proposito == 'isolation':
+            purpose = swc.Purpose.ISOLATION
+        elif proposito == 'coordination':
+            purpose = swc.Purpose.COORDINATION
+        elif proposito == 'restoration':
+            purpose = swc.Purpose.RESTORATION
+
+        plano = swc.SwitchingPlan(
+            mRID=str(uuid4()), 
+            createdDateTime=datetime.datetime.now(),
+            purpose=purpose, 
+            SwitchAction=switch_actions)
+        root = swc.SwitchingCommand(SwitchingPlan=plano)
+        validate(root)
+        
+        # Monta envelope de mensagem ACL
+        message = ACLMessage(ACLMessage.REQUEST)
+        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
+        message.set_ontology(swc.__name__)
+        message.set_content(to_elementtree(root))
+        for acom_aid in self.agent.get_acoms():
+            message.add_receiver(acom_aid)
+
+        self.agent.send(message, callback)
+
 class EnviarPoda(FipaRequestProtocol):
     @staticmethod
     def filter_an(handle_message):
@@ -400,7 +445,7 @@ class AgenteDC(AgenteSMAD):
                     
                 else:
                     display_message(self.aid.name, f'Comando para isolar trecho sob Falta [CH:{content["dados"]["correc_descoord"]}]')
-                    self.enviar_comando_de_chave(
+                    self.command_behaviour.enviar_comando_de_chave(
                         lista_de_comandos={content["dados"]["correc_descoord"]: 'open'},
                         proposito='coordination',
                         callback=lambda response_message: corrigir_descoordenacao_2(content, response_message)
@@ -413,7 +458,7 @@ class AgenteDC(AgenteSMAD):
             else:
                 #BRESSAN: reforça a abertura da chave a montante do setor em falta...
                 display_message(self.aid.name, f"Comando para isolar trecho sob Falta [CH:{content['dados']['chave_falta']}]")
-                self.enviar_comando_de_chave(
+                self.command_behaviour.enviar_comando_de_chave(
                     lista_de_comandos={content["dados"]["chave_falta"]: 'open'},
                     proposito='coordination',
                     callback=lambda response_message: corrigir_descoordenacao_2(content, response_message)
@@ -444,7 +489,7 @@ class AgenteDC(AgenteSMAD):
                 
                 if len(lista_de_comandos):
                     display_message(self.aid.name, "Comando para reestabelecer trechos descoordenados [CH: " + str(lista_de_comandos) + "]")
-                    self.enviar_comando_de_chave(
+                    self.command_behaviour.enviar_comando_de_chave(
                         lista_de_comandos=lista_de_comandos,
                         proposito='coordination',
                         callback=lambda response_message: corrigir_descoordenacao_3(content, response_message),
@@ -465,51 +510,6 @@ class AgenteDC(AgenteSMAD):
             self.isolamento(content)
 
         corrigir_descoordenacao_1(content)
-
-    def enviar_comando_de_chave(self, lista_de_comandos: dict, proposito: str, callback: callable):
-        display_message(self.aid.name, f'Enviando comando: {lista_de_comandos} para {self.subscribe_behaviour.subscribers} ({proposito})')
-        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
-        switch_actions = []
-        sequenceNumber = 0
-        for chave, comando in lista_de_comandos.items():
-            switch = swc.ProtectedSwitch(mRID=chave)
-            sequenceNumber += 1
-            if comando == 'open':
-                action_kind = swc.SwitchActionKind.OPEN
-            elif comando == 'close':
-                action_kind = swc.SwitchActionKind.CLOSE
-            action = swc.SwitchAction(
-                isFreeSequence=False,
-                issuedDateTime=datetime.datetime.now(),
-                kind=action_kind,
-                sequenceNumber=sequenceNumber,
-                OperatedSwitch=switch)
-            switch_actions.append(action)
-
-        if proposito == 'isolation':
-            purpose = swc.Purpose.ISOLATION
-        elif proposito == 'coordination':
-            purpose = swc.Purpose.COORDINATION
-        elif proposito == 'restoration':
-            purpose = swc.Purpose.RESTORATION
-
-        plano = swc.SwitchingPlan(
-            mRID=str(uuid4()), 
-            createdDateTime=datetime.datetime.now(),
-            purpose=purpose, 
-            SwitchAction=switch_actions)
-        root = swc.SwitchingCommand(SwitchingPlan=plano)
-        validate(root)
-        
-        # Monta envelope de mensagem ACL
-        message = ACLMessage(ACLMessage.REQUEST)
-        message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-        message.set_ontology(swc.__name__)
-        message.set_content(to_elementtree(root))
-        for acom_aid in self.get_acoms():
-            message.add_receiver(acom_aid)
-
-        self.send(message, callback)
 
     def solicitar_recomposicao_externa(self, podas, callback):
         if not len(podas):
@@ -607,7 +607,7 @@ class AgenteDC(AgenteSMAD):
                     lista_de_comandos[chave] = 'open'
 
                 if len(lista_de_comandos):
-                    self.enviar_comando_de_chave(
+                    self.command_behaviour.enviar_comando_de_chave(
                         lista_de_comandos=lista_de_comandos,
                         proposito='coordination',
                         callback=lambda response_message: pos_isolamento_por_ACom(lista_de_comandos, response_message)
@@ -711,7 +711,7 @@ class AgenteDC(AgenteSMAD):
                             # opera fechamento de chave
                             if len(lista_de_comandos):
                                 display_message(self.aid.name, f"Comandos para operar chaves {lista_de_comandos}")
-                                self.enviar_comando_de_chave(
+                                self.command_behaviour.enviar_comando_de_chave(
                                     lista_de_comandos=lista_de_comandos,
                                     proposito='restoration',
                                     callback=lambda response_message: recompor_mesma_se_2(poda, response_message),
@@ -999,7 +999,7 @@ class AgenteDC(AgenteSMAD):
                 lista_de_comandos = {chave: 'close' for chave in dados['chaves']}
                 # Prepara mensagem para enviar ao respectivo Agente
                 # Controle da SE para operar a restauracao da poda
-                self.enviar_comando_de_chave(
+                self.command_behaviour.enviar_comando_de_chave(
                     lista_de_comandos=lista_de_comandos,
                     proposito='restoration',
                     callback=lambda response: informar_termino(dados, message, response)
