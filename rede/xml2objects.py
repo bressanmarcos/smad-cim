@@ -31,7 +31,7 @@ from pathlib import Path
 from bs4 import BeautifulSoup
 
 # carraga o arquivo com as definições em xml
-f = open(Path('./rede/rede-rnp.xml'))
+f = open(Path('./rede/models/rede-rnp.xml'))
 # f = open('rede_adaptada.xml')
 
 # gera o objeto para iteração em xml do BeautifulSoup

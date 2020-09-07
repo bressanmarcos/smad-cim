@@ -598,4 +598,4 @@ if __name__ == '__main__':
     
     etree_2 = poda_cim(poda_2)
     pass
-    # carregar_topologia('rede/rede-cim-2.xml')
+    # carregar_topologia('rede/models/rede-cim-2.xml')

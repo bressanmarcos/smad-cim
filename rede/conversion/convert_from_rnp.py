@@ -16,7 +16,7 @@ def parse():
     # - ACLineSegment
     # - Transformador)
 
-    dom = ET.parse('./rede/rede-rnp.xml')
+    dom = ET.parse('./rede/models/rede-rnp.xml')
     root = dom.getroot()
     
     # chaves
@@ -289,7 +289,7 @@ def net():'''
     elements = list(filter(lambda elem: elem.__class__.__module__ == 'rede.network', locals().values()))
     doc = DocumentCIMRDF()
     doc.add_recursively(elements)
-    doc.tofile('./rede/rede-cim.xml')
+    doc.tofile('./rede/models/rede-cim.xml')
 net()
 '''
     file.write(TEXT)

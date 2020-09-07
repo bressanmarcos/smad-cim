@@ -294,7 +294,7 @@ class AgenteDC(AgenteSMAD):
         # Inicio cod Tiago para o agente diagnostico
         self.subestacao = subestacao
         self.relatorios_restauracao = list()
-        self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/rede-cim-2.xml'), subestacao)
+        self.topologia_subestacao = rdf2mygrid.carregar_topologia(Path('./rede/models/rede-cim-2.xml'), subestacao)
 
         display_message(self.aid.name, f"Subestacao {subestacao} carregada com sucesso")
         self.podas = list()

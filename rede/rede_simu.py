@@ -37,7 +37,7 @@ class Network():
  
     def reset_switches(self):
         # Carregar topologia
-        self.subestacoes = carregar_topologia(Path(os.path.dirname(__file__) + '/rede-cim-3.xml'))
+        self.subestacoes = carregar_topologia(Path(os.path.dirname(__file__) + '/models/rede-cim.xml'))
         
         # Chaves e instâncias
         self.chaves = {key: value for subs in self.subestacoes.values() for alim in subs.alimentadores.values() for key, value in alim.chaves.items()}

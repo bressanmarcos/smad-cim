@@ -817,5 +817,5 @@ def net():
     elements = list(filter(lambda elem: elem.__class__.__module__ == 'rede.network', locals().values()))
     doc = DocumentCIMRDF()
     doc.add_recursively(elements)
-    doc.tofile('./rede/rede-cim.xml')
+    doc.tofile('./rede/models/rede-cim.xml')
 net()
