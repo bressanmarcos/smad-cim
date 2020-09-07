@@ -42,12 +42,7 @@ class Network():
         # Chaves e instâncias
         self.chaves = {key: value for subs in self.subestacoes.values() for alim in subs.alimentadores.values() for key, value in alim.chaves.items()}
 
-    def run(self):
-        inputs = [self.socket_evento] + self.sockets_chaves
-        outputs = []
-        message_queues = {}
-        
-        while inputs:
+    def io(self, inputs, outputs, message_queues):
             readable, writable, exceptional = select.select(inputs, outputs, inputs)
 
             for server in readable:
@@ -86,7 +81,7 @@ class Network():
 
                     if command in ('read', 'operate'):
                         # Aciona comando se for Read ou Operate
-                        next_msg = getattr(self, command)(switch, *message)
+                        next_msg = bytes(getattr(self, command)(switch, *message), 'utf-8')
                     
                     elif command == 'reset' and port == 50000:
                         # Reseta estados dos switches
@@ -108,16 +103,24 @@ class Network():
                 server.close()
                 del message_queues[server]
 
+    def run(self):
+        inputs = [self.socket_evento] + self.sockets_chaves
+        outputs = []
+        message_queues = {}
+        
+        while inputs:
+            self.io(inputs, outputs, message_queues)
+
     def operate(self, switch, action):
         """Change the state of a switch remotely"""
         estados = {'open': 0, 'close': 1}
         self.chaves[switch].estado = estados[action]
-        return b'ok'
+        return 'ok'
 
     def read(self, switch):
         """Read the current state of a switch remotely"""
         estados = {0: 'open', 1: 'close'}
-        state = bytes(estados[self.chaves[switch].estado], 'utf-8')
+        state = estados[self.chaves[switch].estado]
         return state
 
 
