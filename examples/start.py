@@ -23,19 +23,10 @@ from core.an import AgenteN, ReceberPoda, GerenciarNegociacao # pylint: disable=
 from core.ied import IED  # pylint: disable=import-error,no-name-in-module
 from information_model import SwitchingCommand as swc  # pylint: disable=import-error
 
-from rede.rede_simu import Network # pylint: disable=import-error
-
 if __name__ == "__main__":
 
-    ## Executar IEDs
-    # Instancia classe
-    network = Network()
-    # Executa loop em novo processo
-    p = multiprocessing.Process(target=network.run)
-    p.start()
-
-    # Define IP e porta do AMS
-    ams_dict = {'name': 'localhost', 'port': 60000}
+    # # Define IP e porta do AMS
+    ams_dict = {'name': 'localhost', 'port': 8000}
 
     # Executa AMS num subprocesso com ``python new_ams.py user email pass {porta}``
     commands = ['python', new_ams.__file__, 'pade_user', 'email@', '12345', str(ams_dict['port'])]
@@ -47,6 +38,8 @@ if __name__ == "__main__":
 
     # Pausa para iniciar AMS
     time.sleep(4)
+
+    rede = './rede/models/rede-cim-2.xml'
 
     enderecos_S1 = {"CH1": ("localhost", 50001),
                     "CH2": ("localhost", 50002),
@@ -73,15 +66,15 @@ if __name__ == "__main__":
                     "CH16": ("localhost", 50016)}
     
     acom1 = AgenteCom(AID('AgenteComunicação-1@localhost:60010'), 'S1', enderecos_S1)
-    adc1 = AgenteDC(AID('AgenteDiagnósticoConfiguração-1@localhost:60011'), 'S1')
+    adc1 = AgenteDC(AID('AgenteDiagnósticoConfiguração-1@localhost:60011'), 'S1', rede)
     an1 = AgenteN(AID('AgenteNegociação-1@localhost:60012'), 'S1')
     
     acom2 = AgenteCom(AID('AgenteComunicação-2@localhost:60020'), 'S2', enderecos_S2)
-    adc2 = AgenteDC(AID('AgenteDiagnósticoConfiguração-2@localhost:60021'), 'S2')
+    adc2 = AgenteDC(AID('AgenteDiagnósticoConfiguração-2@localhost:60021'), 'S2', rede)
     an2 = AgenteN(AID('AgenteNegociação-2@localhost:60022'), 'S2')
     
     acom3 = AgenteCom(AID('AgenteComunicação-3@localhost:60030'), 'S3', enderecos_S3)
-    adc3 = AgenteDC(AID('AgenteDiagnósticoConfiguração-3@localhost:60031'), 'S3')
+    adc3 = AgenteDC(AID('AgenteDiagnósticoConfiguração-3@localhost:60031'), 'S3', rede)
     an3 = AgenteN(AID('AgenteNegociação-3@localhost:60032'), 'S3')
     
     acom1.ams, an1.ams, adc1.ams = 3 * [ams_dict] 
@@ -103,4 +96,4 @@ if __name__ == "__main__":
     an3.add_adc_vizinho(adc1.aid)
     an3.add_adc_vizinho(adc2.aid)
     
-    start_loop([sniffer, acom1, acom2, acom3, adc1, adc2, adc3, an1, an2, an3])
+    start_loop([acom1, acom2, acom3, adc1, adc2, adc3, an1, an2, an3])
