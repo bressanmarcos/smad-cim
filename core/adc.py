@@ -79,9 +79,8 @@ class EnviarComandoDeChaves(FipaRequestProtocol):
     def handle_failure(self, message: ACLMessage):
         display_message(self.agent.aid.name, f'Falha em execução de comando: {message.content}')
 
-    def enviar_comando_de_chave(self, lista_de_comandos: dict, proposito: str, callback: callable):
-        display_message(self.agent.aid.name, f'Enviando comando: {lista_de_comandos} para {self.agent.subscribe_behaviour.subscribers} ({proposito})')
-        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
+    def converter_comando_de_chaves(self, lista_de_comandos: dict, proposito: str):
+        """Converte um dicionário de comandos em um artefato XML SwitchingCommand"""
         switch_actions = []
         sequenceNumber = 0
         for chave, comando in lista_de_comandos.items():
@@ -114,15 +113,26 @@ class EnviarComandoDeChaves(FipaRequestProtocol):
         root = swc.SwitchingCommand(SwitchingPlan=plano)
         validate(root)
         
-        # Monta envelope de mensagem ACL
+        return root
+
+    def montar_envelope(self, root):
         message = ACLMessage(ACLMessage.REQUEST)
         message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
         message.set_ontology(swc.__name__)
-        message.set_content(to_elementtree(root))
+        message.set_content(root)
         for acom_aid in self.agent.get_acoms():
             message.add_receiver(acom_aid)
         self.message = message
+        return message
 
+
+    def enviar_comando_de_chave(self, lista_de_comandos: dict, proposito: str, callback: callable=None):
+        display_message(self.agent.aid.name, f'Enviando comando: {lista_de_comandos} para {self.agent.subscribe_behaviour.subscribers} ({proposito})')
+        """Envia um objeto de informação do tipo SwitchingCommand ao ACom fornecido"""
+        root = self.converter_comando_de_chaves(lista_de_comandos, proposito)
+        
+        # Monta envelope de mensagem ACL
+        message = self.montar_envelope(to_elementtree(root))
         self.agent.send(message, callback)
 
 class EnviarPoda(FipaRequestProtocol):
