@@ -96,14 +96,14 @@ class ReceberComando(FipaRequestProtocol):
             # Retorna sucesso, mas nenhuma operação foi realizada
             reply = message.create_reply()
             reply.set_performative(ACLMessage.INFORM)
-            reply.set_content(str(e))
+            reply.set_content(f'Switch {e} already in position')
             self.agent.send(reply)
             return
         except KeyError as e:
             # Retorna falha ao não encontrar switchId
             reply = message.create_reply()
             reply.set_performative(ACLMessage.FAILURE)
-            reply.set_content(str(e))
+            reply.set_content(f'Switch {e} not found')
             self.agent.send(reply)
             return
         except Exception as e:
