@@ -112,7 +112,7 @@ class EnviarComandoDeChaves(FipaRequestProtocol):
             SwitchAction=switch_actions)
         root = swc.SwitchingCommand(SwitchingPlan=plano)
         validate(root)
-        
+
         return root
 
     def montar_envelope(self, root):
@@ -213,7 +213,7 @@ class ResponderNegociacao(FipaContractNetProtocol):
 
             ### Atualiza poda com informações internas
             # Setores
-            poda[0][setor_raiz].rnp_associadas[setor_interno] = setores[next(v for v in setores[setor_interno].vizinhos)].rnp_associadas[setor_interno]
+            poda[0][setor_raiz].rnp_associadas[setor_interno] = setores[next(v for v in setores[setor_interno].vizinhos if v != setor_raiz)].rnp_associadas[setor_interno]
             poda[0][setor_raiz].vizinhos.append(setor_interno)
             poda[0][setor_raiz].rnp_associadas.pop('alimentador')
             poda[0][setor_raiz].vizinhos.remove('alimentador')
@@ -493,7 +493,7 @@ class AgenteDC(AgenteSMAD):
         if not len(podas):
             return
 
-        for poda in podas:
+        def solicitar(poda):
             # Solicitar recomposição ao AN
             poda_cim = rdf2mygrid.poda_cim(poda=poda)
             # poda_cim = pickle.dumps(poda)
@@ -505,6 +505,10 @@ class AgenteDC(AgenteSMAD):
             message2.add_receiver(self.get_an())
 
             self.send(message2, callback)
+
+        for index, poda in enumerate(podas):
+            self.call_later(3.0 * index, solicitar, poda)
+
 
     def localizar_chave(self, chave):
         for alimentador in self.topologia_subestacao.alimentadores:
@@ -715,6 +719,16 @@ class AgenteDC(AgenteSMAD):
             display_message(self.aid.name, f'Mensagem {response_message.performative} recebida do AN')
             if response_message.performative == ACLMessage.INFORM:
                 display_message(self.aid.name, f'Restauração externa realizada')
+
+                if response_message.ontology == swc.__name__:
+                    display_message(self.aid.name, f'Comando de chaves para concluir restauração internamente')
+
+                    def conclusao_chaves_internas(message_acom):
+                        display_message(self.aid.name, f'Restauração externa concluída com fechamento de chaves internas')
+
+                    message = self.command_behaviour.montar_envelope(response_message.content)
+                    self.send(message, lambda message_acom: conclusao_chaves_internas(message_acom))
+                
             elif response_message.performative == ACLMessage.FAILURE:
                 display_message(self.aid.name, f'Restauração externa não teve sucesso')
 
@@ -964,32 +978,40 @@ class AgenteDC(AgenteSMAD):
 
     def recompor_se_externa(self, message):
  
-        def controlar_chaves():
-            if message.ontology == "CN_04":
-
-                proposta = json.loads(message.content)
-                
-                # Recompoe a poda da proposta
-                dados = self.recompor_ramo(proposta)
-                lista_de_comandos = {chave: 'close' for chave in dados['chaves']}
-                # Prepara mensagem para enviar ao respectivo Agente
-                # Controle da SE para operar a restauracao da poda
-                self.command_behaviour.enviar_comando_de_chave(
-                    lista_de_comandos=lista_de_comandos,
-                    proposito='restoration',
-                    callback=lambda response: informar_termino(dados, message, response)
-                )
+        proposta = json.loads(message.content)
         
-        def informar_termino(dados, message_an: ACLMessage, message_acom: ACLMessage):
+        # Recompoe a poda da proposta
+        dados = self.recompor_ramo(proposta)
 
+        # Separa as chaves da própria SE (incluindo as de recurso NA)
+        chaves_proprias = []
+        chaves_externas = []
+        for chave in dados['chaves']:
+            if any(chave in alim.chaves for alim in self.topologia_subestacao.alimentadores.values()):
+                chaves_proprias.append(chave)
+            else:
+                chaves_externas.append(chave)
+
+        lista_de_comandos = {chave: 'close' for chave in chaves_proprias}
+        # Prepara mensagem para enviar ao respectivo Agente
+        # Controle da SE para operar a restauracao da poda
+        self.command_behaviour.enviar_comando_de_chave(
+            lista_de_comandos=lista_de_comandos,
+            proposito='restoration',
+            callback=lambda response: informar_termino(chaves_externas, message, response)
+        )
+        
+        def informar_termino(chaves_externas, message_an: ACLMessage, message_acom: ACLMessage):
             resposta = message_an.create_reply()
             resposta.set_performative(message_acom.performative)
-            resposta.set_ontology('R_05')
-            resposta.set_content(None)
+
+            if len(chaves_externas):
+                # Retorna as chaves externas (não controláveis), a fim de concluir a restauração
+                root = self.command_behaviour.converter_comando_de_chaves({chave: 'close' for chave in chaves_externas}, 'restoration')
+                resposta.set_ontology(swc.__name__)
+                resposta.set_content(to_elementtree(root))
+
             self.send(resposta)
-
-        controlar_chaves()
-
 
 if __name__ == "__main__":
     from pade.misc.utility import start_loop

@@ -1,0 +1,20 @@
+"""Arquivo para referência de IPs de IEDs"""
+ip_ied = {"R1": ("localhost", 50001),
+          "R2": ("localhost", 50002),
+          "R3": ("localhost", 50003),
+          "R4": ("localhost", 50004),
+          "R5": ("localhost", 50005),
+          "Tie1": ("localhost", 50006),
+          "Tie2": ("localhost", 50007),
+          "Tie3": ("localhost", 50008),
+          "Tie4": ("localhost", 50009),
+          "Tie5": ("localhost", 50010),
+          "Tie6": ("localhost", 50011),
+          "AQZ-21I7": ("localhost", 50014),
+          "AQZ-21I6": ("localhost", 50015),
+          "AQZ-21I5": ("localhost", 50016),
+          "AQZ-21I4": ("localhost", 50017),
+          "JAB-21F8": ("localhost", 50020),
+          "MSJ-21M3": ("localhost", 50022),
+          "AGF-21I7": ("localhost", 50025)
+          }

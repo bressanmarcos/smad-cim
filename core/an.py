@@ -82,25 +82,17 @@ class GerenciarNegociacao(FipaContractNetProtocol):
 
         # Configuração do protocolo CN
         self.cfp_qty = len(message.receivers)
+        self.proposes = []
         
         # Tempo para propostas serem enviadas
-        self.timeout = 60
-
-        def definir_dynamic_handle_all_proposes(*args, **kwargs):
-            """ Define função que será chamada após todas as propostas 
-            tiverem sido recebidas. Permite funcionamento do 
-            `handle_all_proposes` mesmo quando várias podas tenham
-            sido mandadas para recomposição. 
-            self.dynamic_handle_all_proposes é chamada por
-            handle_all_proposes(self, message)."""
-            self.dynamic_handle_all_proposes = handle_all_proposes
-            return callback(*args, **kwargs)
+        self.timeout = 600
 
         # Envia mensagem
-        self.agent.send(message, callback=definir_dynamic_handle_all_proposes)
+        self.agent.send(message, callback)
+        self.dynamic_handle_all_proposes = handle_all_proposes
 
         # Ativa o timed_behaviour para acionar `handle_all_proposes` mais tarde
-        self.timed_behaviour()
+        self.on_start()
 
 class AgenteN(AgenteSMAD):
     def __init__(self, aid, subestacao, debug=False):
@@ -112,12 +104,8 @@ class AgenteN(AgenteSMAD):
                      "perdas": False,
                      "carga_prior": False}
 
-        self.busy = False
-
         self.subestacao = subestacao
         self.criterios_rest = criterios
-
-        self.ramos_remanesc = list()
 
         self.criterios = {"chaveamentos": False,
                  "carreg_SE": True,
@@ -127,6 +115,8 @@ class AgenteN(AgenteSMAD):
         # Determina os ADCs vizinhos para os quais as solicitações de recomposição
         # serão enviadas
         self.adc_vizinhos = list()
+
+        self.busy = False
 
         self.manage_negotiation_behaviour = GerenciarNegociacao(self)
         self.behaviours.append(self.manage_negotiation_behaviour)
@@ -155,17 +145,16 @@ class AgenteN(AgenteSMAD):
 
     def preparar_negociacao(self, poda, message_adc_solicitante):
         dados = {'ramos': [poda]}
+        ramos_remanesc = []
 
         def enviar_solicitacoes():
-            for poda in dados["ramos"]:
+            for poda in dados['ramos']:
 
-                if self.busy == True:
-                    pass
-                else:
+                if not self.busy:
                     self.busy = True
                     # Variaveis auxiliares
-                    i = dados["ramos"].index(poda)
-                    self.ramos_remanesc.append(poda)
+                    i = dados['ramos'].index(poda)
+                    ramos_remanesc.append(poda)
 
                     ramo = list(poda[0].keys())
                     display_message(self.aid.name, f"Tratando Ramo {ramo}: {i+1} de {len(dados['ramos'])}")
@@ -281,15 +270,73 @@ class AgenteN(AgenteSMAD):
 
         def informe_ganhador(message_adc_fornecedor: ACLMessage):
             
+            if False and len(ramos_remanesc):
+                setores_desernerg = list()
+                #
+                for ramo in ramos_remanesc:
+
+                    # Identifica qual dos ramos foi o ramo recomposto
+                    if recomp_realiz["ramo"][0] in ramo[0].keys():
+                        for setor in ramo[0].keys():
+                            if setor not in recomp_realiz["ramo"]:
+                                setores_desernerg.append(setor)
+
+                    # Remonta a poda a ser restaurada (setores nao restaurados)
+                    dic1 = dict()
+                    dic2 = dict()
+                    dic3 = dict()
+                    dic4 = dict()
+                    dic5 = dict()
+                    dic6 = dict()
+                    array1 = ramo[2]
+
+                    for setor in setores_desernerg:
+                        dic1[setor] = ramo[0][setor]
+                        dic2[setor] = ramo[1][setor]
+
+                        # for i in range(len(ramo[2][1,:])):
+                        #     if setor == ramo[2][1,i]:
+                        #         array1 = np.append(array1, ramo[2][1,i])
+
+                        # print ramo[2][1,:], len(ramo[2][1,:]), range(len(ramo[2][1,:]))
+
+                        for no in ramo[3].keys():
+                            if setor in str(no):
+                                dic3[no] = ramo[3][no]
+                                dic4[no] = ramo[4][no]
+
+                        for chave in ramo[6].keys():
+                            if ramo[6][chave].n1.nome == setor or ramo[6][chave].n2.nome == setor:
+                                dic5[chave] = ramo[6][chave]
+
+                        for trecho in ramo[7].keys():
+                            if setor in str(trecho):
+                                dic6[trecho] = ramo[7][trecho]
+
+                    nova_poda = (dic1)
+
+                # print dic1, dic2, dic3, dic4, dic5, dic6
+
+            self.busy = False
+
             if message_adc_fornecedor:
+                # Inform ou Failure entram aqui
                 display_message(self.aid.name, "Recomposição externa concluída")
+
                 # Responder INFORME ao ADC solicitante
                 resposta = message_adc_solicitante.create_reply()
                 resposta.set_performative(message_adc_fornecedor.performative)
-                resposta.set_content(None)
+
+                if message_adc_fornecedor.performative == ACLMessage.INFORM:
+                    # Encaminha chaves para concluir restauração
+                    # TODO: encaminhar também relatório de restauração
+                    resposta.set_ontology(message_adc_fornecedor.ontology)
+                    resposta.set_content(message_adc_fornecedor.content)
+                
                 self.send(resposta)
 
             else:
+                # Nenhuma proposta
                 display_message(self.aid.name, "Recomposição externa não concluída")
                 # Responder FALHA ao ADC solicitante
                 resposta = message_adc_solicitante.create_reply()
@@ -299,53 +346,6 @@ class AgenteN(AgenteSMAD):
 
         enviar_solicitacoes()
 
-    def organiza_ramos(self, recomp_realiz):
-
-        setores_desernerg = list()
-        #
-        for ramo in self.ramos_remanesc:
-
-            # Identifica qual dos ramos foi o ramo recomposto
-            if recomp_realiz["ramo"][0] in ramo[0].keys():
-                for setor in ramo[0].keys():
-                    if setor not in recomp_realiz["ramo"]:
-                        setores_desernerg.append(setor)
-
-            # Remonta a poda a ser restaurada (setores nao restaurados)
-            dic1 = dict()
-            dic2 = dict()
-            dic3 = dict()
-            dic4 = dict()
-            dic5 = dict()
-            dic6 = dict()
-            array1 = ramo[2]
-
-            for setor in setores_desernerg:
-                dic1[setor] = ramo[0][setor]
-                dic2[setor] = ramo[1][setor]
-
-                # for i in range(len(ramo[2][1,:])):
-                #     if setor == ramo[2][1,i]:
-                #         array1 = np.append(array1, ramo[2][1,i])
-
-                # print ramo[2][1,:], len(ramo[2][1,:]), range(len(ramo[2][1,:]))
-
-                for no in ramo[3].keys():
-                    if setor in str(no):
-                        dic3[no] = ramo[3][no]
-                        dic4[no] = ramo[4][no]
-
-                for chave in ramo[6].keys():
-                    if ramo[6][chave].n1.nome == setor or ramo[6][chave].n2.nome == setor:
-                        dic5[chave] = ramo[6][chave]
-
-                for trecho in ramo[7].keys():
-                    if setor in str(trecho):
-                        dic6[trecho] = ramo[7][trecho]
-
-            nova_poda = (dic1)
-
-        # print dic1, dic2, dic3, dic4, dic5, dic6
 
 if __name__ == "__main__":
     from pade.misc.utility import start_loop

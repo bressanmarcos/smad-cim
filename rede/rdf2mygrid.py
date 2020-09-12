@@ -5,7 +5,8 @@ if __name__ == "__main__":
 from mygrid.rede import Subestacao, Alimentador, Setor, Chave
 from mygrid.rede import Trecho, Barramento, NoDeCarga, Transformador, Condutor
 from mygrid.util import Fasor
-from rede.network import *
+from xml.etree import ElementTree as ET
+from rede.models.cim_profile.network_v1_8 import *
 from si_prefix import si_parse
 import numpy
 
@@ -278,7 +279,7 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
         for setor in setores_rdf:
             chaves_do_setor, trechos_do_setor = chaves_e_trechos(setor)
             nomes_dos_trechos |= set(map(lambda line: line.IdentifiedObject_mRID, trechos_do_setor))
-            if setor.IdentifiedObject_mRID != subestacao:
+            if all(not isinstance(terminal.Terminal_ConductingEquipment, BusbarSection) for cn in setor.TopologicalNode_ConnectivityNodes for terminal in cn.ConnectivityNode_Terminals):
                 # Não incluir os setores do barramento da subestação
                 nomes_das_chaves |= set(map(lambda sw: sw.IdentifiedObject_mRID, chaves_do_setor))
        
@@ -286,11 +287,14 @@ def _gerar_alimentadores(resources, setores, trechos, chaves, se):
         setores_do_alimentador = [setor for setor in setores.values() if setor.nome in nomes_dos_setores]
         chaves_do_alimentador = [chave for chave in chaves.values() if chave.nome in nomes_das_chaves]
 
+        barramento = next(busbar for busbar in resources if isinstance(busbar, BusbarSection) and busbar.Equipment_EquipmentContainer is subestacao)
+        setor_raiz = barramento.ConductingEquipment_Terminals[0].Terminal_ConnectivityNode.ConnectivityNode_TopologicalNode
+
         alimentadores[nome] = Alimentador(nome=nome,
                                             setores=setores_do_alimentador,
                                             trechos=trechos_do_alimentador,
                                             chaves=chaves_do_alimentador)
-        alimentadores[nome].ordenar(raiz=nome.split('_')[0])
+        alimentadores[nome].ordenar(raiz=setor_raiz.IdentifiedObject_mRID)
 
         alimentadores[nome].gerar_arvore_nos_de_carga()
             # print 'Alimentador %s criado.' % alimentadores[alimen_tag['nome']].nome
