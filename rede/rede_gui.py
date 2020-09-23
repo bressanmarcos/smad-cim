@@ -1,11 +1,11 @@
 
 import os
 os.sys.path.insert(0, os.getcwd())
-
 import threading
 from tkinter import *
 
 from rede.rede_simu import Network
+
 
 
 def str2int(string):

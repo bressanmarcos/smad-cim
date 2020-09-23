@@ -1,18 +1,19 @@
-from threading import Lock
-import socket
-import select
+import imp
+import json
 import queue
+import select
+import socket
+from pathlib import Path
+from pprint import pprint
+from threading import Lock
 import os
 os.sys.path.insert(0, os.getcwd())
 
-import json
-from pathlib import Path
-from pprint import pprint 
-
-from rede.rdf2mygrid import carregar_topologia
+import numpy as np
 from mygrid.fluxo_de_carga.varred_dir_inv import calcular_fluxo_de_carga
 
-import imp, numpy as np
+from rede.rdf2mygrid import carregar_topologia
+
 
 class Network():
     ESTADO_CODIGO = {'open': 0, 'close': 1}
