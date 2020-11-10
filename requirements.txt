@@ -1,9 +1,10 @@
--e git://github.com/grei-ufc/pade.git#egg=pade
--e git://github.com/grei-ufc/MyGrid.git#egg=MyGrid
--e git://github.com/bressanmarcos/generateDS.git#egg=generateDS
--e git://github.com/bressanmarcos/cimrdf.py.git#egg=cimrdf.py
 si_prefix
 pathlib
 pytest
 uuid
 lxml
+numpy
+graphviz
+-e git://github.com/grei-ufc/pade.git@bbbb07b2487e64d2a9933614d4614bc11db35e92#egg=pade
+-e git://github.com/bressanmarcos/generateDS.git#egg=generateDS
+-e git://github.com/bressanmarcos/cimrdf.py.git#egg=cimrdf.py
