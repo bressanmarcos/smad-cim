@@ -5,6 +5,6 @@ uuid
 lxml
 numpy
 graphviz
--e git://github.com/grei-ufc/pade.git@bbbb07b2487e64d2a9933614d4614bc11db35e92#egg=pade
--e git://github.com/bressanmarcos/generateDS.git#egg=generateDS
--e git://github.com/bressanmarcos/cimrdf.py.git#egg=cimrdf.py
+git+git://github.com/bressanmarcos/pade-plus.git#egg=pade-plus
+git+git://github.com/bressanmarcos/generateDS.git#egg=generateDS
+git+git://github.com/bressanmarcos/cimrdf.py.git#egg=cimrdf.py

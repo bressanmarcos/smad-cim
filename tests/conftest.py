@@ -1,84 +1,45 @@
-import os
-os.sys.path.insert(0, os.getcwd()) 
-# Adiciona ao Path a pasta raiz do projeto
-
-import pytest
 import multiprocessing
+import os
 import subprocess
 import time
 from random import randint
 
+import pytest
+from core.common import dump, to_elementtree, to_string
 from pade.core import new_ams
-from pade.core.sniffer import Sniffer
-from pade.misc.utility import start_loop as st_loop
 from pade.core.agent import Agent_
+from pade.core.sniffer import Sniffer
 
-from core.common import to_elementtree, to_string, dump # pylint: disable=import-error,no-name-in-module
+from pade.plus.testing import start_loop_test
+from pade.plus.testing import start_runtime
 
-from rede.rede_simu import Network
-
-def start_loop(agents, seconds=20.0):
-    """Encapsula o start_loop de modo que quando chamado
-    ele seja executado em outro processo por 20 segundos. \\
-    Ideal para ser usado em testes"""
-
-    p = multiprocessing.Process(target=st_loop, args=(agents,))
-    p.start(), time.sleep(seconds), p.kill()
-
-@pytest.fixture(scope='function')
-def run_ams():
-    """Inicializa o AMS do PADE e retorna a instância do ``sniffer``.
-    Essa instância pode ser usada para incluir ou não o ``sniffer``
-    dentro do ``start_loop`` e para capturar o endereço do AMS no
-    atributo ``sniffer.ams`` para ser definida por outros agentes.
-    Este artifício permite testar diversas instâncias do PADE ao
-    mesmo tempo, já que cada AMS é executado numa porta distinta."""
-
-    # Define IP e porta do AMS
-    ams_dict = {'name': 'localhost', 'port': 60000}
-
-    # Executa AMS num subprocesso com ``python new_ams.py user email pass {porta}``
-    commands = ['python', new_ams.__file__, 'pade_user', 'email@', '12345', str(ams_dict['port'])]
-    p = subprocess.Popen(commands, stdin=subprocess.PIPE)
-
-    # Instancia Sniffer para ser executado na {porta+1}
-    sniffer = Sniffer(host=ams_dict['name'], port=ams_dict['port']+1)
-    sniffer.ams = ams_dict
-
-    # Dá pequeno delay antes de iniciar teste
-    time.sleep(2.0)
-
-    # Inicia teste
-    yield sniffer
-
-    # Finaliza AMS após execução de teste
-    print('\nKilling AMS')
-    p.kill()
 
 @pytest.fixture(scope='module')
 def simular_IEDs():
     """Executa o simulador para IEDs em outra thread"""
     # Instancia classe
-    network = Network()
-    
+    network = Network('', '')
+
     # Executa loop em novo processo
     p = multiprocessing.Process(target=network.run)
     p.start()
-    
+
     # Inicializa testes
     yield
 
     # Finaliza execução dos IEDs
     print('\nKilling IEDs')
     p.kill()
-    
+
 
 @pytest.fixture(scope='function')
 def deactivate_send_message(monkeypatch):
     """Evita o envio de mensagem por todos os agentes, 
     Em vez disso, imprime na tela a mensagem que seria enviada
     """
-    monkeypatch.setattr(Agent_, "_send", lambda self, message, receivers: dump(message))
+    monkeypatch.setattr(Agent_, "_send", lambda self,
+                        message, receivers: dump(message))
+
 
 @pytest.fixture(scope='function')
 def debug_send_message(monkeypatch):
@@ -91,10 +52,15 @@ def debug_send_message(monkeypatch):
         return wrap_send
     monkeypatch.setattr(Agent_, '_send', stack_send(Agent_._send))
 
+
 @pytest.fixture(scope='function')
 def deactivate_call_later(monkeypatch):
     """Impede o uso de call_later"""
-    monkeypatch.setattr(Agent_, "call_later", lambda self, time, method, *args: 1)
+    monkeypatch.setattr(Agent_, "call_later", lambda self,
+                        time, method, *args: 1)
 
 
-
+@pytest.fixture(scope='session')
+def queue():
+    q = multiprocessing.Queue()
+    yield q

@@ -1,116 +1,28 @@
+import json
 import os
-os.sys.path.insert(0, os.getcwd()) 
-# Adiciona ao Path a pasta raiz do projeto
-
+import pickle
 import xml.etree.ElementTree as ET
 
-from pade.core.agent import Agent
+import information_model as im
 from pade.acl.aid import AID
 from pade.acl.messages import ACLMessage
-from pade.behaviours.protocols import FipaRequestProtocol, TimedBehaviour, FipaContractNetProtocol
-from core.common import AgenteSMAD
-import information_model as im
-from pade.misc.utility import display_message
 
+from pade.behaviours.highlevel import *
+
+from pade.core.agent import Agent
+from pade.misc.utility import display_message
 from rede import rdf2mygrid
 
-import pickle, json
-
-class ReceberPoda(FipaRequestProtocol):
-    def __init__(self, agent):
-        super().__init__(agent=agent, message=None, is_initiator=False)
-
-    def handle_request(self, message):
-        if message.ontology == "R_05":
-            # Será recebida uma poda por vez
-            poda_cim = message.content
-            poda = rdf2mygrid.cim_poda(poda_cim)
-            # poda = pickle.loads(poda_cim)
-
-            display_message(self.agent.aid.name, "Mensagem REQUEST Recebida")
-
-            resposta = message.create_reply()
-            resposta.set_performative(ACLMessage.AGREE)
-            resposta.set_ontology("R_05")
-            self.agent.send(resposta)
-
-            self.agent.preparar_negociacao(poda, message)
-
-
-class GerenciarNegociacao(FipaContractNetProtocol):
-    def __init__(self, agent, message=None):
-        super().__init__(agent=agent, message=message, is_initiator=True)
-        # Função a ser chamada por `handle_all_proposes`
-        self.dynamic_handle_all_proposes = None
-
-    def handle_all_proposes(self, proposes):
-        super().handle_all_proposes(proposes)
-        if self.dynamic_handle_all_proposes:
-            self.dynamic_handle_all_proposes()
-
-    def handle_refuse(self, message):
-        super().handle_refuse(message)
-        display_message(self.agent.aid.name, f"Mensagem REFUSE recebida de {message.sender.name}")
-
-    def handle_propose(self, message):
-        super().handle_propose(message)
-        display_message(self.agent.aid.name, f"Mensagem PROPOSE recebida de {message.sender.name}")
-
-    def handle_inform(self, message):
-        super().handle_inform(message)
-        display_message(self.agent.aid.name, "Mensagem INFORM Recebida")
-
-    def handle_failure(self, message):
-        super().handle_failure(message)
-        display_message(self.agent.aid.name, "Mensagem FAILURE Recebida")
-
-    def solicitar_propostas(self, poda, callback, handle_all_proposes):
-        """Define função que será chamada após cada resposta""" 
-        poda_cim = rdf2mygrid.poda_cim(poda)
-        # poda_cim = pickle.dumps(poda)
-        
-        # Elabora mensagem
-        message = ACLMessage(ACLMessage.CFP)
-        message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
-        message.set_ontology("CN_01")
-        message.set_content(poda_cim)
-        for aid in self.agent.adc_vizinhos:
-            message.add_receiver(aid)
-        
-        # Salva mensagem para ser usada como referência mais tarde
-        self.message = message
-
-        # Configuração do protocolo CN
-        self.cfp_qty = len(message.receivers)
-        self.proposes = []
-        
-        # Tempo para propostas serem enviadas
-        self.timeout = 600
-
-        # Envia mensagem
-        self.agent.send(message, callback)
-        self.dynamic_handle_all_proposes = handle_all_proposes
-
-        # Ativa o timed_behaviour para acionar `handle_all_proposes` mais tarde
-        self.on_start()
-
+from core.common import AgenteSMAD
 class AgenteN(AgenteSMAD):
     def __init__(self, aid, subestacao, debug=False):
         super().__init__(aid, subestacao, debug=False)
 
         # Criterios para Agente Negociacao da aplicacao
-        criterios = {"chaveamentos": False,
-                     "carreg_SE": True,
-                     "perdas": False,
-                     "carga_prior": False}
-
-        self.subestacao = subestacao
-        self.criterios_rest = criterios
-
         self.criterios = {"chaveamentos": False,
-                 "carreg_SE": True,
-                 "perdas": False,
-                 "carga_prior": False}
+                          "carreg_SE": True,
+                          "perdas": False,
+                          "carga_prior": False}
 
         # Determina os ADCs vizinhos para os quais as solicitações de recomposição
         # serão enviadas
@@ -118,11 +30,9 @@ class AgenteN(AgenteSMAD):
 
         self.busy = False
 
-        self.manage_negotiation_behaviour = GerenciarNegociacao(self)
-        self.behaviours.append(self.manage_negotiation_behaviour)
-
-        self.receive_prune_behaviour = ReceberPoda(self)
-        self.behaviours.append(self.receive_prune_behaviour)
+        self.manage_negotiation_behaviour = FipaContractNetProtocol(self)
+        self.receive_prune_behaviour = FipaRequestProtocol(self, False)
+        self.receive_prune_behaviour.set_request_handler(self.handle_request)
 
     def add_adc_vizinho(self, adc_aid):
         self.adc_vizinhos.append(adc_aid)
@@ -143,219 +53,240 @@ class AgenteN(AgenteSMAD):
 
     # final registro na ontologia
 
-    def preparar_negociacao(self, poda, message_adc_solicitante):
-        dados = {'ramos': [poda]}
-        ramos_remanesc = []
+    def handle_request(self, message: ACLMessage):
+        if message.ontology == "R_05":
+            # Será recebida uma poda por vez
+            poda_cim = message.content
+            poda = rdf2mygrid.cim_poda(poda_cim)
+            # poda = pickle.loads(poda_cim)
 
-        def enviar_solicitacoes():
-            for poda in dados['ramos']:
+            display_message(self.aid.name, "Mensagem REQUEST Recebida")
 
-                if not self.busy:
-                    self.busy = True
-                    # Variaveis auxiliares
-                    i = dados['ramos'].index(poda)
-                    ramos_remanesc.append(poda)
+            resposta = message.create_reply()
+            resposta.set_performative(ACLMessage.AGREE)
+            resposta.set_ontology("R_05")
+            self.send(resposta)
 
-                    ramo = list(poda[0].keys())
-                    display_message(self.aid.name, f"Tratando Ramo {ramo}: {i+1} de {len(dados['ramos'])}")
+            self.preparar_negociacao(poda, message)
 
-                    # Inicializa lista compartilhada
-                    propostas_realizaveis = []
-                    self.manage_negotiation_behaviour.solicitar_propostas(
-                        poda=poda, 
-                        callback=lambda response: receber_respostas(propostas_realizaveis, response),
-                        handle_all_proposes=lambda: escolher_proposta(propostas_realizaveis)
-                        )
+    def solicitar_propostas(self, poda):
+        """Define função que será chamada após cada resposta"""
+        poda_cim = rdf2mygrid.poda_cim(poda)
+        # poda_cim = pickle.dumps(poda)
 
-        def receber_respostas(propostas_realizaveis: list, message: ACLMessage):
-            """Todas as respostas dos ADCs vizinhos encaminham a esta função"""
-    
-            if message.performative == ACLMessage.PROPOSE:
+        # Elabora mensagem
+        message = ACLMessage(ACLMessage.CFP)
+        message.set_protocol(ACLMessage.FIPA_CONTRACT_NET_PROTOCOL)
+        message.set_ontology("CN_01")
+        message.set_content(poda_cim)
+        for aid in self.adc_vizinhos:
+            message.add_receiver(aid)
 
-                content = json.loads(message.content)
+        propostas_realizaveis = []
+
+        while True:
+            try:
+                proposta = yield self.manage_negotiation_behaviour.send_cfp(message)
+                display_message(self.aid.name,
+                                f"Mensagem PROPOSE recebida de {proposta.sender.name}")
+
+                content = json.loads(proposta.content)
                 proposta_realizavel = (content["setores"] != [])
 
                 if proposta_realizavel:
                     # Salva proposta para mais tarde
-                    propostas_realizaveis.append(message)
+                    propostas_realizaveis.append(proposta)
 
                 else:
-                    # Rejeita proposta
+                    # Rejeita proposta imediatamente
                     name = message.sender.localname
 
-                    ramo = self.manage_negotiation_behaviour.message.content
-                    display_message(self.aid.name, f"Agente {name} possui chave de encontro, mas nao pode colaborar para o ramo {ramo}.")
+                    ramo = proposta.content
+                    display_message(
+                        self.aid.name, f"Agente {name} possui chave de encontro, mas nao pode colaborar para o ramo {ramo}.")
 
-                    reject_message = message.create_reply()
-                    reject_message.set_performative(ACLMessage.REJECT_PROPOSAL)
+                    reject_message = proposta.create_reply()
                     reject_message.set_ontology("CN_05")
-                    reject_message.set_content(None)
-                    self.send(reject_message)
+                    reject_message.set_content('Proposta não realizável')
+                    self.manage_negotiation_behaviour.send_reject_proposal(reject_message)
 
-        def escolher_proposta(propostas_realizaveis: list):
-            """Função chamada após todos os envios de propostas.
-            A variávei `propostas_realizaveis` é persistente e armazena
-            as propostas que podem ser realizadas, a serem avaliadas 
-            aqui."""
 
-            # Dados da melhor proposta
-            melhor_proposta = None
-            setores_atendidos = 0
+            except FipaRefuseHandler as h:
+                refusal = h.message
+                display_message(self.aid.name,
+                                f"Mensagem REFUSE recebida de {refusal.sender.name}")
 
-            # Escolha do melhor propositor sob algum criterio
-            if self.criterios["carreg_SE"] and self.criterios["carga_prior"]:
-                pass
+            except FipaCfpComplete:
+                break
 
-            elif self.criterios["carreg_SE"] and self.criterios["perdas"]:
-                pass
+        # Dados da melhor proposta
+        melhor_proposta = None
+        setores_atendidos = 0
 
-            elif self.criterios["carreg_SE"] and self.criterios["chaveamentos"]:
-                pass
+        # Escolha do melhor propositor sob algum criterio
+        if self.criterios["carreg_SE"] and self.criterios["carga_prior"]:
+            pass
 
-            # Apenas carregamento da SE e qtd de setores atendidos
-            else:
+        elif self.criterios["carreg_SE"] and self.criterios["perdas"]:
+            pass
 
-                # Varre todas as propostas recebidas
-                for message in propostas_realizaveis:
-                    display_message(self.aid.name, f"Analisando proposta {propostas_realizaveis.index(message) + 1} de {len(propostas_realizaveis)}")
+        elif self.criterios["carreg_SE"] and self.criterios["chaveamentos"]:
+            pass
 
-                    # Carrega conteudo da mensagem analisada
-                    content = json.loads(message.content)
-                    name = message.sender.name
+        # Apenas carregamento da SE e qtd de setores atendidos
+        else:
 
-                    display_message(self.aid.name, f"Agente {name} pode restaurar ramo {content['setores']} com carregamento de {content['carreg_SE']}%  da sua SE")
+            # Varre todas as propostas recebidas
+            for message in propostas_realizaveis:
+                display_message(
+                    self.aid.name, f"Analisando proposta {propostas_realizaveis.index(message) + 1} de {len(propostas_realizaveis)}")
 
-                    # Verifica se atual proposta atende maior numero de setores
-                    if len(content["setores"]) > setores_atendidos:
+                # Carrega conteudo da mensagem analisada
+                content = json.loads(message.content)
+                name = message.sender.name
+
+                display_message(
+                    self.aid.name, f"Agente {name} pode restaurar ramo {content['setores']} com carregamento de {content['carreg_SE']}%  da sua SE")
+
+                # Verifica se atual proposta atende maior numero de setores
+                if len(content["setores"]) > setores_atendidos:
+                    melhor_proposta = message
+                    setores_atendidos = len(content["setores"])
+
+                # Se atende o mesmo numero de setores, verifica carregamento
+                elif len(content["setores"]) == setores_atendidos:
+                    content_melhor_atual = json.loads(message.content)
+
+                    # Se carregamento atual for maior, vira melhor proposta
+                    if content["carreg_SE"] > content_melhor_atual["carreg_SE"]:
                         melhor_proposta = message
                         setores_atendidos = len(content["setores"])
 
-                    # Se atende o mesmo numero de setores, verifica carregamento
-                    elif len(content["setores"]) == setores_atendidos:
-                        content_melhor_atual = json.loads(message.content)
+        # Envia Reject-Proposal para demais agentes
+        for message in propostas_realizaveis:
+            if message is melhor_proposta:
+                continue
 
-                        # Se carregamento atual for maior, vira melhor proposta
-                        if content["carreg_SE"] > content_melhor_atual["carreg_SE"]:
-                            melhor_proposta = message
-                            setores_atendidos = len(content["setores"])
+            resposta = message.create_reply()
+            resposta.set_ontology("CN_04")
+            self.manage_negotiation_behaviour.send_reject_proposal(resposta)
+
+        # Envia Accept-Proposal para Agente Ganhador
+        if melhor_proposta is not None:
+
+            resposta = melhor_proposta.create_reply()
+            resposta.set_ontology("CN_04")
+            resposta.set_content(melhor_proposta.content)
+
+            while True:
+                try:
+                    result = yield self.manage_negotiation_behaviour.send_accept_proposal(resposta)
+                    display_message(self.aid.name, "Mensagem INFORM Recebida")
+
+                except FipaFailureHandler as h:
+                    result = h.message
+                    display_message(self.aid.name, "Mensagem FAILURE Recebida")
+
+                except FipaProtocolComplete:
+                    break
+
+            return result 
+
+        else:
+            display_message(self.aid.name, "Nenhuma proposta foi acatada.")
+            return None
 
 
-            # Envia Reject-Proposal para demais agentes
-            for message in propostas_realizaveis:
-                if message is melhor_proposta:
-                    continue
+    @FipaSession.session
+    def preparar_negociacao(self, poda, message_adc_solicitante):
+        dados = {'ramos': [poda]}
+        ramos_remanesc = []
 
-                resposta = message.create_reply()
-                resposta.set_performative(ACLMessage.REJECT_PROPOSAL)
-                resposta.set_ontology("CN_04")
-                self.send(resposta)
+        for poda in dados['ramos']:
 
-            # Envia Accept-Proposal para Agente Ganhador
-            if melhor_proposta is not None:
-                
-                resposta = melhor_proposta.create_reply()
-                resposta.set_conversation_id(resposta.conversation_id+'_2')
-                resposta.set_performative(ACLMessage.ACCEPT_PROPOSAL)
-                resposta.set_ontology("CN_04")
-                resposta.set_content(melhor_proposta.content)
-                self.send(
-                    resposta, 
-                    callback=lambda response: informe_ganhador(response)
-                )
+            if not self.busy:
+                self.busy = True
+                # Variaveis auxiliares
+                i = dados['ramos'].index(poda)
+                ramos_remanesc.append(poda)
 
-            else:
-                display_message(self.aid.name, "Nenhuma proposta foi acatada.")
-                # Chama função para informar da falha
-                informe_ganhador(None)
+                ramo = list(poda[0].keys())
+                display_message(
+                    self.aid.name, f"Tratando Ramo {ramo}: {i+1} de {len(dados['ramos'])}")
 
-        def informe_ganhador(message_adc_fornecedor: ACLMessage):
-            
-            if False and len(ramos_remanesc):
-                setores_desernerg = list()
-                #
-                for ramo in ramos_remanesc:
+                message_adc_fornecedor = yield from self.solicitar_propostas(poda)
 
-                    # Identifica qual dos ramos foi o ramo recomposto
-                    if recomp_realiz["ramo"][0] in ramo[0].keys():
-                        for setor in ramo[0].keys():
-                            if setor not in recomp_realiz["ramo"]:
-                                setores_desernerg.append(setor)
+                if False and len(ramos_remanesc):
+                    setores_desernerg = list()
+                    #
+                    for ramo in ramos_remanesc:
+                        recomp_realiz = dict()
+                        # Identifica qual dos ramos foi o ramo recomposto
+                        if recomp_realiz["ramo"][0] in ramo[0].keys():
+                            for setor in ramo[0].keys():
+                                if setor not in recomp_realiz["ramo"]:
+                                    setores_desernerg.append(setor)
 
-                    # Remonta a poda a ser restaurada (setores nao restaurados)
-                    dic1 = dict()
-                    dic2 = dict()
-                    dic3 = dict()
-                    dic4 = dict()
-                    dic5 = dict()
-                    dic6 = dict()
-                    array1 = ramo[2]
+                        # Remonta a poda a ser restaurada (setores nao restaurados)
+                        dic1 = dict()
+                        dic2 = dict()
+                        dic3 = dict()
+                        dic4 = dict()
+                        dic5 = dict()
+                        dic6 = dict()
+                        array1 = ramo[2]
 
-                    for setor in setores_desernerg:
-                        dic1[setor] = ramo[0][setor]
-                        dic2[setor] = ramo[1][setor]
+                        for setor in setores_desernerg:
+                            dic1[setor] = ramo[0][setor]
+                            dic2[setor] = ramo[1][setor]
 
-                        # for i in range(len(ramo[2][1,:])):
-                        #     if setor == ramo[2][1,i]:
-                        #         array1 = np.append(array1, ramo[2][1,i])
+                            # for i in range(len(ramo[2][1,:])):
+                            #     if setor == ramo[2][1,i]:
+                            #         array1 = np.append(array1, ramo[2][1,i])
 
-                        # print ramo[2][1,:], len(ramo[2][1,:]), range(len(ramo[2][1,:]))
+                            # print ramo[2][1,:], len(ramo[2][1,:]), range(len(ramo[2][1,:]))
 
-                        for no in ramo[3].keys():
-                            if setor in str(no):
-                                dic3[no] = ramo[3][no]
-                                dic4[no] = ramo[4][no]
+                            for no in ramo[3].keys():
+                                if setor in str(no):
+                                    dic3[no] = ramo[3][no]
+                                    dic4[no] = ramo[4][no]
 
-                        for chave in ramo[6].keys():
-                            if ramo[6][chave].n1.nome == setor or ramo[6][chave].n2.nome == setor:
-                                dic5[chave] = ramo[6][chave]
+                            for chave in ramo[6].keys():
+                                if ramo[6][chave].n1.nome == setor or ramo[6][chave].n2.nome == setor:
+                                    dic5[chave] = ramo[6][chave]
 
-                        for trecho in ramo[7].keys():
-                            if setor in str(trecho):
-                                dic6[trecho] = ramo[7][trecho]
+                            for trecho in ramo[7].keys():
+                                if setor in str(trecho):
+                                    dic6[trecho] = ramo[7][trecho]
 
-                    nova_poda = (dic1)
+                        nova_poda = (dic1)
 
-                # print dic1, dic2, dic3, dic4, dic5, dic6
+                    # print dic1, dic2, dic3, dic4, dic5, dic6
 
-            self.busy = False
+                self.busy = False
 
-            if message_adc_fornecedor:
-                # Inform ou Failure entram aqui
-                display_message(self.aid.name, "Recomposição externa concluída")
-
-                # Responder INFORME ao ADC solicitante
+                    # Responder INFORME ao ADC solicitante
                 resposta = message_adc_solicitante.create_reply()
-                resposta.set_performative(message_adc_fornecedor.performative)
 
-                if message_adc_fornecedor.performative == ACLMessage.INFORM:
-                    # Encaminha chaves para concluir restauração
-                    # TODO: encaminhar também relatório de restauração
-                    resposta.set_ontology(message_adc_fornecedor.ontology)
-                    resposta.set_content(message_adc_fornecedor.content)
-                
-                self.send(resposta)
+                if message_adc_fornecedor:
+                    # Inform ou Failure entram aqui
+                    display_message(
+                        self.aid.name, "Recomposição externa concluída")
 
-            else:
-                # Nenhuma proposta
-                display_message(self.aid.name, "Recomposição externa não concluída")
-                # Responder FALHA ao ADC solicitante
-                resposta = message_adc_solicitante.create_reply()
-                resposta.set_performative(ACLMessage.FAILURE)
-                resposta.set_content(None)
-                self.send(resposta)
+                    if message_adc_fornecedor.performative == ACLMessage.INFORM:
+                        # Encaminha chaves para concluir restauração
+                        # TODO: encaminhar também relatório de restauração
+                        resposta.set_ontology(message_adc_fornecedor.ontology)
+                        resposta.set_content(message_adc_fornecedor.content)
+                        self.receive_prune_behaviour.send_inform(resposta)
 
-        enviar_solicitacoes()
+                    else:
+                        self.receive_prune_behaviour.send_failure(resposta)
 
-
-if __name__ == "__main__":
-    from pade.misc.utility import start_loop
-
-    an = AgenteN(AID('agenten@localhost:60012'), 'S1')
-    an.add_adc_vizinho(AID('agentedc-2@localhost:60021'))
-    an.add_adc_vizinho(AID('agentedc-3@localhost:60031'))
-    an.ams['port'] = 60000
-
-
-    start_loop([an])
-
+                else:
+                    # Nenhuma proposta
+                    display_message(
+                        self.aid.name, "Recomposição externa não concluída")
+                    # Responder FALHA ao ADC solicitante
+                    self.receive_prune_behaviour.send_failure(resposta)
 

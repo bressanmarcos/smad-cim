@@ -1,9 +1,3 @@
-pade
-mygrid
-generateDS
-.vscode
-core/ied/*.txt
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -56,6 +50,11 @@ coverage.xml
 docs/_build/
 *.pyc
 *cache*
-core/ied/*
-rede/rdf2mygridcopy.py
-.gitignore
+
+# Other
+pade
+mygrid
+generateDS
+.vscode
+tests/ied-events
+tests/old_tests

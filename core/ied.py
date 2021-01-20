@@ -1,24 +1,21 @@
-import socket
 import os
-os.sys.path.insert(0, os.getcwd()) 
-# Adiciona ao Path a pasta raiz do projeto
-
+import socket
 from pathlib import Path
-from pade.misc.utility import display_message, call_in_thread, call_later
 
-class SwitchAlreadyInPosition(Exception):
-    pass
+from pade.misc.utility import call_in_thread, call_later, display_message
+
+from core.common.enums import *
+
 
 class IED():
     STATES = {'open': 1, 'close': 2, 'invalid': 0, 'intermediate': 3}
     REVERSE_STATES = {value: alias for alias, value in STATES.items()}
     VALID_STATES = ['open', 'close']
 
-
-    def __init__(self, id, ip, port, call_on_event):
+    def __init__(self, id, host, call_on_event=None):
         self.id = id
-        self.ip = ip
-        self.port = port
+        self.ip = host[0]
+        self.port = host[1]
         self.callback = call_on_event
 
     def connect(self):
@@ -28,15 +25,17 @@ class IED():
     def operate(self, action):
         """Envia comando ao IED através de protocol específico"""
         raise NotImplementedError()
- 
+
     def get_breaker_position(self) -> str:
         """Retorna posição do breaker"""
         raise NotImplementedError()
 
+
 class FileIED(IED):
-    def __init__(self, id, ip, port, call_on_event, initial_breaker_position='close'):
-        super().__init__(id, ip, port, call_on_event)
+    def __init__(self, id, host, filename, call_on_event=None, initial_breaker_position='close'):
+        super().__init__(id, host, call_on_event)
         self.breaker_position = initial_breaker_position
+        self.filename = Path(filename)
 
     def connect(self):
         """Conecta-se ao IED (stub)"""
@@ -46,14 +45,16 @@ class FileIED(IED):
     def operate(self, action):
         """Envia comando ao IED através de protocol específico"""
         if action not in IED.VALID_STATES:
-            raise ValueError(f'Invalid action: {action}') 
+            raise ValueError(f'Invalid action: {action}')
         # Envia dado
         self.breaker_position = action
-        display_message(f'{self.id}@{self.ip}:{self.port}', f'Comando {action} enviado')
+        display_message(f'{self.id}@{self.ip}:{self.port}',
+                        f'Comando {action} enviado')
 
     def get_breaker_position(self) -> str:
         """Retorna posição do breaker"""
-        display_message(f'{self.id}@{self.ip}:{self.port}', f'Posição atual: [{self.breaker_position}]')
+        display_message(f'{self.id}@{self.ip}:{self.port}',
+                        f'Posição atual: [{self.breaker_position}]')
         return self.breaker_position
 
     def handle_receive(self, *args):
@@ -71,19 +72,18 @@ class FileIED(IED):
         """Lê arquivos com o mesmo nome da ID do switch
         a cada 5 segundos. Lê linha a linha e apaga.
         Os arquivos lidos se localizam em ``/core/ied/``"""
-        filename = Path(f'./core/ied/{self.id}.txt')
 
         def loop():
             try:
                 # Abertura de arquivo
-                with open(filename, 'r') as file:
+                with open(self.filename, 'r') as file:
                     # Lê primeira linha
                     data = file.readline().strip().split()
                     # Salva demais linhas
                     next_lines = file.readlines()
-                
+
                 # Reescreve demais linhas no mesmo arquivo
-                with open(filename, 'w') as file:
+                with open(self.filename, 'w') as file:
                     # Reescreve demais linhas
                     for line in next_lines:
                         file.write(line)
@@ -102,30 +102,31 @@ class FileIED(IED):
         # Chama função pela primeira vez depois de 3 segundos
         call_later(3.0, loop)
 
+
 class SimulatedIED(IED):
     """Conecta-se a um IED simulado em outro IP:PORT"""
-    def __init__(self, id, ip, port, call_on_event):
-        super().__init__(id, ip, port, call_on_event)
-        
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    def __init__(self, id, host, call_on_event=None):
+        super().__init__(id, host, call_on_event)
 
     def connect(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect((self.ip, self.port))
         # Atualiza a posição da chave
-        self.get_breaker_position() 
+        self.get_breaker_position()
         display_message(f'{self.id}@{self.ip}:{self.port}', 'Conectado')
         self.run()
-        
+
     def operate(self, action):
         """Envia comando ao IED através de protocol específico"""
         assert action in IED.VALID_STATES
-        
+
         # Envia dado
         self.socket.sendall(bytes(f'operate:{action}', "utf-8"))
-        
+
         # Resposta
         response = str(self.socket.recv(1024), "utf-8")
-        
+
         # Salva posição enviada se ok
         if response == 'ok':
             # Obtém código do comando (IEC 61850)
@@ -140,7 +141,8 @@ class SimulatedIED(IED):
         response = str(self.socket.recv(1024), "utf-8")
 
         if response not in IED.STATES:
-            display_message(f'{self.id}@{self.ip}:{self.port}', f'Unexpected return value: "{response}"')
+            display_message(f'{self.id}@{self.ip}:{self.port}',
+                            f'Unexpected return value: "{response}"')
 
         self.breaker_position = response
         return response
@@ -155,7 +157,8 @@ class SimulatedIED(IED):
     def run(self):
         def loop():
             if self.breaker_tripped():
-                display_message(f'{self.id}@{self.ip}:{self.port}', 'Abertura de chave detectada')
+                display_message(f'{self.id}@{self.ip}:{self.port}',
+                                'Abertura de chave detectada')
                 args = ('XCBR',)
                 call_in_thread(self.callback, self, *args)
             # Chama função novamente em 1 segundo
@@ -164,7 +167,8 @@ class SimulatedIED(IED):
         # Chama função pela primeira vez depois de 3 segundos
         call_later(3.0, loop)
 
+
 if __name__ == "__main__":
     # Create a socket (SOCK_STREAM means a TCP socket)
-    ied = SimulatedIED('CH13', 'localhost', 50013, print)
+    ied = SimulatedIED('CH13', ('localhost', 50013), print)
     ied.connect()
