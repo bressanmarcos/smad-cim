@@ -113,8 +113,8 @@ class AgenteDC(AgenteSMAD):
         self.setores_faltosos = list()
 
         # Fatores de subtensao e sobretensão
-        self.fator_subtensao = 0.8
-        self.fator_sobretensao = 1.2
+        self.fator_subtensao = 0.95
+        self.fator_sobretensao = 1.05
         # Fator de sobrecarga dos transformadores
         self.fator_sobrecarga = 1.1
 
@@ -128,14 +128,14 @@ class AgenteDC(AgenteSMAD):
         # Subcribe to AC
         for acom_aid in self.get_acoms():
 
-            @FipaSession.session
+            @AgentSession.session
             def subscribe_to_events():
                 message = ACLMessage()
                 message.add_receiver(acom_aid)
 
                 while True:
                     try:
-                        response = yield self.subscribe_behaviour.send_subscribe(message)
+                        response = yield from self.subscribe_behaviour.send_subscribe(message)
                         display_message(self.aid.name, 'Received INFORM')
 
                         # Inform from AC
@@ -181,7 +181,7 @@ class AgenteDC(AgenteSMAD):
         except:
             raise AttributeError('Agente de Negociação não definido')
 
-    @FipaSession.session
+    @AgentSession.session
     def handle_cfp(self, message: ACLMessage):
         display_message(self.aid.name, "Mensagem CFP recebida")
         setores_colab = dict()
@@ -269,7 +269,7 @@ class AgenteDC(AgenteSMAD):
 
                 while True:
                     try:
-                        response_message = yield self.respond_negotiation_behaviour.send_propose(proposta)
+                        response_message = yield from self.respond_negotiation_behaviour.send_propose(proposta)
                         display_message(self.aid.name,
                                         "Mensagem ACCEPT PROPOSE Recebida.")
                     except FipaRejectProposalHandler as h:
@@ -402,7 +402,7 @@ class AgenteDC(AgenteSMAD):
 
         while True:
             try:
-                response = yield self.command_behaviour.send_request(message)
+                response = yield from self.command_behaviour.send_request(message)
                 display_message(
                     self.aid.name, '[Comando de Chave] Inform: ' + response.content)
 
@@ -419,7 +419,7 @@ class AgenteDC(AgenteSMAD):
 
         return response
 
-    @FipaSession.session
+    @AgentSession.session
     def corrigir_descoordenacao(self, content):
 
         display_message(
@@ -504,7 +504,7 @@ class AgenteDC(AgenteSMAD):
             if alimentador == self.localizar_setor(setor.nome):
                 return alimentador
 
-    @FipaSession.session
+    @AgentSession.session
     def isolamento(self, content):
 
         display_message(self.aid.name, "------------------------")
@@ -604,7 +604,7 @@ class AgenteDC(AgenteSMAD):
 
         self.analise_restauracao(content)
 
-    @FipaSession.session
+    @AgentSession.session
     def analise_restauracao(self, content):
 
         display_message(self.aid.name, "------------------------")
@@ -698,7 +698,7 @@ class AgenteDC(AgenteSMAD):
                         self.podas.remove(poda)
 
             # Request to AN
-            @FipaSession.session
+            @AgentSession.session
             def solicitar(poda):
                 # Solicitar recomposição ao AN
                 poda_cim = rdf2mygrid.poda_cim(poda=poda)
@@ -711,7 +711,7 @@ class AgenteDC(AgenteSMAD):
 
                 while True:
                     try:
-                        response_an = yield self.send_prone_behaviour.send_request(message)
+                        response_an = yield from self.send_prone_behaviour.send_request(message)
                         display_message(
                             self.aid.name, f'Restauração efetivada: {response_an.content}')
 
@@ -808,8 +808,7 @@ class AgenteDC(AgenteSMAD):
 
         for alimentador in subestacao.alimentadores.values():
             for no in alimentador.nos_de_carga.values():
-                if no.tensao.mod < self.fator_subtensao * subestacao.tensao.mod or \
-                        no.tensao.mod > self.fator_sobretensao * subestacao.tensao.mod:
+                if not self.fator_subtensao * subestacao.tensao.mod <= no.tensao.mod <= self.fator_sobretensao * subestacao.tensao.mod:
                     display_message(
                         self.aid.name, f'Restrição de Tensão atingida no nó de carga {no.nome}')
                     print(

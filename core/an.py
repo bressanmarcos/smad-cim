@@ -86,7 +86,7 @@ class AgenteN(AgenteSMAD):
 
         while True:
             try:
-                proposta = yield self.manage_negotiation_behaviour.send_cfp(message)
+                proposta = yield from self.manage_negotiation_behaviour.send_cfp(message)
                 display_message(self.aid.name,
                                 f"Mensagem PROPOSE recebida de {proposta.sender.name}")
 
@@ -180,7 +180,7 @@ class AgenteN(AgenteSMAD):
 
             while True:
                 try:
-                    result = yield self.manage_negotiation_behaviour.send_accept_proposal(resposta)
+                    result = yield from self.manage_negotiation_behaviour.send_accept_proposal(resposta)
                     display_message(self.aid.name, "Mensagem INFORM Recebida")
 
                 except FipaFailureHandler as h:
@@ -197,7 +197,7 @@ class AgenteN(AgenteSMAD):
             return None
 
 
-    @FipaSession.session
+    @AgentSession.session
     def preparar_negociacao(self, poda, message_adc_solicitante):
         dados = {'ramos': [poda]}
         ramos_remanesc = []
