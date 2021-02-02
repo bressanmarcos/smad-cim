@@ -13,25 +13,6 @@ from pade.core.sniffer import Sniffer
 from pade.plus.testing import start_loop_test
 from pade.plus.testing import start_runtime
 
-
-@pytest.fixture(scope='module')
-def simular_IEDs():
-    """Executa o simulador para IEDs em outra thread"""
-    # Instancia classe
-    network = Network('', '')
-
-    # Executa loop em novo processo
-    p = multiprocessing.Process(target=network.run)
-    p.start()
-
-    # Inicializa testes
-    yield
-
-    # Finaliza execução dos IEDs
-    print('\nKilling IEDs')
-    p.kill()
-
-
 @pytest.fixture(scope='function')
 def deactivate_send_message(monkeypatch):
     """Evita o envio de mensagem por todos os agentes, 

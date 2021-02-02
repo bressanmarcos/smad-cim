@@ -313,8 +313,11 @@ def test_c(start_runtime, mock_smt, queue):
     ]):
 
         # Simulate an IED events after 20 secs
-        time.sleep(20)
-        with open('tests/ied-events/AQZ-21I7.txt', 'w') as file:
+        time.sleep(16)
+        with open('tests/ied-events/AQZ-21I6.txt', 'w') as file:
+            file.write('XCBR')
+        time.sleep(4)
+        with open('tests/ied-events/AQZ-21I5.txt', 'w') as file:
             file.write('XCBR')
 
         print(queue.get())

@@ -40,7 +40,7 @@ class AgenteCom(AgenteSMAD):
         self.behaviours_enviodedados.set_subscribe_handler(self.handle_subscribe)
         self.behaviours_recebercomando.set_request_handler(self.handle_request)
 
-        self.deadtime = 3.0  # Tempo em segundos do deadtime
+        self.deadtime = 1.5  # Tempo em segundos do deadtime
         # Mantém o ACom à escuta durante um certo tempo de deadtime antes de notificar eventos
         self.in_hold = False
         # Armazena temporariamente o documento enquanto ele está sendo construído
@@ -224,6 +224,5 @@ class AgenteCom(AgenteSMAD):
         """
         breaker_position = self.IEDs[switchId].get_breaker_position()
         if action == breaker_position:
-            raise SwitchAlreadyInPosition(
-                f'Chave já está na posição solicitada ({action})')
+            raise SwitchAlreadyInPosition
         self.IEDs[switchId].operate(action)
