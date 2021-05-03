@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from information_model import OutageEvent as out
 from information_model import SwitchingCommand as swc
-from mygrid.fluxo_de_carga.varred_dir_inv import calculate_loadflow
+from mygrid.fluxo_de_carga.varred_dir_inv import calcular_fluxo_de_carga
 from pade.acl.aid import AID
 from pade.acl.filters import Filter
 from pade.acl.messages import ACLMessage
@@ -778,7 +778,7 @@ class AgenteDC(AgenteSMAD):
         self.topologia_subestacao.alimentadores[alimentador].inserir_ramo(setor_colab, poda)
 
         # Calcula Fluxo de Carga
-        calculate_loadflow(self.topologia_subestacao)
+        calcular_fluxo_de_carga(self.topologia_subestacao)
 
         # Verifica Condicoes
         analise1 = self.verificar_carregamento_dos_condutores(self.topologia_subestacao)
@@ -835,7 +835,7 @@ class AgenteDC(AgenteSMAD):
         self.topologia_subestacao.alimentadores[alim].inserir_ramo(setor_colab, poda, setor_raiz)
 
         # Calcula fluxo de carga para SE com a poda inserida
-        calculate_loadflow(self.topologia_subestacao)
+        calcular_fluxo_de_carga(self.topologia_subestacao)
 
         # Verifica Condicoes
         analise1 = self.verificar_carregamento_dos_condutores(self.topologia_subestacao)

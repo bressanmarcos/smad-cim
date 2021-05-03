@@ -38,84 +38,6 @@ def queue_command(monkeypatch):
     monkeypatch.setattr(AgenteCom, 'comandar_chave', queue_insert)
     yield queue
 
-
-def old_test_handle_request(deactivate_send_message, queue_command):
-    """Testa (sem Rede) o ReceberComando::handle_request do ACom"""
-    enderecos_S1 = {"CH1": ("localhost", 50000+1),
-                    "CH2": ("localhost", 50000+2),
-                    "CH3": ("localhost", 50000+3),
-                    "CH6": ("localhost", 50000+6),
-                    "CH7": ("localhost", 50000+7),
-                    "CH8": ("localhost", 50000+8),
-                    "CH9": ("localhost", 50000+9),
-                    "CH10": ("localhost", 50000+10),
-                    "CH11": ("localhost", 50000+11),
-                    "CH13": ("localhost", 50000+13),
-                    "CH14": ("localhost", 50000+14),
-                    "CH15": ("localhost", 50000+15),
-                    "CH16": ("localhost", 50000+16)}
-    enderecos_S2 = {"CH4": ("localhost", 50000+4),
-                    "CH5": ("localhost", 50000+5),
-                    "CH3": ("localhost", 50000+3),
-                    "CH8": ("localhost", 50000+8),
-                    "CH11": ("localhost", 50000+11),
-                    "CH12": ("localhost", 50000+12),
-                    "CH16": ("localhost", 50000+16)}
-    enderecos_S3 = {"CH17": ("localhost", 50000+17),
-                    "CH18": ("localhost", 50000+18),
-                    "CH16": ("localhost", 50000+16)}
-
-    acom = AgenteCom(AID(f'acom1@localhost:{randint(10000, 60000)}'), 'S1', enderecos_S1)
-
-    #################################################
-    # Exemplo de Arquivo para ser recebido pelo ACOM
-    swt13 = swc.ProtectedSwitch(
-        mRID='CH13', name='Switch que protege minha casa')
-    swt14 = swc.ProtectedSwitch(
-        mRID='CH14', name='Switch do portão')
-    acao1 = swc.SwitchAction(
-        executedDateTime=datetime.datetime.now(),
-        isFreeSequence=False,
-        issuedDateTime=datetime.datetime.now(),
-        kind=swc.SwitchActionKind.CLOSE,
-        plannedDateTime=datetime.datetime.now(),
-        sequenceNumber=1,
-        OperatedSwitch=swt13)
-    acao0 = swc.SwitchAction(
-        executedDateTime=datetime.datetime.now(),
-        isFreeSequence=False,
-        issuedDateTime=datetime.datetime.now(),
-        kind=swc.SwitchActionKind.OPEN,
-        plannedDateTime=datetime.datetime.now(),
-        sequenceNumber=0,
-        OperatedSwitch=swt14)
-    plano = swc.SwitchingPlan(
-        mRID=str(uuid4()), 
-        createdDateTime=datetime.datetime.now(),
-        name='Plano de Teste', 
-        purpose=swc.Purpose.COORDINATION, 
-        SwitchAction=[acao1, acao0])
-    root = swc.SwitchingCommand(SwitchingPlan=plano)
-    validate(root)
-    # Monta envelope de mensagem ACL
-    message = ACLMessage(performative=ACLMessage.REQUEST)
-    message.set_protocol(ACLMessage.FIPA_REQUEST_PROTOCOL)
-    message.set_ontology(swc.__name__)
-    message.set_content(to_elementtree(root))
-
-    # Simula recepção de mensagem
-    acom.handle_request(message)      
-
-    # Testa valores retornados
-    assert queue_command.get_nowait()[1:] == \
-        ('CH14', swc.SwitchActionKind.OPEN)
-    assert queue_command.get_nowait()[1:] == \
-        ('CH13', swc.SwitchActionKind.CLOSE)
-
-
-
-# V3.0
-
 @pytest.fixture
 def mock_receive_ied_event(monkeypatch, queue):
     """AgenteCom, ao receber mensagem do IED, somente imprime e joga na queue"""
@@ -159,7 +81,7 @@ def mock_smt(monkeypatch, queue):
     def print_and_queue(self, *args):
         print(args)
         queue.put_nowait(args)
-    monkeypatch.setattr(AgenteDC, 'isolamento', print_and_queue)
+    monkeypatch.setattr(AgenteDC, AgenteDC.isolation_analysis.__name__, print_and_queue)
 
 
 def test_ac_adc(start_runtime, mock_smt, queue):
