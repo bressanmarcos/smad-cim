@@ -32,9 +32,9 @@ pip install -r requirements.txt
 pade create-pade-db
 ```
 
-3. Execute o exemplo `start.py` (o script já contém o código necessário para executar o AMS, logo NÃO é necessário executar `pade start-runtime`):
+3. Execute o teste `test_sequence.py` (o script já contém o código necessário para executar o AMS, logo NÃO é necessário executar `pade start-runtime`):
 ```bash
-python examples/start.py
+python tests/test_sequence.py
 ```
 
 4. Aguarde até que os ADCs se inscrevam junto aos ACs. O seguinte log aparecerá no terminal quando isso acontecer:
@@ -44,8 +44,3 @@ python examples/start.py
 [AgenteDiagnósticoConfiguração-3@localhost:60031] 10/11/2020 17:40:30.426 --> Inscrito em AgenteComunicação-3@localhost:60030
 [AgenteDiagnósticoConfiguração-4@localhost:60041] 10/11/2020 17:40:30.525 --> Inscrito em AgenteComunicação-4@localhost:60040
 ```
-
-5. Junto à janela que se abre (figura a seguir), simule a abertura de disjuntores. Disjuntores fechados (ativos) são mostrados em verde, enquanto aqueles abertos (inativos) são mostrados em cinza.
-Verifique a reação do sistema à abertura do disjuntor.
-
-![Janela de Disjuntores](docs/images/switches.png)
